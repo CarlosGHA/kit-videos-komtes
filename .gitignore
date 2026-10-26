@@ -1,0 +1,10 @@
+# salidas de producción (no se versionan)
+trabajo/chk/*
+trabajo/out/*
+trabajo/out_siex2/*
+trabajo/covers/*
+!trabajo/*/.gitkeep
+__pycache__/
+*.pyc
+*.noaudio.mp4
+*.vo.wav

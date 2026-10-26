@@ -1,0 +1,13 @@
+[warmly] SIEX diseña sistemas de agentes limpios de inundación total para centros de datos, con certificaciones u ele y efe eme. [pause]
+[serious] Todo empieza en un rack. El equipo se sobrecalienta… y comienza a generar humo. Los detectores lo identifican en su fase más temprana. [pause]
+Al confirmarse el incendio, la central de extinción activa la alarma y la cuenta atrás. El personal evacúa la sala y la climatización se detiene. [pause]
+[confident] Los cilindros se instalan en una sala aledaña al centro de datos, anclados a la pared. Junto a la batería principal, una batería de reserva mantiene la protección durante el mantenimiento o la recarga. [pause]
+Al disparar el sistema, el cilindro piloto abre las válvulas de los cilindros, y el gas llega al colector. Los presostatos pueden vigilar en todo momento la presión de la carga. [pause]
+Las válvulas direccionales, situadas entre ambas baterías, envían el gas solo a la sala afectada: una misma batería protege varias salas. Y cada válvula dispone de palanca de accionamiento manual. [pause]
+El agente entra en la sala a través de los difusores silenciosos de SIEX, por debajo de noventa decibelios, para no dañar los discos duros. [pause]
+El gas inunda todo el recinto, sobre y bajo el suelo técnico, hasta alcanzar la concentración de extinción. Sin agua… y sin residuos. [pause]
+[warmly] El fuego se extingue. Tras ventilar la sala, el centro de datos recupera su actividad, sin limpiezas ni daños en los equipos. [pause]
+[confident] Nuestro software de diseño acústico analiza cada centro de datos: calcula los niveles acústicos finales, respeta los límites de ruido de los discos duros, determina las distancias de seguridad y valida los criterios de diseño. [pause]
+Además, compara configuraciones y evalúa sustituir los difusores tradicionales por difusores silenciosos. Sin cálculos manuales y con todo documentado: menos tiempo y menos riesgo. [pause]
+Gases inertes obtenidos de la atmósfera, o efe ka cinco uno doce: SIEX tiene una solución limpia para cada centro de datos. [pause]
+[warmly] SIEX. Protección contra incendios para lo que no puede detenerse.
