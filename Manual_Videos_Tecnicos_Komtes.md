@@ -368,7 +368,7 @@ Empieza revisando la ficha y dime qué materiales faltan.
 
 ## 15. Anexo B · Herramientas de producción
 
-El código de producción (escenas 3D, composición, transiciones con cámara única, montaje de audio y portadas) se guarda junto a este manual en el paquete `Kit_Videos_Komtes.zip`. El kit es autónomo: incluye los recursos, los renders de referencia, las locuciones, la música, las tipografías y los logotipos. La instalación y los comandos están en su `LEEME.md`. También existe la skill `videos-tecnicos-komtes`, que aplica este manual automáticamente en cualquier sesión de Claude. Para cada vídeo nuevo se reutiliza el kit y solo se cambian las escenas 3D, el guion y los textos; el sistema gráfico, las transiciones y el audio no se tocan.
+El código de producción (escenas 3D, composición, transiciones con cámara única, montaje de audio y portadas) se publica, junto a este manual, en el repositorio público https://github.com/CarlosGHA/kit-videos-komtes (descarga: `git clone --depth 1 https://github.com/CarlosGHA/kit-videos-komtes`, o **Code → Download ZIP** desde el navegador). El kit es autónomo: incluye los recursos, los renders de referencia, las locuciones, la música, las tipografías y los logotipos. La instalación y los comandos están en su `LEEME.md`. También existe la skill `videos-tecnicos-komtes`, que aplica este manual automáticamente en cualquier sesión de Claude. Para cada vídeo nuevo se reutiliza el kit y solo se cambian las escenas 3D, el guion y los textos; el sistema gráfico, las transiciones y el audio no se tocan.
 
 | Archivo | Función |
 |---|---|
