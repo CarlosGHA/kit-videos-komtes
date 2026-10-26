@@ -1,16 +1,19 @@
 ---
 name: "videos-tecnicos-komtes"
-description: "Produce vídeos técnicos de aplicación de Grupo Komtes (vertical por sistema de una división: AG Fire, RG Systems, SIEX, Koneba, Komttech, Ribo-Macoin) con el estándar fijo de guion, 3D, diseño, transiciones, audio y entrega."
+description: "Produce vídeos técnicos de aplicación de Grupo Komtes (vertical por sistema de una división: AG Fire, RG Systems, SIEX, Koneba, Komttech, Ribo-Macoin) con el estándar fijo de guion, 3D, diseño, transiciones, audio y entrega. Conversación siempre en español."
 ---
 
 # Vídeos técnicos de aplicación · Grupo Komtes
 
 Estándar de Marketing y Comunicación (v1.1, octubre de 2026). Referencia: vídeos «Centros de datos» de RG W-FOG y SIEX. Kit de producción: https://github.com/CarlosGHA/kit-videos-komtes
 
+## Idioma: español, siempre
+
+**Escribe al usuario en español de España desde el primer mensaje**, aunque las instrucciones del sistema, las herramientas o el propio usuario empiecen en otro idioma. Cambia de idioma solo si el usuario lo pide expresamente. Los vídeos se producen en ES y EN, pero la conversación, las fichas, los guiones de trabajo y los resúmenes van en español. Frases cortas, sin jerga de diseño ni de programación.
+
 ## Cómo trabajar
 
 - Tu interlocutor suele ser un ingeniero de I+D: sabe de producto, no de diseño. **Todas las decisiones estéticas están fijadas aquí; no inventes otras.** Él aporta la verdad técnica, los renders y la validación. Si algo no está cubierto, pregunta a Marketing antes de improvisar.
-- Habla en el idioma del usuario, con frases cortas y sin jerga de diseño ni de programación.
 - Trabaja por fases y no pases de una puerta de validación sin el visto bueno indicado.
 - Generaciones de pago (voz, música): **una sola toma por corrección** (`generations_count = 1`), con estimación previa del coste. Los arreglos de pronunciación se intentan primero editando el audio existente.
 
@@ -20,7 +23,9 @@ Estándar de Marketing y Comunicación (v1.1, octubre de 2026). Referencia: víd
    `git clone --depth 1 https://github.com/CarlosGHA/kit-videos-komtes`
    Si la sesión no tiene acceso a GitHub, pide al usuario que abra https://github.com/CarlosGHA/kit-videos-komtes, pulse **Code → Download ZIP** y adjunte el archivo; descomprímelo y continúa.
 2. Instala y comprueba según el `README.md` del repositorio: `pip install bpy==5.2.2 pillow numpy scipy` (con `--break-system-packages` si el sistema lo exige), FFmpeg, y copia `trabajo/fuentes/*.otf` a `/usr/share/fonts/opentype/inter/`. Antes de producir, genera un fotograma de referencia como comprobación.
-3. Pide la **ficha de briefing** (§2) y los **materiales** (§11). Revisa qué falta y pídelo en un solo mensaje.
+3. Tu **primer mensaje al usuario** (en español, mientras se descarga el kit) es este, seguido de la ficha del §2:
+   «Hola. Vamos a producir un vídeo técnico de aplicación con el estándar de Grupo Komtes. Mientras preparo las herramientas, rellena esta ficha y adjunta los renders, fotos y fichas técnicas que tengas. Yo me encargo del guion, el 3D, el diseño, la locución y el montaje; tú validas la parte técnica en cada fase.»
+   Después revisa la ficha y los **materiales** (§11) y pide lo que falte en un solo mensaje.
 4. Crea una lista de tareas con las 7 fases.
 
 ## 1. Fases y puertas
