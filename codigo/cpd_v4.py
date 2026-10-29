@@ -36,22 +36,36 @@ def mclip(im):
     im.putalpha(Image.fromarray(a.astype(np.uint8))); return im
 
 
-STEPS = ['Inicio', 'Activación', 'Bombeo', 'Descarga', 'Bajo suelo', 'Extinción']
+STEPS = ['Inicio', 'Detección', 'Preacción', 'Activación', 'Bombeo', 'Descarga', 'Falso suelo', 'Extinción']
+NSTEPS = len(STEPS)
+
+
+F_STAT_S = B.F_STAT
+
+
+STEP_MAP = [None]    # piezas de LinkedIn: ({paso original: paso nuevo}, total) — pasos fuera del mapa se muestran como título
 
 
 def step_header(d, n, name, sub, a):
     if not B.UI[0]:
         return
+    a *= B.HDR_A[0]
     if a <= 0.01:
         return
+    nst = NSTEPS
+    if STEP_MAP[0] is not None:
+        m, nst = STEP_MAP[0]
+        if n not in m:
+            return B.title(d, name, sub, a / max(B.HDR_A[0], 1e-6))
+        n = m[n]
     d = B._ud(d)
     d.text((S(70), S(112)), f'{n:02d} · {name}', font=F_T1, fill=ca(INK, a))
     d.text((S(70), S(156)), sub, font=F_T2, fill=ca(INK, a))
     x = 70
-    for i in range(6):
+    for i in range(nst):
         col = RED if i + 1 == n else (INK if i + 1 < n else (215, 217, 220))
-        d.rounded_rectangle([S(x), S(206), S(x + 52), S(212)], radius=S(3), fill=ca(col, a))
-        x += 60
+        d.rounded_rectangle([S(x), S(206), S(x + 40), S(212)], radius=S(3), fill=ca(col, a))
+        x += 47
 
 
 # ---------------- escenas ----------------
@@ -66,10 +80,11 @@ def sc_fm(t, L, img):
         card(img, box, a)
         fit_logo(img, FM_LOGO, (box[0] + 10, box[1] + 10, box[0] + 170, box[3] - 10), a, pad=14)
         du = ImageDraw.Draw(B.uiimg(img))
-        du.text((S(box[0] + 186), S(box[1] + 44)), 'Certificación', font=F_T2, fill=ca(INK, a))
-        du.text((S(box[0] + 186), S(box[1] + 80)), 'FM', font=B.F_STAT, fill=ca(RED, a))
+        du.text((S(box[0] + 186), S(box[1] + 40)), 'Sistema aprobado', font=F_SM, fill=ca(INK2, a))
+        du.text((S(box[0] + 182), S(box[1] + 56)), 'FM', font=F_STAT_S, fill=ca(RED, a))
+        du.text((S(box[0] + 185), S(box[1] + 122)), 'APPROVED', font=F_T1, fill=ca(RED, a))
         d = ImageDraw.Draw(img)
-    subtitle(d, 'Protección contra incendios con certificación FM para centros de datos: sobre y bajo suelo técnico.', win(t, 0.6, L))
+    subtitle(d, 'Protección contra incendios aprobada por FM para centros de datos, en ambiente y en falso suelo.', win(t, 0.6, L))
 
 
 def fire_fx(img, v, js, t, lvl_glow, fsize, smoke_lvl, t_smoke):
@@ -94,7 +109,7 @@ def sc_start(t, L, img):
     d = ImageDraw.Draw(img)
     step_header(d, 1, 'INICIO DEL FUEGO', 'Sobrecalentamiento en un rack', ss(0.2, 0.7, t))
     tag(d, pt[0] + 70, pt[1] - 170, 'Foco en rack', win(t, 1.2, L - 0.3), (pt[0], pt[1] + 20))
-    subtitle(d, 'El calor, el humo y los gases corrosivos de un solo equipo amenazan a toda la sala.', win(t, 0.6, L))
+    subtitle(d, 'El calor, el humo y los gases tóxicos de un solo equipo amenazan a toda la sala.', win(t, 0.6, L))
 
 
 CL_CEIL = [Cloud(100 + i, 900, 3.35, 9.0, (0.5, 1.1), 0.14, (240, 380)) for i in range(16)]
@@ -155,13 +170,14 @@ def sc_activation(t, L, img):
         spray(od, fd, cl, t, p0[0], p0[1], ang, max(0.6, k), 1.0, drag=2.2, grav=90, fog_a=34, dot_a=235)
     img.alpha_composite(mclip(up(fog, 6))); img.alpha_composite(mclip(over))
     d = ImageDraw.Draw(img)
-    step_header(d, 2, 'ACTIVACIÓN', 'Boquilla cerrada RG · techo', ss(0.2, 0.7, t))
+    step_header(d, 4, 'ACTIVACIÓN', 'Boquilla cerrada MM-P51 · ambiente', ss(0.2, 0.7, t))
     tag(d, 640, 820, 'Ampolla térmica', win(t, 0.8, T_BREAK + 0.2), bulb)
+    tag(d, 70, 300, 'Boquilla MM-P51', win(t, 0.8, L - 0.2), v(js['hex']) if 'hex' in js else None)
     tag(d, 640, 380, 'Embellecedor NS1', win(t, 1.2, T_BREAK), v(js['esc']))
     tag(d, 640, 820, 'Micro-orificios', win(t, T_BREAK + 1.0, L - 0.2), v(js['orif'][0][0]))
-    subtitle(d, 'El calor del incendio sube hasta el techo y calienta la ampolla térmica de la boquilla más próxima al foco.',
-             win(t, 0.5, T_BREAK + 0.1))
-    subtitle(d, 'Al alcanzar su temperatura de tarado, la ampolla rompe y solo esa boquilla se abre.', win(t, T_BREAK + 0.1, L))
+    subtitle(d, 'Cuando la temperatura alcanza su valor de disparo, se rompe la ampolla de la boquilla MM-P51 más cercana al foco.',
+             win(t, 0.5, T_BREAK + 1.2))
+    subtitle(d, 'Solo esa boquilla se abre.', win(t, T_BREAK + 1.2, L))
 
 
 def pressure(t):
@@ -227,15 +243,15 @@ def sc_discharge(t, L, img):
         fd.ellipse([x / 4 - r, y / 4 - r, x / 4 + r, y / 4 + r], fill=MISTC + (int(62 * hold),))
     img.alpha_composite(mclip(up(fog, 7))); img.alpha_composite(mclip(over))
     d = ImageDraw.Draw(img)
-    step_header(d, 4, 'DESCARGA LOCALIZADA', 'Microgotas a alta presión', ss(0.2, 0.7, t))
+    step_header(d, 6, 'DESCARGA LOCALIZADA', 'Microgotas a alta presión', ss(0.2, 0.7, t))
     others = [v(q) for q in js['nozzles']]
     others = [q for q in others if 250 < q[1] < 1050 and math.hypot(q[0] - nz[0], q[1] - nz[1]) > 120]
     if others:
         tag(d, 640, 270, 'Resto de boquillas: cerradas', win(t, 3.2, L - 0.2), min(others, key=lambda q: q[1]))
-    tag(d, 70, 960, 'Enfría: absorbe el calor', win(t, 1.0, 4.4))
-    tag(d, 70, 1010, 'Sofoca: el vapor desplaza el oxígeno', win(t, 1.4, 4.4))
-    subtitle(d, 'La niebla absorbe el calor del foco y el vapor generado desplaza el oxígeno junto a la llama.', win(t, 0.5, 4.4))
-    subtitle(d, 'Eficaz con la climatización en marcha y sobre equipos en tensión.', win(t, 4.4, L))
+    tag(d, 70, 960, 'Enfría el fuego: absorbe su calor', win(t, 1.0, 4.4))
+    tag(d, 70, 1010, 'Desplaza el oxígeno junto a la llama', win(t, 1.4, 4.4))
+    subtitle(d, 'La niebla enfría el fuego al absorber su calor, y el vapor que genera desplaza el oxígeno junto a la llama.', win(t, 0.5, 4.4))
+    subtitle(d, 'Es eficaz incluso con la climatización en marcha.', win(t, 4.4, L))
 
 
 CL_UF = [Cloud(200 + i, 2600, 0.6, 9.0, (0.6, 1.3), 0.45, (170, 290)) for i in range(2)]
@@ -287,8 +303,8 @@ def sc_ext(t, L, img):
             fd.ellipse([x / 4 - r, y / 4 - r * 0.7, x / 4 + r, y / 4 + r * 0.7], fill=MISTC + (int(80 * mist),))
         img.alpha_composite(up(fog, 8))
     d = ImageDraw.Draw(img)
-    step_header(d, 6, 'EXTINCIÓN', 'Vuelta rápida a la actividad', ss(0.2, 0.7, t))
-    subtitle(d, 'Fuego extinguido. La niebla restante se disipa con la ventilación y el CPD recupera rápidamente su actividad.', win(t, 0.5, L))
+    step_header(d, 8, 'EXTINCIÓN', 'Vuelta rápida a la actividad', ss(0.2, 0.7, t))
+    subtitle(d, 'El fuego se extingue. La niebla restante se elimina con la ventilación y el centro de datos recupera pronto su actividad.', win(t, 0.5, L))
 
 
 def sc_cyl(t, L, img):
@@ -303,7 +319,7 @@ def sc_outro(t, L, img):
     a = ss(0.1, 0.8, t)
     img.alpha_composite(fade_img(LOCK, a), (S(W / 2) - LOCK.width // 2, S(H / 2) - LOCK.height // 2 - S(40)))
     d = ImageDraw.Draw(img)
-    for i, (txt, f_, c) in enumerate([('Protección contra incendios para centros de datos', F_T2, INK), ('www.komtes.com', F_SMB, RED)]):
+    for i, (txt, f_, c) in enumerate([('Protección contra incendios para centros de datos', F_T2, INK), ('www.rg-systems.com', F_SMB, RED)]):
         d.text((S(W / 2) - f_.getlength(txt) / 2, S(H / 2 + 50 + i * 48)), txt, font=f_, fill=ca(c, ss(0.6, 1.3, t)))
 
 

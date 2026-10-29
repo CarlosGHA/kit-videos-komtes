@@ -1070,6 +1070,7 @@ def scene_frame(i, t, ui=True, nofade=True):
     # capa de rótulos/tarjetas aparte: fundidos correctos (ImageDraw sobre RGBA reemplaza en vez de mezclar)
     B.UIL[0] = Image.new('RGBA', img.size, (0, 0, 0, 0)) if ui else None
     fn(t - a, b - a, img)
+    B.flush_tags(img)
     if B.UIL[0] is not None:
         img.alpha_composite(B.UIL[0]); B.UIL[0] = None
     if ui and fn not in (sc_intro, sc_outro):
@@ -1085,6 +1086,7 @@ def scene_parts(i, t):
     img = Image.new('RGBA', (W * SS, H * SS), (0, 0, 0, 0))
     B.UIL[0] = Image.new('RGBA', img.size, (0, 0, 0, 0))
     fn(t - a, b - a, img)
+    B.flush_tags(img)
     ui = B.UIL[0]; B.UIL[0] = None; B.NOFADE[0] = False
     return img, ui, fn not in (sc_intro, sc_outro), (BG if band else BG_PLAIN)
 

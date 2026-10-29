@@ -2,12 +2,12 @@
 Uso: python3 siex_scene.py <out_dir> <shot> [samples] [scale] [led_seed]
 Planos: gwide gmed gfloor gdoor gnoz groom"""
 import os
-import os as _os
-KW = _os.environ.get('KOMTES_WORK', _os.path.normpath(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '..', 'trabajo'))) + '/'
 exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'siex_base.py')).read())
 exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'label_wrap.py')).read())
 LABEL_SIEX = KW + 'assets/siex/label_siex.png'
 from mathutils import Matrix
+import os as _os
+KW = _os.environ.get('KOMTES_WORK', _os.path.normpath(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '..', 'trabajo'))) + '/'
 
 M['gal'] = mat('gal', (0.50, 0.52, 0.54), 0.38, 1.0)          # tubería de acero galvanizado
 M['brushed'] = mat('brushed', (0.80, 0.80, 0.81), 0.26, 1.0)

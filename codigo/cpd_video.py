@@ -303,9 +303,13 @@ def wrap(text, f, maxw):
     lines.append(cur); return lines
 
 
+HDR_A = [1.0]        # multiplicador de cabeceras (gancho de las piezas de LinkedIn)
+
+
 def title(d, t1, t2, a):
     if not UI[0]:
         return
+    a *= HDR_A[0]
     if a <= 0.01:
         return
     d = _ud(d)
@@ -329,18 +333,123 @@ def subtitle(d, text, a):
         d.text((S(W / 2) - w / 2, S(y)), ln, font=F_SUB, fill=ca(INK, a)); y += 42
 
 
+# ---- etiquetas: regla fija (v1.5) ----
+# punto rojo sobre el componente -> diagonal a 45° -> tramo horizontal de TAG_SH -> pastilla.
+# La diagonal tiene una de las longitudes fijas de TAG_K: se elige la más corta que deja la pastilla FUERA de las
+# piezas (se mira la imagen ya compuesta de la escena) y sin pisar otras etiquetas; el lado de diseño (x, y) se
+# prefiere en caso de empate. La decisión se recuerda mientras la etiqueta sigue a su componente: no salta.
+# Las etiquetas se dibujan al final de la escena (flush_tags), cuando ya está toda la imagen.
+TAG_SH, TAG_H = 24, 38
+TAG_K = (56, 76, 96, 120, 150, 185, 220, 260)   # separación en cada eje (px a 1080): la más corta que no pisa pieza
+TAG_X0, TAG_X1, TAG_Y0, TAG_Y1 = 24, W - 24, 268, 1062
+TAG_FIXED = [__import__('os').environ.get('TAG_OLD') == '1']          # True = posiciones manuales antiguas
+_TPEND = {'key': None, 'items': []}
+_TCACHE = {}
+
+
+def _busy_map(img):
+    """máscara de 'pieza' (no fondo) a 1/8 de resolución de trabajo: oscuro, saturado o rojo de la franja excluido"""
+    k = 8
+    sm = img.resize((img.width // k, img.height // k), Image.BILINEAR)
+    a = np.asarray(sm).astype(np.float32)
+    rgb, al = a[..., :3], a[..., 3:4] / 255.0
+    rgb = rgb * al + 255 * (1 - al)
+    ink = (255 - rgb).max(axis=2)
+    sat = rgb.max(axis=2) - rgb.min(axis=2)
+    band = (rgb[..., 0] > 170) & (rgb[..., 1] < 60) & (rgb[..., 2] < 70)      # franja roja corporativa: no es pieza
+    busy = ((ink > 60) | (sat > 45)) & ~band
+    return busy, SS / k
+
+
+def _cand(ax, ay, w, sx, sy, D):
+    ex, ey = ax + sx * D, ay + sy * D
+    px = ex + TAG_SH if sx > 0 else ex - TAG_SH - w
+    return px, ey - TAG_H / 2, [(ax, ay), (ex, ey), (ex + sx * TAG_SH, ey)]
+
+
+def _inside(px, py, w):
+    return TAG_X0 <= px and px + w <= TAG_X1 and TAG_Y0 <= py and py + TAG_H <= TAG_Y1
+
+
+def _hits(px, py, w, boxes):
+    return any(px < bx1 + 10 and px + w > bx0 - 10 and py < by1 + 8 and py + TAG_H > by0 - 8 for bx0, by0, bx1, by1 in boxes)
+
+
+def tag_layout(x, y, w, anchor, boxes=(), busy=None, txt=None, a=1.0):
+    ax, ay = anchor
+    sx0 = 1 if x + w / 2 >= ax else -1
+    sy0 = -1 if y + TAG_H / 2 < ay else 1
+    c = _TCACHE.get(txt)
+    # mientras la etiqueta es invisible se recalcula libremente; en cuanto se ve, se queda donde está (no salta)
+    if c is not None and a > 0.04 and math.hypot(c[0][0] - ax, c[0][1] - ay) < 120:
+        sx, sy, D = c[1:]
+        px, py, pl = _cand(ax, ay, w, sx, sy, D)
+        if _inside(px, py, w) and not _hits(px, py, w, boxes):
+            _TCACHE[txt] = ((ax, ay), sx, sy, D)
+            return px, py, pl
+    best = None
+    for oi, (sx, sy) in enumerate(((sx0, sy0), (sx0, -sy0), (-sx0, sy0), (-sx0, -sy0))):
+        for ki, D in enumerate(TAG_K):
+            px, py, pl = _cand(ax, ay, w, sx, sy, D)
+            if not _inside(px, py, w) or _hits(px, py, w, boxes):
+                continue
+            ov = 0.0
+            if busy is not None:
+                m, f = busy
+                x0, y0 = int((px - 6) * f), int((py - 6) * f); x1, y1 = int((px + w + 6) * f) + 1, int((py + TAG_H + 6) * f) + 1
+                sub = m[max(0, y0):y1, max(0, x0):x1]
+                ov = float(sub.mean()) if sub.size else 0.0
+            cost = ov * 6.0 + ki * 0.3 + oi * 0.4
+            if best is None or cost < best[0]:
+                best = (cost, sx, sy, D)
+    if best is None:
+        px, py, pl = _cand(ax, ay, w, sx0, sy0, TAG_K[0])
+        px2 = min(max(px, TAG_X0), TAG_X1 - w); py2 = min(max(py, TAG_Y0), TAG_Y1 - TAG_H)
+        pl[-1] = (pl[-1][0] + px2 - px, pl[-1][1] + py2 - py)
+        return px2, py2, pl
+    _, sx, sy, D = best
+    if txt is not None:
+        _TCACHE[txt] = ((ax, ay), sx, sy, D)
+    return _cand(ax, ay, w, sx, sy, D)
+
+
+def _draw_tag(d, x, y, w, txt, a, anchor, pl):
+    if a <= 0.01:
+        return
+    if anchor:
+        d.line([(S(px), S(py)) for px, py in pl], fill=ca(INK, a * 0.8), width=SW(1.5), joint='curve')
+        d.ellipse([S(anchor[0] - 5), S(anchor[1] - 5), S(anchor[0] + 5), S(anchor[1] + 5)], fill=ca(RED, a))
+    d.rounded_rectangle([S(x), S(y), S(x + w), S(y + TAG_H)], radius=S(19), fill=ca(WHITE, 0.94 * a), outline=ca(INK, 0.35 * a), width=SW(1))
+    d.text((S(x + 13), S(y + 7)), txt, font=F_SMB, fill=ca(INK, a))
+
+
+def flush_tags(content=None):
+    """coloca y dibuja las etiquetas pendientes de la escena; content = imagen ya compuesta de la escena"""
+    items = _TPEND['items']; _TPEND['key'] = None; _TPEND['items'] = []
+    if not items:
+        return
+    busy = _busy_map(content) if content is not None else None
+    boxes = []
+    for target, x, y, w, txt, a, anchor in items:
+        px, py, pl = tag_layout(x, y, w, anchor, boxes, busy, txt, a)
+        boxes.append((px, py, px + w, py + TAG_H))       # reserva el sitio aunque aún no se vea: sin saltos
+        _draw_tag(ImageDraw.Draw(target), px, py, w, txt, a, anchor, pl)
+
+
 def tag(d, x, y, txt, a, anchor=None):
     if not UI[0]:
         return
-    if a <= 0.01:
-        return
     d = _ud(d)
     w = F_SMB.getlength(txt) / SS + 26
-    if anchor:
-        d.line([(S(anchor[0]), S(anchor[1])), (S(x + 12), S(y + 18))], fill=ca(INK, a * 0.8), width=SW(1.5))
-        d.ellipse([S(anchor[0] - 5), S(anchor[1] - 5), S(anchor[0] + 5), S(anchor[1] + 5)], fill=ca(RED, a))
-    d.rounded_rectangle([S(x), S(y), S(x + w), S(y + 38)], radius=S(19), fill=ca(WHITE, 0.94 * a), outline=ca(INK, 0.35 * a), width=SW(1))
-    d.text((S(x + 13), S(y + 7)), txt, font=F_SMB, fill=ca(INK, a))
+    if anchor and not TAG_FIXED[0]:
+        target = getattr(d, '_image', None)
+        if _TPEND['key'] is not target and _TPEND['items']:
+            flush_tags(None)                              # restos de otra escena sin flush: se dibujan tal cual
+        _TPEND['key'] = target
+        _TPEND['items'].append((target, x, y, w, txt, a, anchor))
+        return
+    pl = [anchor, (x + 12, y + 18)] if anchor else None
+    _draw_tag(d, x, y, w, txt, a, anchor, pl)
 
 
 # ---------------- boquilla (render real) ----------------
@@ -715,6 +824,7 @@ def render(fi):
                 continue
             img = (BG if band else BG_PLAIN).copy()
             fn(t - a, b - a, img)
+            flush_tags(img)
             # lockup pequeño (como en la referencia) arriba a la derecha
             if fn not in (sc_intro, sc_outro):
                 img.alpha_composite(LOCK_S, (S(1010) - LOCK_S.width, S(60)))

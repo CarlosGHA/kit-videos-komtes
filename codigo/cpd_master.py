@@ -16,83 +16,219 @@ r = subprocess.run(['ffmpeg', '-hide_banner', '-i', VO, '-af', 'silencedetect=no
 sil = [(float(a), float(b)) for a, b in zip(re.findall(r'silence_start: ([\d.]+)', r), re.findall(r'silence_end: ([\d.]+)', r))]
 VODUR = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', VO],
                              capture_output=True, text=True).stdout)
-sep = sorted(sorted(sil, key=lambda s: s[1] - s[0], reverse=True)[:8])          # las 8 pausas largas separan 9 bloques
+NBLK = 1 + max(b for bl in F.SCENE_BLOCKS.values() for b in bl)
+sep = sorted(sorted(sil, key=lambda s: s[1] - s[0], reverse=True)[:NBLK - 1])   # las pausas largas separan los bloques
 starts = [0.0] + [b for a, b in sep]
 ends = [a for a, b in sep] + [VODUR]
 blocks = list(zip(starts, ends))
+_bj = os.path.splitext(VO)[0] + '.blocks.json'   # tiempos de bloque alineados (transcripción o guion + silencios)
+BJ = {}
+if os.path.exists(_bj):
+    import json as _json
+    BJ = _json.load(open(_bj))
+    blocks = [(max(0.0, a - 0.08), min(VODUR, b + 0.12)) for a, b in BJ['blocks']]
+assert len(blocks) >= NBLK, f'la locución tiene {len(blocks)} bloques y el montaje necesita {NBLK}'
 SPEED = 1.0 if LANG == 'es' else 1.06
 LEAD, TAIL = 0.3, 0.55
+GAP = 0.4
 orig = F.SCENES
 new = [(0.0, orig[0][1], orig[0][2], orig[0][3], 1.0)]
 t = orig[0][1]
 vo_place = []
-# locuciones adicionales por escena (se colocan tras el bloque de esa escena)
-EXTRA = {8: SP + f'vo/uac_{LANG}.mp3'}
-EXTRA = {k: v for k, v in EXTRA.items() if os.path.exists(v)}
-GAP = 0.4
 extra_place = []
 def _dur(f_):
     return float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f_],
                                 capture_output=True, text=True).stdout)
-for i in range(1, 10):
+# cortes a tempo: cada cambio de escena cae en un pulso de la música (100 BPM; la base repite 104 pulsos a partir de 76,14 s)
+_bp = open(SFX + 'beat.txt').read().split() if os.path.exists(SFX + 'beat.txt') else None
+
+
+def next_beat(T):
+    if not _bp:
+        return T
+    bt, ph = float(_bp[0]), float(_bp[1])
+    best = None
+    for off, lo in ((0.0, 0.0), (62.322, 76.144), (124.644, 138.466), (186.966, 200.788)):
+        src = T - off
+        k = math.ceil((src - ph) / bt - 1e-6)
+        cand = ph + k * bt + off
+        if cand >= lo and (best is None or cand < best):
+            best = cand
+    return best if best is not None else T
+
+
+for i in range(1, len(orig)):
     a, b, fn, band = orig[i]
     L0 = b - a
-    bl = (blocks[i - 1][1] - blocks[i - 1][0]) / SPEED
-    ex = 0.0
-    if i in EXTRA:
-        ex = GAP + _dur(EXTRA[i]) / SPEED
-        extra_place.append((t + LEAD + bl + GAP, EXTRA[i]))
-    L = max(L0, LEAD + bl + ex + TAIL)
+    bl_ids = F.SCENE_BLOCKS.get(i, [])
+    pos = t + LEAD
+    for k_, bi in enumerate(bl_ids):
+        vo_place.append((pos, blocks[bi]))
+        pos += (blocks[bi][1] - blocks[bi][0]) / SPEED + (GAP if k_ < len(bl_ids) - 1 else 0)
+    L = max(L0, pos - t + TAIL + getattr(F, 'SCENE_TAIL', {}).get(i, 0.0)) if bl_ids else L0
+    if i < len(orig) - 1:
+        L = next_beat(t + L) - t
     new.append((t, t + L, fn, band, L / L0))
-    vo_place.append((t + LEAD, blocks[i - 1]))
     t += L
 DUR = t
 print('blocks', [(round(a, 2), round(b - a, 2)) for a, b in blocks])
 print('scenes', [(round(s[0], 2), round(s[1] - s[0], 2)) for s in new], 'DUR', round(DUR, 2))
 
 
-def stretch(fn, f):
-    if f <= 1.0001:
+import unicodedata as _ud
+
+
+def _norm(w):
+    w = _ud.normalize('NFD', w.lower())
+    return re.sub(r'[^a-z0-9]', '', ''.join(c for c in w if _ud.category(c) != 'Mn'))
+
+
+def clause_time(bi, prefix):
+    """instante (en la locución) en que empieza la frase 'prefix' dentro del bloque bi; None si no está"""
+    a, b = BJ['blocks'][bi]
+    pw = [_norm(w) for w in prefix.split()]
+    if 'words' in BJ:
+        W_ = [(w, s_, e_) for w, s_, e_ in BJ['words'] if a - 0.2 <= s_ <= b + 0.2]
+        nw = [_norm(w) for w, *_ in W_]
+        for j in range(len(nw) - len(pw) + 1):
+            if nw[j:j + len(pw)] == pw:
+                return W_[j][1]
+        return None
+    if 'texts' not in BJ:
+        return None
+    txt = BJ['texts'][bi]
+    tw = txt.split(); nt = [_norm(w) for w in tw]
+    for j in range(len(nt) - len(pw) + 1):
+        if nt[j:j + len(pw)] == pw:
+            frac = len(' '.join(tw[:j])) / max(1, len(txt))
+            exp = a + (b - a) * frac
+            cand = [q for q in BJ.get('sil', []) if a < q[0] and q[1] < b and abs(q[1] - exp) < 1.2]
+            return min(cand, key=lambda q: abs(q[1] - exp))[1] if cand else exp
+    return None
+
+
+# anclajes: (tiempo local original de la escena, bloque, frase) -> el instante en que la voz dice esa frase
+block_pos = {}
+for pos_, blk in vo_place:
+    block_pos[blocks.index(blk)] = pos_
+WARP = []
+for i, (a0, b0, fn, band, f) in enumerate(new):
+    L0 = orig[i][1] - orig[i][0]; Ln = b0 - a0
+    pts = [(0.0, 0.0)]
+    for (to, bi, pref) in getattr(F, 'ANCHORS', {}).get(i, []):
+        if bi not in block_pos:
+            continue
+        if pref is None:
+            vt = BJ['blocks'][bi][0] if BJ else blocks[bi][0]
+        else:
+            vt = clause_time(bi, pref[LANG]) if BJ else None
+            if vt is None:
+                print('  ancla no encontrada', i, pref[LANG]); continue
+        tau = block_pos[bi] + (vt - blocks[bi][0]) / SPEED - a0
+        if tau > pts[-1][0] + 0.3 and to > pts[-1][1] + 0.2 and tau < Ln - 0.3 and to < L0 - 0.2:
+            pts.append((tau, to))
+    pts.append((Ln, L0))
+    WARP.append(pts)
+    if len(pts) > 2:
+        print('  escena', i, 'anclas', [(round(x, 2), round(y, 2)) for x, y in pts])
+
+
+def _interp(pts, x, inv=False):
+    P = [(b_, a_) for a_, b_ in pts] if inv else pts
+    if x <= P[0][0]:
+        (x0, y0), (x1, y1) = P[0], P[1]
+    elif x >= P[-1][0]:
+        (x0, y0), (x1, y1) = P[-2], P[-1]
+    else:
+        k = max(j for j in range(len(P) - 1) if P[j][0] <= x)
+        (x0, y0), (x1, y1) = P[k], P[k + 1]
+    return y0 + (x - x0) * (y1 - y0) / (x1 - x0)
+
+
+def warp(i):
+    pts = WARP[i]; L0 = pts[-1][1]
+    fn = new[i][2]
+    if len(pts) == 2 and abs(pts[-1][0] - L0) < 1e-6:
         return fn
-    return lambda tl, L, img: fn(tl / f, L / f, img)
+    return lambda tl, L, img: fn(_interp(pts, tl), L0, img)
 
 
-F.SCENES = [(a, b, stretch(fn, f), band) for (a, b, fn, band, f) in new]
+F.SCENES = [(a, b, warp(i), band) for i, (a, b, fn, band, f) in enumerate(new)]
 TR2 = {}
 for k, (kind, D, fa, fb) in F.TRANS.items():
-    fA, fB = new[k][4], new[k + 1][4]
-    TR2[k] = (kind, D, (lambda fa, f1, f2: lambda ta, La, tb, Lb: fa(ta / f1, La / f1, tb / f2, Lb / f2))(fa, fA, fB), None)
+    pA, pB = WARP[k], WARP[k + 1]
+    TR2[k] = (kind, D, (lambda fa, pA, pB: lambda ta, La, tb, Lb: fa(_interp(pA, ta), pA[-1][1], _interp(pB, tb), pB[-1][1]))(fa, pA, pB), None)
 F.TRANS = TR2
 F.DUR = DUR
+
 
 # ------------------------------------------------------------------ eventos de sonido (tiempo global)
 def g(i, tl):
     """tiempo local original de la escena i -> global"""
-    return new[i][0] + tl * new[i][4]
+    return new[i][0] + _interp(WARP[i], tl, inv=True)
 
 
 EV = []
 for k, (kind, *_r) in F.TRANS.items():
     if kind in ('zin', 'zout'):
         EV.append(('whoosh', new[k][1] - 0.55, 0.15))
-EV += [('whoosh', g(4, F.TZ - 0.55), 0.13), ('whoosh', g(6, F.T2 - 0.55), 0.13)]
-EV += [('fire', g(2, 1.2), 0.25), ('fire', g(3, 0.0), 0.15)]
-EV += [('glass', g(3, V.T_BREAK - 0.05), 1.5), ('mist', g(3, V.T_BREAK + 0.2), 0.1)]
-EV += [('motor', g(4, F.TZ + 0.2), 0.4)]
-EV += [('mist', g(5, 0.0), 0.09), ('glass', g(6, F.T2 + 0.5), 1.1), ('mist', g(6, F.T2 + 0.8), 0.08)]
+IP, IA, IS, IF_, IU, IDT, IPR, IS1, IS2 = 6, 5, 2, 8, 12, 3, 4, 10, 11
+EV += [('whoosh', g(IP, F.TZ2 - 0.55), 0.13), ('whoosh', g(IP, F.TC2 - 0.55), 0.12), ('whoosh', g(IF_, F.T2 - 0.55), 0.13)]
+EV += [('fire', g(IS, 1.2), 0.25), ('fire', g(IDT, 0.0), 0.15), ('fire', g(IA, 0.0), 0.12)]
+EV += [('alarm', g(IDT, 0.6), 0.05), ('whoosh', g(IDT, F.TD_A - 0.55), 0.12), ('click', g(IDT, F.TD_A + 2.6), 0.3)]
+EV += [('whoosh', g(IPR, F.TP_B - 0.55), 0.12)]
+EV += [('glass', g(IA, V.T_BREAK - 0.05), 1.5), ('mist', g(IA, V.T_BREAK + 0.2), 0.1)]
+EV += [('motor', g(IP, F.TZ2 + 0.4), 0.4)]
+EV += [('mist', g(7, 0.0), 0.09), ('glass', g(IF_, F.T2 + 0.5), 1.1), ('mist', g(IF_, F.T2 + 0.8), 0.08)]
+EV += [('glass', g(IS1, 0.3), 1.0), ('alarm', g(IS1, F.TS1 + 0.6), 0.04), ('alarm', g(IS2, 0.5), 0.04),
+       ('whoosh', g(IS2, F.TS2 - 0.55), 0.12)]
 # sala de generadores: fuego, alarma, activación y descarga
-EV += [('whoosh', g(8, F.TU1 - 0.55), 0.13), ('fire', g(8, F.UF), 0.18), ('alarm', g(8, F.UD + 0.1), 0.05),
-       ('click', g(8, F.UA), 0.35), ('whoosh', g(8, F.CA0 - 0.55), 0.13), ('gas', g(8, F.CA0 + 0.6), 0.06),
-       ('whoosh', g(8, F.CB0 - 0.55), 0.12), ('mist', g(8, F.CB0 + 0.5), 0.12), ('whoosh', g(8, F.CC0 - 0.55), 0.12),
-       ('whoosh', g(8, F.CD0 - 0.55), 0.12)]
+EV += [('whoosh', g(IU, F.TU1 - 0.55), 0.13), ('fire', g(IU, F.UF), 0.18), ('alarm', g(IU, F.UD + 0.1), 0.05),
+       ('click', g(IU, F.UA), 0.35), ('whoosh', g(IU, F.CA0 - 0.55), 0.13), ('gas', g(IU, F.CA0 + 0.6), 0.06),
+       ('whoosh', g(IU, F.CB0 - 0.55), 0.12), ('mist', g(IU, F.CB0 + 0.5), 0.12), ('whoosh', g(IU, F.CC0 - 0.55), 0.12),
+       ('whoosh', g(IU, F.CD0 - 0.55), 0.12)]
 
+
+# ------------------------------------------------------------------ pieza autoconclusiva para LinkedIn (solo 4:5)
+if os.environ.get('PIEZA'):
+    ci = int(os.environ['PIEZA']) - 1
+    F.PC_CUR[0] = ci
+    spec = F.PIECES[ci]
+    V.STEP_MAP[0] = spec['steps'] if spec['steps'][1] else ({}, 0)
+    oldS = F.SCENES
+    CLOSE = 3.4
+    newS = []
+    tt = 0.0; remap = []                       # (a_viejo, b_viejo, a_nuevo)
+    for j, i in enumerate(spec['scenes']):
+        a0, b0, fn, band = oldS[i]
+        newS.append((tt, tt + (b0 - a0), F.hooked(fn) if j == 0 else fn, band)); remap.append((a0, b0, tt)); tt += b0 - a0
+    newS.append((tt, tt + CLOSE, F.sc_close, False))
+    DUR = tt + CLOSE
+
+    def _m(T):
+        for a0, b0, an in remap:
+            if a0 - 1e-6 <= T < b0 + 1e-6:
+                return T - a0 + an
+        return None
+    newTR = {}
+    for k, v in F.TRANS.items():
+        if k in spec['scenes'] and k + 1 in spec['scenes']:
+            j = spec['scenes'].index(k)
+            if spec['scenes'][j + 1] == k + 1:
+                newTR[j] = v
+    vo_place = [(_m(p_), blk) for p_, blk in vo_place if _m(p_) is not None]
+    EV = [(nm, _m(at), vol) for nm, at, vol in EV if _m(at) is not None]
+    F.SCENES = newS; F.TRANS = newTR; F.DUR = DUR
+    print('pieza', ci + 1, spec['slug'], 'DUR', round(DUR, 2), [(round(a, 2), round(b - a, 2)) for a, b, *_ in newS])
 
 if os.environ.get('VO_TRT'):
     _tr = {'push%d' % k: (new[k][1], F.PUSH) for k in range(len(new) - 1) if k not in F.TRANS}
     _tr.update({'z%d' % k: (new[k][1], F.TRANS[k][1]) for k in F.TRANS})
-    _tr.update({'pumpA': (g(4, F.TS), F.DZP * new[4][4]), 'pumpB': (g(4, F.TZ), F.DZP * new[4][4]),
-                'floor': (g(6, F.T2), F.DZ * new[6][4])})
-    _tr.update({'u%d' % k: (g(8, T_[0]), F.DZP * new[8][4]) for k, T_ in enumerate(F.UAC_TR)})
+    _tr.update({'det': (g(IDT, F.TD_A), F.DZP * new[IDT][4]), 'pre': (g(IPR, F.TP_B), F.DZP * new[IPR][4]),
+                'pumpA': (g(IP, F.TZ2), F.DZP * new[IP][4]), 'pumpB': (g(IP, F.TC2), F.DZP * new[IP][4]),
+                'floor': (g(IF_, F.T2), F.DZ * new[IF_][4]), 's1': (g(IS1, F.TS1), F.DZP * new[IS1][4]),
+                's2': (g(IS2, F.TS2), F.DZP * new[IS2][4])})
+    _tr.update({'u%d' % k: (g(IU, T_[0]), F.DZP * new[IU][4]) for k, T_ in enumerate(F.UAC_TR)})
     print('TRT', __import__('json').dumps(_tr)); sys.exit()
 
 
@@ -110,7 +246,7 @@ def build_audio(video_in, out):
         labs.append(f'[x{j}]')
     fl.append(''.join(labs) + f"amix=inputs={len(labs)}:normalize=0,apad=whole_dur={DUR:.3f}[o]")
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error'] + ins + ['-filter_complex', ';'.join(fl), '-map', '[o]', '-ar', '48000', '-ac', '2', vow], check=True)
-    inp = ['-i', vow, '-i', SFX + 'music_loop.wav', '-stream_loop', '-1', '-i', SFX + 'amb.mp3']
+    inp = ['-i', vow, '-i', SFX + 'music_loop2.wav', '-stream_loop', '-1', '-i', SFX + 'amb.mp3']
     names = {'whoosh': 'whoosh.mp3', 'glass': 'glass.mp3', 'mist': 'mist.mp3', 'motor': 'motor.mp3', 'fire': 'fire.mp3',
              'alarm': 'alarm.mp3', 'click': 'click.mp3', 'gas': 'gas.mp3'}
     idx = {}
@@ -218,10 +354,10 @@ if ASPECT == '169':
                 d.text((x0 * SS, 150 * SS), f'{n:02d} · {TR(name)}', font=FH, fill=B.ca(B.INK, a))
                 d.text((x0 * SS, 206 * SS), TR(sub), font=FH2, fill=B.ca(B.INK2, a))
                 x = x0
-                for i_ in range(6):
+                for i_ in range(V.NSTEPS):
                     col = B.RED if i_ + 1 == n else (B.INK if i_ + 1 < n else (215, 217, 220))
-                    d.rounded_rectangle([x * SS, 272 * SS, (x + 64) * SS, 279 * SS], radius=4 * SS, fill=B.ca(col, a))
-                    x += 74
+                    d.rounded_rectangle([x * SS, 272 * SS, (x + 48) * SS, 279 * SS], radius=4 * SS, fill=B.ca(col, a))
+                    x += 56
             elif r_[0] == 'title':
                 _, t1, t2, a = r_
                 d.text((x0 * SS, 150 * SS), TR(t1), font=FH, fill=B.ca(B.INK, a))
@@ -253,6 +389,7 @@ if ASPECT == '169':
         ui = Image.new('RGBA', (B.W * SS, B.H * SS), (0, 0, 0, 0))
         REC.clear(); B.UIL[0] = ui; B.UI[0] = True; B.NOFADE[0] = True
         fn(t - a, b - a, img)
+        B.flush_tags(img)
         B.UIL[0] = None; B.UI[0] = True; B.NOFADE[0] = False
         return img, ui, list(REC)
 
@@ -281,7 +418,7 @@ if ASPECT == '169':
         if i:
             d = ImageDraw.Draw(out)
             for k_, (txt, f_, c_) in enumerate([('Protección contra incendios para centros de datos', B.F_T2, B.INK),
-                                                ('www.komtes.com', B.F_SMB, B.RED)]):
+                                                ('www.rg-systems.com', B.F_SMB, B.RED)]):
                 tt = TR(txt)
                 d.text((WS // 2 - f_.getlength(tt) / 2, HS // 2 + (50 + k_ * 48) * SS), tt, font=f_, fill=B.ca(c_, B.ss(0.6, 1.3, tl)))
         return out
@@ -331,6 +468,8 @@ if __name__ == '__main__':
     if os.environ.get('VO_MODE') == '--still':
         for ts in os.environ['VO_TS'].split(','):
             Image.frombytes('RGB', (OW, OH), render(int(float(ts) * F.FPS))).save(f'{OUT}_{ts}.png')
+        if F.MISSING:
+            print('SIN TRADUCIR:', sorted(F.MISSING))
         sys.exit()
     if os.environ.get('VO_MODE') == '--audio':
         build_audio(os.environ['VO_VIDEO'], OUT); print('done', OUT); sys.exit()

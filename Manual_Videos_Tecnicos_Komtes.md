@@ -1,6 +1,6 @@
 # Manual de producción de vídeos técnicos de aplicación · Grupo Komtes
 
-**Versión 1.1 · octubre de 2026 · Responsable: Marketing y Comunicación**
+**Versión 1.5 · octubre de 2026 · Responsable: Marketing y Comunicación**
 Referencia de origen: vídeos «Centros de datos» de RG W-FOG (agua nebulizada) y SIEX (agentes limpios de inundación total), en ES/EN, 4:5 y 16:9.
 
 ---
@@ -32,10 +32,12 @@ No se pasa de fase sin la validación indicada. Cada corrección posterior a una
 | **3. Locución** | Claude genera la voz ES y EN con ElevenLabs, **una sola toma por idioma** | Audio ES + EN | **Ingeniero:** pronunciación de marcas y términos |
 | **4. Fotogramas clave** | Claude modela el 3D y entrega 1 fotograma por escena (y tiras de cada transición) | Hoja de fotogramas | **Ingeniero:** fidelidad de producto y de la secuencia. **Marketing:** encuadre |
 | **5. Render** | Render de las 4 versiones (ES/EN × 4:5/16:9), una tras otra | 4 vídeos MP4 | — |
-| **6. Revisión** | Visionado completo con el checklist del §12 | Lista de cambios numerada | **Ingeniero + Marketing** |
-| **7. Entrega** | Correcciones, portadas y entrega unificada | 4 vídeos + 4 portadas en un solo mensaje | **Marketing** publica |
+| **6. Revisión y feedback** | Visionado completo con el checklist del §12 y rondas de feedback hasta el OK | Lista de cambios numerada, aplicada y respondida punto por punto | **Ingeniero + Marketing** (OK explícito) |
+| **7. Entrega** | Correcciones, portadas, piezas autoconclusivas para LinkedIn (§10.1) y entrega unificada | 4 vídeos + 4 portadas + piezas en un solo mensaje | **Marketing** publica |
 
-**Regla de créditos:** cualquier generación de pago (voz, música) se hace **una sola vez por corrección** (`generations_count = 1`), primero con estimación de coste. Los arreglos de pronunciación se intentan antes editando el audio existente, sin regenerar.
+**Ronda de feedback (después de cada generación):** Claude entrega y pregunta él mismo «¿Lo ves todo bien o tienes alguna observación?», con 3–5 puntos concretos que mirar. Acepta observaciones en cualquier forma (texto, minuto y segundo, foto, captura, nota de voz), las numera, confirma qué hará, aplica todo en una pasada, responde punto por punto («1. Hecho…») y vuelve a preguntar. Ninguna fase se cierra sin el OK explícito del técnico. En lo técnico manda el ingeniero; si una observación choca con el estilo, se consulta a Marketing.
+
+**Regla de créditos:** antes de cualquier acción que gaste créditos (voz, transcripción, música o efectos de pago), Claude avisa de qué va a generar, por qué, el coste estimado y el saldo, y espera el OK. Cada generación se hace **una sola vez por corrección** (`generations_count = 1`), agrupando todas las correcciones de voz de una ronda. Primero se intenta lo gratuito (editar el audio existente, cambiar un texto, ajustar tiempos). Las transcripciones también cuestan, y pueden costar más que la voz. Sin saldo, se para y se ofrecen opciones.
 
 **Regla de correcciones:** las correcciones se entregan en una lista numerada, cada una con su minuto y segundo. Claude corrige y revisa los fotogramas afectados antes de volver a renderizar.
 
@@ -64,7 +66,15 @@ FICHA DE BRIEFING · VÍDEO TÉCNICO DE APLICACIÓN
 11. Instalación física: dónde se ubica cada equipo (sala aledaña, pared, falso techo, bajo suelo…)
 12. Materiales adjuntos (ver §11): renders · fotos · fichas técnicas · etiquetas · planos
 13. Público y uso: LinkedIn / web / feria / comercial. Idiomas: ES + EN (por defecto)
+14. Vídeos de la competencia sobre este sistema o aplicación (enlaces o archivos; opcional)
 ```
+
+### 2.1 Vídeos de la competencia: aprendizajes sin copiar el estilo
+
+- Claude **pregunta siempre** si hay vídeos de la competencia y, si los hay, los revisa antes del guion (enlace o archivo: fotogramas + transcripción; avisa antes si la transcripción gasta créditos).
+- Saca aprendizajes de **contenido y narrativa** (qué explican y en qué orden, qué componentes enseñan, argumentos técnicos o normativos, ritmo, gancho y cierre, dudas que resuelven y lo que dejan sin explicar) y los presenta como «Lo que hacen bien / Lo que no explican / Qué incorporamos», para aprobar antes del guion.
+- **La estética es siempre la de Grupo Komtes (§6–§9).** Un aprendizaje que exija cambiar el estilo se propone antes a Marketing.
+- Nunca se reutilizan imágenes, música, textos ni guion de la competencia, ni se nombran sus marcas.
 
 ---
 
@@ -134,7 +144,8 @@ Reglas:
 | Tomas | 1 | 1 |
 
 - Etiquetas permitidas: `[warmly]` en la apertura y el cierre, `[serious]` en el incendio, `[confident]` al explicar el sistema, y `[pause]` entre bloques. Las pausas separan los bloques y son las que usa el montaje para sincronizar las escenas.
-- **Pronunciación:** las siglas se escriben como se leen en el texto para la voz. Por ejemplo, en español «UL» se escribe «u ele» y «FM», «efe eme»; las cifras, en letra («noventa decibelios»). Antes de generar, se revisa la lista de marcas con el ingeniero. En inglés, comprobar «SIEX».
+- **Pronunciación:** las siglas se escriben como se leen en el texto para la voz. Por ejemplo, en español «UL» se escribe «u ele» y «FM», «efe eme»; las cifras, en letra («noventa decibelios»). Las referencias de producto con letras se deletrean separadas por comas para que la voz no las lea como palabra: EMM-416549 → «e, eme, eme»; MM-P51 → «eme, eme, pe cincuenta y uno». Antes de generar, se revisa la lista de marcas y referencias con el ingeniero. En inglés, comprobar «SIEX».
+- **El texto de la locución termina con la frase de cierre (eslogan)**, que se oye sobre la cartela final; no se deja solo escrita.
 
 ---
 
@@ -180,7 +191,7 @@ No se usa negro puro en ningún texto ni fondo.
 | Título (escenas sin paso) | (70, 118) y subtítulo en (70, 162) |
 | Ventana de imagen | De y = 250 a y = 1100, con desvanecido suave de 250 a 340 y de 1020 a 1100. La imagen 3D nunca invade cabecera ni subtítulos |
 | Subtítulos | Centrados, ancho máximo 900 px, centro vertical en y = 1170 |
-| Etiquetas | Pastilla blanca al 94 %, alto 38 px, radio 19, borde INK al 35 %. Línea guía INK al 80 % (1,5 px) hasta un punto RED de radio 5 sobre el componente. Se colocan en los márgenes (x ≈ 70 o x ≈ 600–640; y ≈ 260–330 o y ≈ 960–1060), nunca encima del producto. Máximo 4 a la vez |
+| Etiquetas | Pastilla blanca al 94 %, alto 38 px, radio 19, borde INK al 35 %, Inter SemiBold 21. Punto RED de radio 5 sobre la pieza concreta y guía INK al 80 % (1,5 px). **Colocación automática con regla fija** (`tag()` en `cpd_video.py`): diagonal a 45° + tramo horizontal de 24 px; la diagonal toma la más corta de unas longitudes fijas (56–260 px por eje) que deja la pastilla **fuera de las piezas** (se analiza la imagen ya compuesta) y sin solapar otras etiquetas; se prefiere el lado indicado en la llamada. Una vez visible, la etiqueta no cambia de sitio. Dentro de la ventana de imagen; máximo 4 a la vez |
 | Tarjetas de dato | Blancas, radio 16, sombra suave. Esquina superior derecha de la ventana (≈ 590–1010 × 250–470) |
 | Franja roja | Polígono diagonal desde (0, 420) con pendiente 0,5 y grosor 180 px. Solo en planos generales; estática en todas las transiciones |
 
@@ -287,7 +298,22 @@ Reglas fijas:
 | Versiones | ES 4:5 · ES 16:9 · EN 4:5 · EN 16:9 |
 | Vídeo | `<DIVISION>-<SISTEMA>_<Vertical>_<IDIOMA>_<ancho>x<alto>.mp4` → p. ej. `RG-WFOG_DataCenter_ES_1080x1350.mp4` |
 | Portada | `Portada_` + mismo nombre en `.png` |
-| Entrega | **Un único mensaje** con los 4 vídeos y las 4 portadas, más una tabla con idioma, formato y duración |
+| Entrega | **Un único mensaje** con los 4 vídeos y las 4 portadas, más una tabla con idioma, formato y duración, seguido de la pregunta de feedback |
+
+### 10.1 Piezas autoconclusivas para LinkedIn (solo 4:5)
+
+Del vídeo completo salen 3–5 piezas que **se entienden solas**, porque se publican con días o semanas de diferencia y en cualquier orden. El 16:9 se entrega completo (web, YouTube, presentaciones) y se enlaza en el primer comentario. SIEX publica en su LinkedIn; el resto de divisiones, en el de Grupo Komtes.
+
+| Elemento | Regla |
+|---|---|
+| Historia | Una pregunta y su respuesta completa (problema → actuación → resultado). La primera frase de la locución no depende de nada anterior |
+| Gancho | Primeros 3,2 s, escrito sobre la imagen (LinkedIn arranca sin sonido): antetítulo RED Inter Bold 22 «SISTEMA · VERTICAL» en (70, 92); pregunta Inter Display Bold 50 INK desde y = 128, máximo 2 líneas (≈65 caracteres); barra roja 64×7. Sin cartela blanca de entrada |
+| Pasos | Renumerados dentro de la pieza; con un solo paso, título sin número. Sin «Capítulo n/N» ni «Próximo capítulo» |
+| Cierre | 3,4 s: firma + frase + web, igual en todas |
+| Duración y coste | 25–60 s; mismas escenas, voz y música que el vídeo completo (sin créditos) |
+| Montaje | Lista `PIECES` en el script de composición y `PIEZA=n python3 cpd_master.py <es\|en> <voz.mp3> 45 <salida.mp4>` |
+| Nombre | `<DIVISION>-<SISTEMA>_<Vertical>_<IDIOMA>_1080x1350_LinkedIn<n>_<Tema>.mp4`; portada = fotograma del gancho |
+| Documento de publicación | Por pieza: texto listo para pegar (abre con la pregunta del gancho, 3–4 ideas con «→», 3–4 hashtags, sin enlace) y primer comentario con la web. Calendario: una pieza por semana, martes a jueves de 9 a 11 h. Difusión: 5–10 perfiles personales del equipo en la primera hora. Tabla de medición: visualizaciones, % visto entero, comentarios, clics |
 
 ---
 
@@ -320,7 +346,7 @@ Reglas fijas:
 - [ ] Logotipo, títulos y franja inmóviles en todas las transiciones.
 - [ ] Ningún elemento salta de posición en los zooms (revisar la tira de cada transición).
 - [ ] Ningún rótulo queda visible después de su escena.
-- [ ] Las etiquetas no tapan el producto, máximo 4 a la vez, dentro de márgenes.
+- [ ] Las etiquetas siguen la regla fija (§6.4): guía corta a 45°, fuera de las piezas, sin solapes, máximo 4 a la vez.
 - [ ] Imagen siempre dentro de la ventana; subtítulos legibles, en 2 líneas como máximo.
 - [ ] Marca correcta para la división (§3); textos de EN sin restos en español.
 
@@ -349,6 +375,13 @@ Reglas fijas:
 | Plano general con un pasillo vacío | Edificio completo con salas coherentes |
 | Música solapada o duplicada | Empalme único a compás (§9) |
 | Pronunciación incorrecta de una marca en EN | Revisar la lista de marcas antes de generar y corregir editando el audio |
+| Referencia con letras leída como palabra («EMM») | Deletrear con comas en el texto de la voz: «e, eme, eme» |
+| Eslogan final solo escrito | La locución lee la frase de cierre |
+| Etiquetas con guías largas y posiciones al azar, o pisando la pieza | Regla fija de colocación automática (§6.4) |
+| Serie en capítulos que no se entiende por separado | Piezas autoconclusivas con gancho y cierre propios (§10.1) |
+| Voz o transcripción lanzada sin avisar del coste | Aviso previo con coste y saldo, y OK del técnico (§1) |
+| Fase cerrada sin el OK del técnico | Ronda de feedback hasta el OK explícito (§1) |
+| Pieza inventada cuando existe foto real | Primer plano con la foto recortada; solo se dibujan las conexiones |
 
 ---
 

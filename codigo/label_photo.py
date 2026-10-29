@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 import os as _os
 KW = _os.environ.get('KOMTES_WORK', _os.path.normpath(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '..', 'trabajo'))) + '/'
-SP = KW
+SP = KW + ''
 src = Image.open(SP + 'assets/siex2/sys_iso.png').convert('RGBA')
 im = np.array(src).astype(np.float32)
 lab = np.array(Image.open(SP + 'assets/siex/label_siex.png').convert('RGBA')).astype(np.float32)

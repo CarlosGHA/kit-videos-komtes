@@ -3,7 +3,7 @@ import random
 from PIL import Image, ImageDraw, ImageFont
 import os as _os
 KW = _os.environ.get('KOMTES_WORK', _os.path.normpath(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '..', 'trabajo'))) + '/'
-SP = KW
+SP = KW + ''
 A = SP + 'assets/'
 FD = '/usr/share/fonts/opentype/inter/'
 random.seed(7)
@@ -39,7 +39,7 @@ def siex_label():
     # pegatina de certificaciones
     sx0, sy0, sx1, sy1 = 560, 0, 880, 190
     d.rectangle([sx0, sy0, sx1, sy1], fill=(250, 250, 250, 255))
-    ul = Image.open(KW + 'assets/siex/ul_circle.png').convert('RGBA')
+    ul = Image.open('/root/.claude/uploads/9170677f-e914-5fad-9582-ded74f623b9a/f3a186a2-image.png').convert('RGBA')
     ul = fit(ul, h=120); im.alpha_composite(ul, (sx0 + 22, sy0 + 18))
     fm = fit(Image.open(A + 'siex/fm.png').convert('RGBA'), w=130); im.alpha_composite(fm, (sx0 + 170, sy0 + 40))
     f = ImageFont.truetype(FD + 'Inter-Bold.otf', 30)

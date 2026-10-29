@@ -110,7 +110,7 @@ def build_audio(video_in, out):
                   f"afade=t=out:st={(b - a) / SPEED + 0.03:.3f}:d=0.12,adelay={int(pos * 1000)}|{int(pos * 1000)}[v{k}]")
     fl.append(''.join(f'[v{k}]' for k in range(len(vo_place))) + f"amix=inputs={len(vo_place)}:normalize=0,apad=whole_dur={DUR:.3f}[o]")
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', VO, '-filter_complex', ';'.join(fl), '-map', '[o]', '-ar', '48000', '-ac', '2', vow], check=True)
-    inp = ['-i', vow, '-i', SFX + 'music_loop.wav', '-stream_loop', '-1', '-i', SFX + 'amb.mp3']
+    inp = ['-i', vow, '-i', SFX + 'music_loop2.wav', '-stream_loop', '-1', '-i', SFX + 'amb.mp3']
     names = {'whoosh': 'whoosh.mp3', 'fire': 'fire.mp3', 'gas': 'gas.mp3', 'alarm': 'alarm.mp3', 'click': 'click.mp3'}
     idx = {}
     for nm, fn in names.items():
@@ -252,6 +252,7 @@ if ASPECT == '169':
         ui = Image.new('RGBA', (B.W * SS, B.H * SS), (0, 0, 0, 0))
         REC.clear(); B.UIL[0] = ui; B.UI[0] = True; B.NOFADE[0] = True
         fn(t - a, b - a, img)
+        B.flush_tags(img)
         B.UIL[0] = None; B.UI[0] = True; B.NOFADE[0] = False
         return img, ui, list(REC)
 
