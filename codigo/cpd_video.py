@@ -531,6 +531,9 @@ def tag(d, x, y, txt, a, anchor=None):
     d = _ud(d)
     txt = TXT_TR[0](txt)
     w = F_SMB.getlength(txt) / SS + 26
+    if anchor and a > 0.05 and __import__('os').environ.get('TAG_WARN') and not (
+            TAG_X0 <= anchor[0] <= TAG_X1 and TAG_Y0 <= anchor[1] <= TAG_Y1):
+        print(f'TAG_FUERA {txt!r} ancla={tuple(round(v) for v in anchor)}', flush=True)   # punto fuera de la ventana
     if not TAG_FIXED[0]:
         target = getattr(d, '_image', None)
         if _TPEND['key'] is not target and _TPEND['items']:

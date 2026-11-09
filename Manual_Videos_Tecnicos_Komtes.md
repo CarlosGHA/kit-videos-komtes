@@ -360,7 +360,7 @@ Del vídeo completo salen 3–5 piezas que **se entienden solas**, porque se pub
 - [ ] Logotipo, títulos y franja inmóviles en todas las transiciones.
 - [ ] Ningún elemento salta de posición en los zooms (revisar la tira de cada transición).
 - [ ] Ningún rótulo queda visible después de su escena.
-- [ ] Las etiquetas siguen la regla fija (§6.4): guía corta a 45°, fuera de las piezas, sin solapes, máximo 4 a la vez; **fijas una vez visibles, por encima de las líneas y sin tapar puntos ajenos ni tarjetas** (revisado en un tramo renderizado en orden con `t_seq.py`).
+- [ ] Las etiquetas siguen la regla fija (§6.4): guía corta a 45°, fuera de las piezas, sin solapes, máximo 4 a la vez; **fijas una vez visibles, por encima de las líneas y sin tapar puntos ajenos ni tarjetas** (revisado en un tramo renderizado en orden con `t_seq.py`). Todos los puntos rojos dentro de la ventana: con `TAG_WARN=1` el montaje avisa (`TAG_FUERA`) de los que caen fuera.
 - [ ] Las rutas animadas van encima de la tubería real en todo su recorrido.
 - [ ] Imagen siempre dentro de la ventana; subtítulos legibles, en 2 líneas como máximo.
 - [ ] Marca correcta para la división (§3); textos de EN sin restos en español (`SIN TRADUCIR` vacío).
@@ -407,6 +407,8 @@ Del vídeo completo salen 3–5 piezas que **se entienden solas**, porque se pub
 | Etiqueta que se mueve después de aparecer | Pastilla fija en pantalla; solo se estira la guía (§6.4) |
 | Guía de una etiqueta por encima de otra pastilla, o pastilla tapando el punto de otra | Primero todas las guías, después todas las pastillas; nunca tapar un punto ajeno (§6.4) |
 | Etiquetas validadas con fotogramas sueltos | Tramo renderizado en orden con `t_seq.py` |
+| Punto rojo de una etiqueta en la cabecera o fuera del encuadre | Anclar al último tramo visible de la pieza; comprobar con `TAG_WARN=1` |
+| Ruta animada que invade la cabecera | Recortar la capa a la ventana de imagen |
 | Corregir solo el minuto citado | Revisar todos los planos y salas con el mismo problema |
 | Dos vídeos a la vez o encadenados en un mismo trabajo | Un vídeo por trabajo, de uno en uno (§1) |
 

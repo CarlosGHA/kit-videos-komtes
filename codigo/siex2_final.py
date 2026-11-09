@@ -134,6 +134,18 @@ F_STAT2 = ImageFont.truetype('/usr/share/fonts/opentype/inter/InterDisplay-Bold.
 GASC = (120, 170, 225)
 
 
+
+def _visible_end(pts, ymin=360):
+    """Último punto de la tubería que se ve dentro de la ventana de imagen (el tramo final sale por arriba)."""
+    if pts[-1][1] >= ymin:
+        return pts[-1]
+    for i in range(len(pts) - 1, 0, -1):
+        (x0, y0), (x1, y1) = pts[i - 1], pts[i]
+        if y0 >= ymin > y1:
+            k = (y0 - ymin) / (y0 - y1)
+            return (x0 + (x1 - x0) * k, ymin)
+    return pts[-1]
+
 def _ld(n):
     if not os.path.exists(RS1 + n):
         n = 'gmed.png'
@@ -491,7 +503,7 @@ def sc_cylroom(t, L, img):
             layC.alpha_composite(up(glow, 4)); layC.alpha_composite(lay2)
             flow_dots(ImageDraw.Draw(layC), fpts, t - TZ - 0.3, aa, n=10, speed=0.3, col=(255, 255, 255))
         d = ImageDraw.Draw(img)
-        tag(d, 70, 330, 'Hacia los difusores del CPD', win(t, TZ + 0.6, L - 0.1), fpts[-1])
+        tag(d, 70, 330, 'Hacia los difusores del CPD', win(t, TZ + 0.6, L - 0.1), _visible_end(fpts))
         tag(d, 70, 960, 'Batería principal', win(t, TZ + 0.5, L - 0.1), vC(jsC['main_bank']))
         T_R = TZ + 2.6
         tag(d, 640, 1010, 'Batería de reserva', win(t, T_R, L - 0.1), vC(jsC['res_bank']))
@@ -505,7 +517,7 @@ def sc_cylroom(t, L, img):
         lay, _ = MZ.zoom_pair(layS, layC, p, fA, fB, R, clip=True)
         img.alpha_composite(lay)
     else:
-        img.alpha_composite(layS if layS is not None else layC)
+        img.alpha_composite(V.mclip(layS if layS is not None else layC))   # la ruta de gas no invade la cabecera
     d = ImageDraw.Draw(img)
     step(d, 3, 'SALA DE CILINDROS', 'Aledaña al centro de datos', ss(0.2, 0.7, t))
     subtitle(d, 'En una sala aledaña al CPD, las baterías de cilindros se anclan a la pared.', win(t, 0.5, TZ + 2.6))

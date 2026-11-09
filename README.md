@@ -47,6 +47,7 @@ python3 cpd_scene.py ../trabajo/rtest gnoz 8 0.3                                
 | Render 3D de un plano | `python3 cpd_scene.py <carpeta_salida> <plano> [muestras] [escala] [led]` (RG; para cambios, a una carpeta nueva `../trabajo/r13` puesta la primera en `_DIRS` de `cpd_final.py`) · `python3 siex_scene.py …` (SIEX) |
 | Fotogramas de control | `VO_MODE=--still VO_TS=t1,t2 python3 cpd_master.py <es\|en> <locución.mp3> <45\|169> <prefijo>` |
 | Prueba de un tramo en orden (etiquetas tal como quedan en el vídeo) | `python3 t_seq.py <es\|en> <locución.mp3> <45\|169> <t0> <t1>` |
+| Avisar de etiquetas con el punto fuera de la ventana | `TAG_WARN=1` delante de cualquier comando de montaje (líneas `TAG_FUERA`) |
 | Tiempos de cada transición | `VO_TRT=1 python3 cpd_master.py <es\|en> <locución.mp3> 45 x` |
 | Vídeo completo | `python3 cpd_master.py <es\|en> <locución.mp3> <45\|169> <salida.mp4>` (≈50–70 min por versión con 2 núcleos; **uno por trabajo en segundo plano y de uno en uno**) |
 | Solo remezclar audio | `VO_MODE=--audio VO_VIDEO=<salida.mp4>.noaudio.mp4 python3 cpd_master.py <es\|en> <locución.mp3> <45\|169> <salida.mp4>` |

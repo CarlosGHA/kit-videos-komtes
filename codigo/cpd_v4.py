@@ -245,7 +245,7 @@ def sc_discharge(t, L, img):
     d = ImageDraw.Draw(img)
     step_header(d, 6, 'DESCARGA LOCALIZADA', 'Microgotas a alta presión', ss(0.2, 0.7, t))
     others = [v(q) for q in js['nozzles']]
-    others = [q for q in others if 250 < q[1] < 1050 and math.hypot(q[0] - nz[0], q[1] - nz[1]) > 120]
+    others = [q for q in others if 340 < q[1] < 1000 and 60 < q[0] < 1020 and math.hypot(q[0] - nz[0], q[1] - nz[1]) > 120]   # solo boquillas visibles en la ventana
     if others:
         tag(d, 640, 270, 'Resto de boquillas: cerradas', win(t, 3.2, L - 0.2), min(others, key=lambda q: q[1]))
     tag(d, 70, 960, 'Enfría el fuego: absorbe su calor', win(t, 1.0, 4.4))
