@@ -117,6 +117,7 @@ if LANG == 'en':
     ImageFont.FreeTypeFont.getlength = lambda self, text, *a, **k: _gl(self, TR(text), *a, **k)
 
 import cpd_video as B
+B.TXT_TR[0] = TR
 if LANG == 'en':
     _wrap = B.wrap
     B.wrap = lambda text, f, maxw: _wrap(TR(text), f, maxw)

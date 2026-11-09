@@ -15,8 +15,10 @@ Lo usa automáticamente la skill `videos-tecnicos-komtes`: al empezar una sesió
 | Carpeta | Contenido |
 |---|---|
 | `codigo/` | Scripts de producción (3D, sistema gráfico, transiciones, audio, montaje, portadas) |
-| `trabajo/` | Directorio de trabajo: renders 3D de referencia (`r3`–`r8`, `rs1`), recursos (`assets`), locuciones (`vo`, `vo_siex2`), música y efectos (`sfx`), tipografías (`fuentes`) y salidas (`out`, `out_siex2`, `covers`, `chk`) |
+| `trabajo/` | Directorio de trabajo: renders 3D de referencia (`r3`–`r12`, `rs1`; el script usa la carpeta más reciente que tenga cada plano), recursos (`assets`), locuciones (`vo`, `vo_siex2`), música y efectos (`sfx`), tipografías (`fuentes`) y salidas (`out`, `out_siex2`, `covers`, `chk`) |
 | `marcas/` | Logotipos oficiales de las divisiones y de Group Komtes |
+| `fichas/` | Hechos de producto ya confirmados por I+D, uno por sistema (`RG-WFOG.md`…). Se leen antes del guion y se amplían en cada ronda de feedback |
+| `skill/` | Copia de la skill `videos-tecnicos-komtes` (v1.7) |
 
 ## Instalación (una vez por equipo o sesión)
 
@@ -42,10 +44,11 @@ python3 cpd_scene.py ../trabajo/rtest gnoz 8 0.3                                
 
 | Tarea | Comando (desde `codigo/`) |
 |---|---|
-| Render 3D de un plano | `python3 cpd_scene.py <carpeta_salida> <plano> [muestras] [escala]` (RG) · `python3 siex_scene.py …` (SIEX) |
+| Render 3D de un plano | `python3 cpd_scene.py <carpeta_salida> <plano> [muestras] [escala] [led]` (RG; para cambios, a una carpeta nueva `../trabajo/r13` puesta la primera en `_DIRS` de `cpd_final.py`) · `python3 siex_scene.py …` (SIEX) |
 | Fotogramas de control | `VO_MODE=--still VO_TS=t1,t2 python3 cpd_master.py <es\|en> <locución.mp3> <45\|169> <prefijo>` |
+| Prueba de un tramo en orden (etiquetas tal como quedan en el vídeo) | `python3 t_seq.py <es\|en> <locución.mp3> <45\|169> <t0> <t1>` |
 | Tiempos de cada transición | `VO_TRT=1 python3 cpd_master.py <es\|en> <locución.mp3> 45 x` |
-| Vídeo completo | `python3 cpd_master.py <es\|en> <locución.mp3> <45\|169> <salida.mp4>` (≈20–30 min por versión con 2 núcleos) |
+| Vídeo completo | `python3 cpd_master.py <es\|en> <locución.mp3> <45\|169> <salida.mp4>` (≈50–70 min por versión con 2 núcleos; **uno por trabajo en segundo plano y de uno en uno**) |
 | Solo remezclar audio | `VO_MODE=--audio VO_VIDEO=<salida.mp4>.noaudio.mp4 python3 cpd_master.py <es\|en> <locución.mp3> <45\|169> <salida.mp4>` |
 | Vídeos de referencia | `./render_q.sh <1-8>` (uno por llamada) |
 | Pieza autoconclusiva para LinkedIn (4:5) | `PIEZA=<n> python3 cpd_master.py es <locución.mp3> 45 <salida.mp4>` · referencia: `./render_q.sh <9-12>` |
@@ -60,3 +63,4 @@ Para SIEX se usan `siex2_master.py` / `siex2_final.py` en lugar de `cpd_master.p
 3. Las transiciones se declaran con las funciones de cámara de `mz_tools.py`: `matched()` para planos del mismo modelo, ancla + escala para producto y `under` para barridos largos.
 4. El sistema gráfico (`cpd_video.py`) y el audio no se modifican, salvo el cambio de logotipo de la firma (§3 del manual). Las etiquetas se colocan solas con la regla fija (§6.4): basta con llamar a `tag()` con el componente y el lado preferido.
 5. Las piezas de LinkedIn se definen en la lista `PIECES` del script de composición (§10.1 del manual).
+6. Las tuberías acaban en el último difusor, y las rutas animadas y las etiquetas se anclan a los puntos `KEY` que exporta el render 3D: nunca coordenadas a mano (§7.4 del manual).

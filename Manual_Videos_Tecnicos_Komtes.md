@@ -1,6 +1,6 @@
 # Manual de producción de vídeos técnicos de aplicación · Grupo Komtes
 
-**Versión 1.5 · octubre de 2026 · Responsable: Marketing y Comunicación**
+**Versión 1.7 · noviembre de 2026 · Responsable: Marketing y Comunicación**
 Referencia de origen: vídeos «Centros de datos» de RG W-FOG (agua nebulizada) y SIEX (agentes limpios de inundación total), en ES/EN, 4:5 y 16:9.
 
 ---
@@ -31,15 +31,23 @@ No se pasa de fase sin la validación indicada. Cada corrección posterior a una
 | **2. Guion técnico** | Claude redacta el guion por escenas (§4 y §5) | Tabla escena · texto · imagen | **Ingeniero:** exactitud técnica |
 | **3. Locución** | Claude genera la voz ES y EN con ElevenLabs, **una sola toma por idioma** | Audio ES + EN | **Ingeniero:** pronunciación de marcas y términos |
 | **4. Fotogramas clave** | Claude modela el 3D y entrega 1 fotograma por escena (y tiras de cada transición) | Hoja de fotogramas | **Ingeniero:** fidelidad de producto y de la secuencia. **Marketing:** encuadre |
-| **5. Render** | Render de las 4 versiones (ES/EN × 4:5/16:9), una tras otra | 4 vídeos MP4 | — |
+| **5. Render** | Render de las 4 versiones (ES/EN × 4:5/16:9), **un vídeo por trabajo en segundo plano y de uno en uno** (≈50–70 min cada uno con 2 núcleos) | 4 vídeos MP4 | — |
 | **6. Revisión y feedback** | Visionado completo con el checklist del §12 y rondas de feedback hasta el OK | Lista de cambios numerada, aplicada y respondida punto por punto | **Ingeniero + Marketing** (OK explícito) |
 | **7. Entrega** | Correcciones, portadas, piezas autoconclusivas para LinkedIn (§10.1) y entrega unificada | 4 vídeos + 4 portadas + piezas en un solo mensaje | **Marketing** publica |
 
-**Ronda de feedback (después de cada generación):** Claude entrega y pregunta él mismo «¿Lo ves todo bien o tienes alguna observación?», con 3–5 puntos concretos que mirar. Acepta observaciones en cualquier forma (texto, minuto y segundo, foto, captura, nota de voz), las numera, confirma qué hará, aplica todo en una pasada, responde punto por punto («1. Hecho…») y vuelve a preguntar. Ninguna fase se cierra sin el OK explícito del técnico. En lo técnico manda el ingeniero; si una observación choca con el estilo, se consulta a Marketing.
+**Ronda de feedback (después de cada generación):** Claude entrega y pregunta él mismo «¿Lo ves todo bien o tienes alguna observación?», con 3–5 puntos concretos que mirar. Acepta observaciones en cualquier forma (texto, minuto y segundo, foto, captura, nota de voz), las numera, confirma qué hará, **revisa y corrige todos los planos y salas con el mismo problema (no solo el minuto citado)**, aplica todo en una pasada, responde punto por punto («1. Hecho…») y vuelve a preguntar. Ninguna fase se cierra sin el OK explícito del técnico. En lo técnico manda el ingeniero; si una observación choca con el estilo, se consulta a Marketing.
 
-**Regla de créditos:** antes de cualquier acción que gaste créditos (voz, transcripción, música o efectos de pago), Claude avisa de qué va a generar, por qué, el coste estimado y el saldo, y espera el OK. Cada generación se hace **una sola vez por corrección** (`generations_count = 1`), agrupando todas las correcciones de voz de una ronda. Primero se intenta lo gratuito (editar el audio existente, cambiar un texto, ajustar tiempos). Las transcripciones también cuestan, y pueden costar más que la voz. Sin saldo, se para y se ofrecen opciones.
+**Regla de créditos:** antes de cualquier acción que gaste créditos (voz, transcripción, música o efectos de pago), Claude avisa de qué va a generar, por qué, el coste estimado y el saldo, y espera el OK. Cada generación se hace **una sola vez por corrección** (`generations_count = 1`), agrupando todas las correcciones de voz de una ronda. Primero se intenta lo gratuito (editar el audio existente, cambiar un texto, ajustar tiempos). Las transcripciones también cuestan, y pueden costar más que la voz. Sin saldo, se para y se ofrecen opciones; mientras tanto, las correcciones visuales se montan con la locución anterior y la voz queda como siguiente paso, que Claude recuerda en cada entrega.
 
-**Regla de correcciones:** las correcciones se entregan en una lista numerada, cada una con su minuto y segundo. Claude corrige y revisa los fotogramas afectados antes de volver a renderizar.
+**Regla de correcciones:** las correcciones se entregan en una lista numerada, cada una con su minuto y segundo. Claude corrige y revisa los fotogramas afectados antes de volver a renderizar. Los hechos de producto que confirma el ingeniero se anotan en `fichas/<DIVISION>-<SISTEMA>.md` del kit, para que el siguiente vídeo del mismo sistema no vuelva a preguntarlos.
+
+**Regla de ahorro (tiempo de máquina y de conversación):**
+- Un vídeo por trabajo en segundo plano y uno detrás de otro: con 2 núcleos, dos a la vez tardan el doble y se cortan a las 2 h.
+- Antes de lanzar los 4 vídeos, se prueba solo el tramo afectado renderizado en orden (`t_seq.py`): las etiquetas se fijan según los fotogramas anteriores, así que un fotograma suelto no muestra cómo quedan en el vídeo.
+- En 3D solo se vuelven a renderizar los planos que cambian, en una carpeta nueva (`r13/`, `r14/`…) que se pone la primera en la lista `_DIRS` de `cpd_final.py`; las portadas se regeneran en segundos.
+- Todas las observaciones de una ronda se aplican en una sola tanda de renders; se entrega por idiomas en cuanto un idioma está revisado.
+- Se revisa con hojas de contactos (4–6 fotogramas en una imagen), duración con `ffprobe` y volumen con el filtro `ebur128`; los scripts no se leen enteros, solo la función que se cambia.
+- El guion vigente (ES y EN) y los pendientes se guardan en el proyecto de Komtes para poder seguir en otra sesión.
 
 ---
 
@@ -60,10 +68,10 @@ FICHA DE BRIEFING · VÍDEO TÉCNICO DE APLICACIÓN
 7. Componentes que deben aparecer (nombre comercial exacto + referencia):
    - Boquilla/difusor:  …     - Detección: …     - Central: …
    - Almacenamiento (cilindros, bombas, depósito): …    - Válvulas: …
-8. Certificaciones que se pueden citar (solo las vigentes y aplicables a ESTE sistema): FM / UL / VdS / CEPREVEN…
+8. Aprobaciones y certificaciones que se pueden citar (solo las vigentes y aplicables a ESTE sistema, con la fórmula exacta del emisor: «aprobado por FM», no «certificado»): FM / UL / VdS / CEPREVEN…
 9. Cifras que se pueden decir (con fuente): presiones, tiempos, dB, concentraciones, tamaño de gota…
 10. Lo que NO se debe decir o mostrar (limitaciones, claims no certificados, competidores):
-11. Instalación física: dónde se ubica cada equipo (sala aledaña, pared, falso techo, bajo suelo…)
+11. Instalación física: dónde se ubica cada equipo (sala aledaña, pared, falso techo, bajo suelo…), su posición de montaje, por dónde entra y sale el agente y hasta dónde llega cada tubería
 12. Materiales adjuntos (ver §11): renders · fotos · fichas técnicas · etiquetas · planos
 13. Público y uso: LinkedIn / web / feria / comercial. Idiomas: ES + EN (por defecto)
 14. Vídeos de la competencia sobre este sistema o aplicación (enlaces o archivos; opcional)
@@ -100,7 +108,7 @@ FICHA DE BRIEFING · VÍDEO TÉCNICO DE APLICACIÓN
 
 ## 4. Estructura narrativa estándar
 
-Duración objetivo: **90–140 s**. La marca la locución: cada escena dura lo que su bloque de voz + 0,3 s antes + 0,55 s después.
+Duración objetivo: **90–210 s**. La marca la locución: cada escena dura lo que su bloque de voz + 0,3 s antes + 0,55 s después.
 
 | # | Escena | Imagen | Rótulo superior | Fondo |
 |---|---|---|---|---|
@@ -112,7 +120,7 @@ Duración objetivo: **90–140 s**. La marca la locución: cada escena dura lo q
 | 5 | **04 · Descarga** | Producto en primer plano descargando | Paso 04 | Blanco liso |
 | 6 | **05 · Zona secundaria** (bajo suelo, otra sala) | Corte o detalle | Paso 05 | Blanco liso |
 | 7 | **06 · Extinción y vuelta a la actividad** | Vuelta al plano general, sin fuego | Paso 06 | Franja roja |
-| 8 | **Otros riesgos del edificio** (opcional) | Sala aledaña con su propio sistema y su secuencia completa detección → extinción | Título | Franja roja |
+| 8 | **Otras salas del edificio** (opcional) | Zonas de personal, centro de control, generadores, transformadores…: cada una con su producto, su válvula, su aprobación y su secuencia completa | Título | Franja roja |
 | 9 | **Software / gama** (opcional) | Interfaz o familia de producto | Título | Franja roja |
 | 10 | **Cierre** (3–5 s) | Logotipo + frase + web | — | Blanco liso |
 
@@ -132,7 +140,7 @@ Reglas:
 - Bloques de **18–35 palabras por escena** (120–230 caracteres). Frases afirmativas, presente, sin subordinadas largas.
 - Vocabulario técnico correcto y constante (el mismo término para el mismo equipo en todo el vídeo).
 - Sin superlativos («el mejor», «el único») salvo que estén certificados.
-- Solo cifras y certificaciones de la ficha de briefing.
+- Solo cifras y aprobaciones de la ficha de briefing, con la fórmula exacta del emisor («aprobado por FM» / «FM APPROVED», nunca «certificado por FM»).
 - Subtítulos en pantalla: versión condensada del bloque, **máximo 2 líneas** (≈110 caracteres).
 
 ### Generación de voz (ElevenLabs)
@@ -191,7 +199,7 @@ No se usa negro puro en ningún texto ni fondo.
 | Título (escenas sin paso) | (70, 118) y subtítulo en (70, 162) |
 | Ventana de imagen | De y = 250 a y = 1100, con desvanecido suave de 250 a 340 y de 1020 a 1100. La imagen 3D nunca invade cabecera ni subtítulos |
 | Subtítulos | Centrados, ancho máximo 900 px, centro vertical en y = 1170 |
-| Etiquetas | Pastilla blanca al 94 %, alto 38 px, radio 19, borde INK al 35 %, Inter SemiBold 21. Punto RED de radio 5 sobre la pieza concreta y guía INK al 80 % (1,5 px). **Colocación automática con regla fija** (`tag()` en `cpd_video.py`): diagonal a 45° + tramo horizontal de 24 px; la diagonal toma la más corta de unas longitudes fijas (56–260 px por eje) que deja la pastilla **fuera de las piezas** (se analiza la imagen ya compuesta) y sin solapar otras etiquetas; se prefiere el lado indicado en la llamada. Una vez visible, la etiqueta no cambia de sitio. Dentro de la ventana de imagen; máximo 4 a la vez |
+| Etiquetas | Pastilla blanca al 94 %, alto 38 px, radio 19, borde INK al 35 %, Inter SemiBold 21. Punto RED de radio 5 sobre la pieza concreta y guía INK al 80 % (1,5 px). **Colocación automática con regla fija** (`tag()` en `cpd_video.py`): diagonal a 45° + tramo horizontal de 24 px; la diagonal toma la más corta de unas longitudes fijas (56–260 px por eje) que deja la pastilla **fuera de las piezas** (se analiza la imagen ya compuesta) y sin solapar otras etiquetas; se prefiere el lado indicado en la llamada. **Una vez visible, la pastilla queda fija en pantalla** y solo la guía se estira hasta su punto. **Las pastillas siempre por encima de las líneas** (primero se dibujan todas las guías y después todas las pastillas); una pastilla nunca tapa el punto rojo de otra etiqueta y se evita que una guía cruce otras pastillas o guías. Si hay tarjeta, su sitio se reserva con `B.tag_block(caja)`. Ancho medido con el texto ya traducido. Dentro de la ventana de imagen; máximo 4 a la vez |
 | Tarjetas de dato | Blancas, radio 16, sombra suave. Esquina superior derecha de la ventana (≈ 590–1010 × 250–470) |
 | Franja roja | Polígono diagonal desde (0, 420) con pendiente 0,5 y grosor 180 px. Solo en planos generales; estática en todas las transiciones |
 
@@ -202,7 +210,8 @@ No se usa negro puro en ningún texto ni fondo.
 
 ### 6.6 Portadas
 - 4:5 y 16:9 por idioma. Antetítulo en mayúsculas, Inter Bold 40 px (sobre lienzo ×2), en RED; titular en Inter Display Bold 140–146 en INK; subtítulo en Inter Display Medium 54–56 en INK2; barra roja de 128 × 14 bajo el subtítulo.
-- Imagen: plano general isométrico con la red del sistema resaltada en rojo y un círculo con el detalle del producto.
+- Imagen: plano general isométrico con la red del sistema resaltada en rojo y círculos con **cada** producto del vídeo (boquillas, válvulas, grupos, baterías), cada uno con su código y descripción en una pastilla y su flecha al punto exacto de instalación. Válvulas y equipos con foto real, con la foto.
+- Se regeneran (`rg_covers.py`, segundos) cada vez que cambia el plano 3D de portada.
 - Nombres: `Portada_<DIVISION>-<SISTEMA>_<Vertical>_<IDIOMA>_<ancho>x<alto>.png`
 
 ---
@@ -244,7 +253,11 @@ No se usa negro puro en ningún texto ni fondo.
 5. **Sin geometría sobrante:** nada que no exista en la instalación real (varillas, soportes inventados).
 6. Instalación verosímil: baterías ancladas a la pared, tuberías visibles y conectadas de punta a punta, el cilindro piloto en el lado correcto, las salas aledañas conectadas por tubería.
 7. El plano general es un edificio real, no un pasillo vacío: incluye salas contiguas coherentes con la vertical.
-8. Si un primer plano usa una foto de producto, se recorta el fondo para que pueda superponerse al 3D.
+8. Si un primer plano usa una foto de producto, se recorta el fondo para que pueda superponerse al 3D. Si existe foto real, el primer plano usa la foto y solo se dibujan las conexiones.
+9. **Posición de montaje y sentido del flujo del fabricante** (p. ej. válvulas verticales con entrada por un lado y salida por abajo). Cada pieza visible se identifica con el ingeniero antes de etiquetarla (solenoide, presostato, interruptor de confirmación…).
+10. **Sentido hidráulico:** una válvula por zona o sala, el número exacto que indica el ingeniero; cada red llega solo a los difusores de su sala, sin cruzarse con otra.
+11. **Las tuberías acaban en el último difusor, con su tapón.** Ningún tramo ni colector sigue hasta la pared. Se comprueba en todas las salas (techo y falso suelo).
+12. **Rutas animadas y etiquetas desde los puntos `KEY`:** el JSON de cada plano guarda la posición en pantalla de cada componente y de cada tramo de tubería. Las rutas de agua, aire o nitrógeno se dibujan siempre desde esos puntos, nunca con coordenadas a mano, para que coincidan con la tubería. Si cambia una tubería, se actualizan sus `KEY` y se re-renderizan todos los planos que la muestran (y la portada).
 
 ---
 
@@ -270,7 +283,7 @@ Reglas fijas:
 - **Fuego:** halo naranja + llamas + humo gris que sube. Siempre en un punto concreto del equipo afectado.
 - **Agua nebulizada:** partículas azules desde cada orificio real de la boquilla, con niebla que baja.
 - **Gas:** chorros azul claro desde los orificios del difusor, con inundación progresiva de la sala.
-- **Flujo por tubería:** puntos rojos con borde blanco que recorren el trazado real (agua: azul; N₂: verde).
+- **Flujo por tubería:** puntos con borde blanco que recorren el trazado real desde los puntos `KEY` (agua: azul; nitrógeno y demás gases: rojo).
 - **Avisos:** anillos rojos que se expanden desde el detector o la central.
 - **Datos:** tarjetas con indicador (presión, dB, concentración) que se animan con la acción.
 
@@ -330,7 +343,7 @@ Del vídeo completo salen 3–5 piezas que **se entienden solas**, porque se pub
 | Secuencia de funcionamiento | Texto (ficha §2, punto 6) | Guion y orden de escenas |
 
 **Cómo pedírselos (texto que Claude envía al ingeniero):**
-> «Para el vídeo de [sistema] en [vertical] necesito: 1) renders de [producto] en vista frontal y ¾ con fondo blanco; 2) la etiqueta real de [cilindro/equipo]; 3) confirmación de dónde se instala [equipo] respecto a la sala protegida; 4) la ficha técnica con las certificaciones vigentes.»
+> «Para el vídeo de [sistema] en [vertical] necesito: 1) renders o fotos de [producto] en vista frontal y ¾ con fondo blanco, en su posición real de montaje; 2) la etiqueta real de [cilindro/equipo]; 3) dónde se instala cada equipo, por dónde entra y sale el agua y hasta dónde llega cada tubería; 4) qué es cada pieza visible de las válvulas; 5) la ficha técnica con las aprobaciones vigentes; 6) si los tienes, vídeos de la competencia.»
 
 ---
 
@@ -340,21 +353,23 @@ Del vídeo completo salen 3–5 piezas que **se entienden solas**, porque se pub
 - [ ] Todos los nombres comerciales, cifras y certificaciones coinciden con la ficha.
 - [ ] La secuencia de actuación es la real y completa (detección → alarma → disparo → descarga → extinción).
 - [ ] Cada producto mostrado es fiel: forma, acabado, agujeros reales, piezas integradas, etiquetas de marca.
-- [ ] La instalación es verosímil: anclajes, tuberías continuas, ubicación de salas y equipos.
+- [ ] La instalación es verosímil: anclajes, tuberías continuas, ubicación de salas y equipos, válvulas en su posición real.
+- [ ] Cada red acaba en su último difusor; ningún tramo sigue hasta la pared.
 
 **Gráfico (lo valida Claude con fotogramas)**
 - [ ] Logotipo, títulos y franja inmóviles en todas las transiciones.
 - [ ] Ningún elemento salta de posición en los zooms (revisar la tira de cada transición).
 - [ ] Ningún rótulo queda visible después de su escena.
-- [ ] Las etiquetas siguen la regla fija (§6.4): guía corta a 45°, fuera de las piezas, sin solapes, máximo 4 a la vez.
+- [ ] Las etiquetas siguen la regla fija (§6.4): guía corta a 45°, fuera de las piezas, sin solapes, máximo 4 a la vez; **fijas una vez visibles, por encima de las líneas y sin tapar puntos ajenos ni tarjetas** (revisado en un tramo renderizado en orden con `t_seq.py`).
+- [ ] Las rutas animadas van encima de la tubería real en todo su recorrido.
 - [ ] Imagen siempre dentro de la ventana; subtítulos legibles, en 2 líneas como máximo.
-- [ ] Marca correcta para la división (§3); textos de EN sin restos en español.
+- [ ] Marca correcta para la división (§3); textos de EN sin restos en español (`SIN TRADUCIR` vacío).
 
 **Audio**
 - [ ] La locución está sincronizada con su escena; no se corta ninguna palabra.
 - [ ] La música no suena doble ni se corta (empalmes a compás); continúa hasta el final con salida suave.
 - [ ] Siglas y marcas bien pronunciadas en los dos idiomas.
-- [ ] Sonoridad del máster en −15 LUFS.
+- [ ] Sonoridad del máster en −15 LUFS (filtro `ebur128`) y duración esperada (`ffprobe`).
 
 ---
 
@@ -382,6 +397,18 @@ Del vídeo completo salen 3–5 piezas que **se entienden solas**, porque se pub
 | Voz o transcripción lanzada sin avisar del coste | Aviso previo con coste y saldo, y OK del técnico (§1) |
 | Fase cerrada sin el OK del técnico | Ronda de feedback hasta el OK explícito (§1) |
 | Pieza inventada cuando existe foto real | Primer plano con la foto recortada; solo se dibujan las conexiones |
+| Válvula en otra posición o con otra entrada/salida | Posición y sentido del flujo del fabricante (§7.4) |
+| Más válvulas o colectores de los que tiene la instalación | El número exacto que indica el ingeniero |
+| «Preacción» dicho de una válvula de sección o de control; una pieza etiquetada con el nombre de otra | Identificar cada pieza con el ingeniero antes de etiquetarla |
+| «Certificado por FM» | La fórmula del emisor: «aprobado por FM» / «FM APPROVED» |
+| Tarjeta tapada por una etiqueta; texto EN fuera de la pastilla | `B.tag_block()` y ancho medido con el texto traducido |
+| Tubería que sigue hasta la pared pasado el último difusor | Acaba en el último difusor, con tapón (§7.4) |
+| Ruta animada desplazada respecto a la tubería | Dibujada desde los puntos `KEY` del plano, nunca a mano (§7.4) |
+| Etiqueta que se mueve después de aparecer | Pastilla fija en pantalla; solo se estira la guía (§6.4) |
+| Guía de una etiqueta por encima de otra pastilla, o pastilla tapando el punto de otra | Primero todas las guías, después todas las pastillas; nunca tapar un punto ajeno (§6.4) |
+| Etiquetas validadas con fotogramas sueltos | Tramo renderizado en orden con `t_seq.py` |
+| Corregir solo el minuto citado | Revisar todos los planos y salas con el mismo problema |
+| Dos vídeos a la vez o encadenados en un mismo trabajo | Un vídeo por trabajo, de uno en uno (§1) |
 
 ---
 
@@ -401,7 +428,7 @@ Empieza revisando la ficha y dime qué materiales faltan.
 
 ## 15. Anexo B · Herramientas de producción
 
-El código de producción (escenas 3D, composición, transiciones con cámara única, montaje de audio y portadas) se publica, junto a este manual, en el repositorio público https://github.com/CarlosGHA/kit-videos-komtes (descarga: `git clone --depth 1 https://github.com/CarlosGHA/kit-videos-komtes`, o **Code → Download ZIP** desde el navegador). El kit es autónomo: incluye los recursos, los renders de referencia, las locuciones, la música, las tipografías y los logotipos. La instalación y los comandos están en su `LEEME.md`. También existe la skill `videos-tecnicos-komtes`, que aplica este manual automáticamente en cualquier sesión de Claude. Para cada vídeo nuevo se reutiliza el kit y solo se cambian las escenas 3D, el guion y los textos; el sistema gráfico, las transiciones y el audio no se tocan.
+El código de producción (escenas 3D, composición, transiciones con cámara única, montaje de audio y portadas) se publica, junto a este manual, en el repositorio público https://github.com/CarlosGHA/kit-videos-komtes (descarga: `git clone --depth 1 https://github.com/CarlosGHA/kit-videos-komtes`, o **Code → Download ZIP** desde el navegador). El kit es autónomo: incluye los recursos, los renders de referencia, las locuciones, la música, las tipografías y los logotipos. La instalación y los comandos están en su `README.md`. En `fichas/` están los hechos de producto ya confirmados por I+D de cada sistema. También existe la skill `videos-tecnicos-komtes`, que aplica este manual automáticamente en cualquier sesión de Claude. Para cada vídeo nuevo se reutiliza el kit y solo se cambian las escenas 3D, el guion y los textos; el sistema gráfico, las transiciones y el audio no se tocan.
 
 | Archivo | Función |
 |---|---|
@@ -412,5 +439,19 @@ El código de producción (escenas 3D, composición, transiciones con cámara ú
 | `cpd_final.py` / `siex2_final.py` | Escenas, tiempos y transiciones de cada vídeo de referencia |
 | `cpd_master.py` / `siex2_master.py` | Sincronización con la locución, mezcla de audio, versión 16:9 y exportación |
 | `rg_covers.py` / `siex_covers.py` | Portadas 4:5 y 16:9 |
+| `t_seq.py` | Prueba rápida de un tramo renderizado en orden (etiquetas tal como quedan en el vídeo) |
+
+**Mapa de observaciones → dónde se cambia**
+
+| Observación del ingeniero | Dónde | Qué hay que volver a generar |
+|---|---|---|
+| Texto en pantalla, subtítulo o etiqueta (ES) | Función de la escena en `cpd_final.py` | Vídeos |
+| Traducción EN | Diccionario `EN` de `cpd_final.py` | Vídeos EN |
+| Etiqueta en otra pieza o lado | Llamada a `tag()` de la escena (punto = `KEY` del componente) | Tramo de prueba + vídeos |
+| Geometría (tubería, válvula, difusor, sala) | `cpd_scene.py` y sus `KEY` | Planos afectados en carpeta nueva + portadas + vídeos |
+| Ruta animada desplazada | `KEY` del plano en `cpd_scene.py` (nunca píxeles en `cpd_final.py`) | Planos afectados + vídeos |
+| Duración u orden de escenas | `SCENES` y `SCENE_BLOCKS` de `cpd_final.py` | Vídeos |
+| Locución | Guion + ElevenLabs (regla de créditos, §1) | Voz + vídeos |
+| Portada | `rg_covers.py` | Portadas |
 | `sfx/` | Música corporativa (con el empalme a compás) y efectos de sonido |
 | `marcas/` | Logotipos oficiales de las seis divisiones y de Group Komtes (PNG con fondo transparente) |

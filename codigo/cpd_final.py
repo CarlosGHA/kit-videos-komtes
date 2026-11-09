@@ -8,6 +8,60 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 LANG = sys.argv[2] if sys.argv[1] == 'still' else sys.argv[1]
 
 EN = {
+    'Solenoide: la abre la central': 'Solenoid: opened by the panel',
+    'Entrada desde la batería': 'Inlet from the bank',
+    'Presostato: confirma el paso de agua': 'Pressure switch: confirms water flow',
+    'Salida al colector de generadores': 'Outlet to the generator manifold',
+    'El nitrógeno presuriza la batería y empuja el agua hacia las válvulas de control WF-VC.': 'Nitrogen pressurizes the bank and pushes the water towards the WF-VC control valves.',
+    'La central abre la WF-VC de esa sala: el agua entra por la izquierda, sale por abajo hacia su colector y el presostato lo confirma.': "The panel opens that room's WF-VC: water enters from the left, leaves from the bottom to its manifold, and the pressure switch confirms it.",
+    'El colector lleva el agua a los difusores EMM-416549, que descargan a la vez sobre los grupos y extinguen el fuego.': 'The manifold carries the water to the EMM-416549 nozzles, which discharge simultaneously over the gensets and put out the fire.',
+    'Red llena de agua hasta los difusores': 'Pipework full of water up to the nozzles',
+    'Ampolla rota por el calor': 'Bulb broken by the heat',
+    'Bandejas de cables': 'Cable trays',
+    'Área de cobertura: todo el falso suelo': 'Area of coverage: the whole raised floor',
+    'Boquilla MM-P51': 'MM-P51 nozzle',
+    'Descarga dirigida a la bandeja': 'Discharge aimed at the tray',
+    'Aplicación local: un riesgo concreto': 'Local application: one specific hazard',
+    'MM-P52 / MM-P53 · MM-P51 · falso suelo': 'MM-P52 / MM-P53 · MM-P51 · raised floor',
+    'Bajo el suelo técnico, una red independiente con su propia válvula de preacción protege las bandejas de cables.': 'Below the raised floor, a separate network with its own pre-action valve protects the cable trays.',
+    'Las boquillas MM-P52 / MM-P53 protegen todo el falso suelo como sistema de área de cobertura.': 'MM-P52 / MM-P53 nozzles protect the whole raised floor as an area of coverage system.',
+    'La boquilla MM-P51, como sistema de aplicación local, descarga directamente sobre un riesgo concreto.': 'The MM-P51 nozzle, as a local application system, discharges directly onto one specific hazard.',
+    'Boquilla activada': 'Nozzle activated',
+    'Salida hacia difusores MM-P50': 'Outlet to MM-P50 nozzles',
+    'Detector de paso de agua: confirma el flujo': 'Water flow detector: confirms flow',
+    'Normalmente abierta: se cierra tras la extinción': 'Normally open: closed after extinction',
+    'ZONAS DE PERSONAL': 'STAFF AREAS',
+    'Las zonas de personal, como oficinas, se pueden proteger con el difusor MM-P50, aprobado por FM para riesgos HC-1.': 'Staff areas such as offices can be protected with the MM-P50 nozzle, FM approved for HC-1 hazards.',
+    'Se emplean válvulas de sección WF-SV normalmente abiertas, que confirman el flujo de agua en caso de activación…': 'They use normally open WF-SV section valves, which confirm water flow if the system activates…',
+    '…y permiten cerrarlo para poner de nuevo el sistema en servicio una vez extinguido el incendio.': '…and allow it to be shut off to put the system back in service once the fire is out.',
+    'Descarga sin esperar a la detección': 'Discharge without waiting for detection',
+    'Entrada desde el grupo de bombeo': 'Inlet from the pump unit',
+    'Salida hacia los MM-P50': 'Outlet to the MM-P50 nozzles',
+    'Detector de paso de agua': 'Water flow detector',
+    'Aviso a la central: descarga en esta sala': 'Signal to the panel: discharge in this room',
+    'Aquí la red está llena de agua hasta los difusores: si el calor rompe una ampolla, el MM-P50 descarga sin esperar a la detección.': 'Here the pipework is full of water up to the nozzles: if the heat breaks a bulb, the MM-P50 discharges without waiting for detection.',
+    'El agua pasa por la WF-SV: su detector avisa a la central de qué sala ha descargado, y la caída de presión arranca el grupo de bombeo.': 'Water flows through the WF-SV: its detector tells the panel which room has discharged, and the pressure drop starts the pump unit.',
+    'Válvula de sección WF-SV': 'WF-SV section valve',
+    'Confirmación de activación': 'Activation confirmation',
+    'La caída de presión produce el arranque del grupo de bombeo W-FOG UAP, en una sala aledaña.': 'The pressure drop starts the W-FOG UAP pump unit, in an adjacent room.',
+    'La preacción también protege frente a falsas alarmas y accidentes. Si una ampolla se rompe por accidente, el aire de la tubería se escapa.': 'Pre-action also protects against false alarms and accidents. If a bulb breaks by accident, the air in the pipe escapes.',
+    'Válvulas de control WF-VC: una por sala': 'WF-VC control valves: one per room',
+    'Se abre la válvula de esta sala': "This room's valve opens",
+    'Válvula de transformadores: cerrada': 'Transformer valve: closed',
+    'Descarga en la sala de generadores': 'Discharge in the generator room',
+    'Salida hacia las válvulas WF-VC': 'Outlet to the WF-VC valves',
+    'Microdifusores': 'Micro-diffusers',
+    'Descarga simultánea sobre los grupos': 'Simultaneous discharge over the gensets',
+    'Cada sala tiene su propia válvula de control WF-VC junto a la batería: una para generadores y otra para transformadores.': 'Each room has its own WF-VC control valve next to the bank: one for the generators and one for the transformers.',
+    'Ante un incendio en un generador, los detectores lo identifican y la central abre solo la válvula de esa sala.': "If a generator catches fire, the detectors identify it and the panel opens only that room's valve.",
+    'El nitrógeno impulsa el agua por su colector hasta los difusores EMM-416549, que descargan sobre los grupos.': 'Nitrogen drives the water through its manifold to the EMM-416549 nozzles, which discharge over the gensets.',
+    'Centro de control': 'Control room',
+    'Difusores MM-P50': 'MM-P50 nozzles',
+    'Difusor MM-P50': 'MM-P50 nozzle',
+    'CENTRO DE CONTROL': 'CONTROL ROOM',
+    'Difusores MM-P50 · válvula de sección WF-SV': 'MM-P50 nozzles · WF-SV section valve',
+    'El centro de control se protege con difusores MM-P50 y su propia válvula de sección WF-SV, también con aprobación FM.': 'The control room is protected by MM-P50 nozzles and its own WF-SV section valve, also FM approved.',
+    'Los MM-P50 tienen la misma forma y el mismo funcionamiento que las boquillas de la sala de racks.': 'MM-P50 nozzles have the same shape and operation as those in the rack room.',
     'CENTROS DE DATOS': 'DATA CENTERS',
     'Agua nebulizada RG W-FOG': 'RG W-FOG water mist',
     'Certificación': 'Certified by',
@@ -233,6 +287,7 @@ if LANG == 'en':
     ImageFont.FreeTypeFont.getlength = lambda self, text, *a, **k: _gl(self, TR(text), *a, **k)
 
 import cpd_video as B
+B.TXT_TR[0] = TR
 if LANG == 'en':
     _wrap = B.wrap
     B.wrap = lambda text, f, maxw: _wrap(TR(text), f, maxw)
@@ -456,66 +511,99 @@ def _v_ufd(t, L):
     return B.View(1.0 + 0.05 * ss(T2, L, t), 0, 40)
 
 
+T3F = 7.4          # empuje al primer plano de la MM-P51 (aplicación local)
+L_FLOOR = 12.0
+
+
+def _v_ufl(t, L):
+    return B.View(1.0 + 0.05 * ss(T3F, L, t), 0, 40)
+
+
+def _uf_close(tt, sa_, sb_, vB, seed=9):
+    """primer plano bajo suelo: calor -> rotura de ampolla -> descarga (tt = s desde el inicio de la fase)"""
+    lay = Image.new('RGBA', (W * SS, H * SS), (0, 0, 0, 0))
+    jsB = B.SHOTS[sa_][2]
+    bulb = vB(jsB['bulb'])
+    heat = ss(-0.6, 0.6, tt) * (1 - ss(2.6, 4.0, tt))
+    if heat > 0.01:
+        glow, gd = low()
+        for rr, al in ((420, 50), (260, 80), (140, 110)):
+            r = rr * (0.6 + 0.4 * heat) / 4
+            gd.ellipse([bulb[0] / 4 - r, (bulb[1] + 300) / 4 - r, bulb[0] / 4 + r, (bulb[1] + 300) / 4 + r],
+                       fill=(255, 110, 30, int(al * heat)))
+        lay.alpha_composite(up(glow, 14))
+    B.draw_shot(lay, sa_ if tt < UFD_TB else sb_, 0.0, vB.k * B.RES[0] / W, 1.0, dy=40, window=True)
+    over, od = full(); fog, fd = low()
+    if UFD_TB < tt < UFD_TB + 1.4:
+        tb = tt - UFD_TB
+        rng = np.random.default_rng(seed)
+        for i in range(14):
+            ang = rng.uniform(0, 6.28); spd = rng.uniform(160, 320)
+            px = bulb[0] + math.cos(ang) * spd * tb; py = bulb[1] + math.sin(ang) * spd * tb + 380 * tb * tb
+            od.ellipse([S(px - 3), S(py - 3), S(px + 3), S(py + 3)], fill=(225, 50, 40, int(220 * clamp(1 - tb))))
+    sa = ss(UFD_TB + 0.2, UFD_TB + 0.6, tt)
+    if sa > 0.01:
+        for i_, (a_, b_) in enumerate(jsB['orif']):
+            p0 = vB(a_); p1 = vB(b_)
+            ang = math.atan2(p1[1] - p0[1], p1[0] - p0[0])
+            k = math.hypot(p1[0] - p0[0], p1[1] - p0[1]) / 260
+            spray(od, fd, CL_UFD[i_ % len(CL_UFD)], tt - UFD_TB - 0.2 - 0.03 * i_, p0[0], p0[1], ang, max(0.6, k), sa,
+                  drag=2.2, grav=90, fog_a=34, dot_a=235)
+    lay.alpha_composite(up(fog, 6)); lay.alpha_composite(over)
+    return lay, jsB, bulb
+
+
 def sc_floor(t, L, img):
-    """falso suelo: plano general de la red bajo baldosas -> primer plano de la boquilla MM-P52/53 (mismo detalle que la de techo)"""
+    """falso suelo: plano general de la red bajo baldosas -> MM-P52/53 (área de cobertura) -> MM-P51 (aplicación local)"""
     js_f = B.SHOTS['floor'][2]
     p = clamp((t - (T2 - DZ)) / (2 * DZ))
     zA = 1.0 + 0.04 * ss(0, T2, min(t, T2))
-    layA = layB = None
+    T3 = T3F if 'ufl_a' in B.SHOTS else L + 9
+    layA = layB = layC = None
     d = ImageDraw.Draw(img)
     if t < T2 + DZ:
         layA = Image.new('RGBA', (W * SS, H * SS), (0, 0, 0, 0))
         vA, js = B.draw_shot(layA, 'floor', t, zA, 1.0 if B.NOFADE[0] else ss(0, 0.5, t), window=True)
         ua = 1 - ss(T2 - DZ, T2 - DZ + 0.2, t)
         tag(d, 80, 930, 'Red seca bajo el suelo técnico', win(t, 0.6, L) * ua, vA(js['uf_noz'][1]))
-    if t > T2 - DZ:
+    if T2 - DZ < t < T3 + PUSH:
         tt = t - T2
-        layB = Image.new('RGBA', (W * SS, H * SS), (0, 0, 0, 0))
         vB = _v_ufd(t, L)
-        jsB = B.SHOTS['ufd_a'][2]
-        bulb = vB(jsB['bulb'])
-        heat = ss(-0.6, 0.6, tt) * (1 - ss(2.6, 4.0, tt))
-        if heat > 0.01:
-            glow, gd = low()
-            for rr, al in ((420, 50), (260, 80), (140, 110)):
-                r = rr * (0.6 + 0.4 * heat) / 4
-                gd.ellipse([bulb[0] / 4 - r, (bulb[1] + 300) / 4 - r, bulb[0] / 4 + r, (bulb[1] + 300) / 4 + r],
-                           fill=(255, 110, 30, int(al * heat)))
-            layB.alpha_composite(up(glow, 14))
-        B.draw_shot(layB, 'ufd_a' if tt < UFD_TB else 'ufd_b', t, vB.k * B.RES[0] / W, 1.0, dy=40, window=True)
-        over, od = full(); fog, fd = low()
-        if UFD_TB < tt < UFD_TB + 1.4:
-            tb = tt - UFD_TB
-            rng = np.random.default_rng(9)
-            for i in range(14):
-                ang = rng.uniform(0, 6.28); spd = rng.uniform(160, 320)
-                px = bulb[0] + math.cos(ang) * spd * tb; py = bulb[1] + math.sin(ang) * spd * tb + 380 * tb * tb
-                od.ellipse([S(px - 3), S(py - 3), S(px + 3), S(py + 3)], fill=(225, 50, 40, int(220 * clamp(1 - tb))))
-        sa = ss(UFD_TB + 0.2, UFD_TB + 0.6, tt)
-        if sa > 0.01:
-            for i_, (a_, b_) in enumerate(jsB['orif']):
-                p0 = vB(a_); p1 = vB(b_)
-                ang = math.atan2(p1[1] - p0[1], p1[0] - p0[0])
-                k = math.hypot(p1[0] - p0[0], p1[1] - p0[1]) / 260
-                spray(od, fd, CL_UFD[i_ % len(CL_UFD)], tt - UFD_TB - 0.2 - 0.03 * i_, p0[0], p0[1], ang, max(0.6, k), sa,
-                      drag=2.2, grav=90, fog_a=34, dot_a=235)
-        layB.alpha_composite(up(fog, 6)); layB.alpha_composite(over)
-        ub = ss(T2 + DZ - 0.1, T2 + DZ + 0.2, t)
+        layB, jsB, bulb = _uf_close(tt, 'ufd_a', 'ufd_b', vB)
+        ub = ss(T2 + DZ - 0.1, T2 + DZ + 0.2, t) * (1 - ss(T3 - PUSH, T3, t))
         tag(d, 640, 300, 'Boquilla MM-P52 / MM-P53', win(tt, DZ + 0.1, L - T2 - 0.2) * ub, vB(jsB['hex']))
         tag(d, 640, 820, 'Micro-orificios', win(tt, UFD_TB + 0.8, L - T2 - 0.2) * ub, vB(jsB['orif'][0][0]))
-        tag(d, 70, 1010, 'Mazos de cables', win(tt, DZ + 0.6, L - T2 - 0.2) * ub, (bulb[0] - 170, bulb[1] + 150))
+        tag(d, 70, 1010, 'Bandejas de cables', win(tt, DZ + 0.6, L - T2 - 0.2) * ub, (bulb[0] - 170, bulb[1] + 150))
+        tag(d, 70, 300, 'Área de cobertura: todo el falso suelo', win(tt, DZ + 1.6, L - T2 - 0.2) * ub, None)
+    if t > T3 - PUSH:
+        tc = t - T3
+        vC = _v_ufl(t, L)
+        layC, jsC, bulbC = _uf_close(tc - 0.5, 'ufl_a', 'ufl_b', vC, seed=13)
+        uc = ss(T3 + PUSH - 0.1, T3 + PUSH + 0.2, t)
+        tag(d, 640, 300, 'Boquilla MM-P51', win(tc, 0.5, L - T3) * uc, vC(jsC['hex']))
+        tag(d, 70, 1010, 'Descarga dirigida a la bandeja', win(tc, UFD_TB + 1.2, L - T3) * uc, (bulbC[0] - 170, bulbC[1] + 150))
+        tag(d, 70, 300, 'Aplicación local: un riesgo concreto', win(tc, 1.0, L - T3) * uc, None)
     if layA is not None and layB is not None:
         vA = B.View(zA); vB = _v_ufd(t, L)
         lay, _ = zoom_pair(layA, layB, p, vA(js_f['uf_noz'][1]), vB(B.SHOTS['ufd_a'][2]['hex']), UFD_R, False, True, clip=True)
         img.alpha_composite(V.mclip(lay))
+    elif layB is not None and layC is not None:
+        pp = clamp((t - (T3 - PUSH)) / (2 * PUSH))
+        img.alpha_composite(V.mclip(_push_pair(_panel_layer(layB), _panel_layer(layC), pp)))
     elif layA is not None:
         img.alpha_composite(V.mclip(layA))
-    else:
+    elif layB is not None:
         img.alpha_composite(_panel_layer(layB))
+    else:
+        img.alpha_composite(_panel_layer(layC))
     d = ImageDraw.Draw(img)
-    V.step_header(d, 7, 'FALSO SUELO', 'Boquillas MM-P52 / MM-P53 · falso suelo', ss(0.2, 0.7, t))
-    subtitle(d, 'Bajo el suelo técnico, una red independiente con boquillas MM-P52 / MM-P53 y su propia válvula de preacción.',
-             win(t, 0.5, L))
+    V.step_header(d, 7, 'FALSO SUELO', 'MM-P52 / MM-P53 · MM-P51 · falso suelo', ss(0.2, 0.7, t))
+    subtitle(d, 'Bajo el suelo técnico, una red independiente con su propia válvula de preacción protege las bandejas de cables.',
+             win(t, 0.5, T2 + 0.4))
+    subtitle(d, 'Las boquillas MM-P52 / MM-P53 protegen todo el falso suelo como sistema de área de cobertura.',
+             win(t, T2 + 0.4, T3 + 0.4))
+    subtitle(d, 'La boquilla MM-P51, como sistema de aplicación local, descarga directamente sobre un riesgo concreto.',
+             win(t, T3 + 0.4, L))
 
 
 # ---------------- escena de bombeo: sala 3D -> zoom -> motor ----------------
@@ -525,7 +613,7 @@ B.SHOTS['proom'] = (Image.open(B.SP + 'r5/proom.png').convert('RGBA'), None, __i
 # planos con la sala de bombeo aledaña (r7)
 R7 = B.SP + ('r8/' if os.path.exists(B.SP + 'r8/site.json') else 'r7/')
 _j = __import__('json')
-_DIRS = [B.SP + d_ for d_ in ('r10/', 'r9/', 'r8/', 'r7/')]
+_DIRS = [B.SP + d_ for d_ in ('r12/', 'r11/', 'r10/', 'r9/', 'r8/', 'r7/')]
 
 
 def _l7(n, alt=None):
@@ -540,7 +628,7 @@ def _has(n):
 
 
 B.SHOTS['wide'] = _l7('site', True)
-for n_ in ('proom2', 'gen', 'gnoz', 'floor_det', 'floor_det_b', 'ceil_a', 'ceil_b', 'pavd', 'ufd_a', 'ufd_b'):
+for n_ in ('proom2', 'gen', 'gnoz', 'floor_det', 'floor_det_b', 'ceil_a', 'ceil_b', 'pavd', 'svd', 'vcd', 'ufd_a', 'ufd_b', 'ufl_a', 'ufl_b'):
     if _has(n_):
         B.SHOTS[n_] = _l7(n_)
 for n_ in ('med', 'floor'):
@@ -580,7 +668,7 @@ def pump_detail(img, t, L):
     return P
 
 
-def _flow_dots(d, path, t, a, n=14, speed=0.3, col=(255, 255, 255)):
+def _flow_dots(d, path, t, a, n=14, speed=0.3, col=(255, 255, 255), fc=None):
     if a <= 0.01 or len(path) < 2:
         return
     segs = [(p, q, math.hypot(q[0] - p[0], q[1] - p[1])) for p, q in zip(path[:-1], path[1:])]
@@ -593,7 +681,7 @@ def _flow_dots(d, path, t, a, n=14, speed=0.3, col=(255, 255, 255)):
                 x, y = p[0] + (q[0] - p[0]) * k_, p[1] + (q[1] - p[1]) * k_
                 break
             u -= l
-        d.ellipse([S(x - 6), S(y - 6), S(x + 6), S(y + 6)], fill=B.ca(B.RED, a), outline=B.ca(col, a), width=B.SW(1.5))
+        d.ellipse([S(x - 6), S(y - 6), S(x + 6), S(y + 6)], fill=B.ca(fc or B.RED, a), outline=B.ca(col, a), width=B.SW(1.5))
 
 
 def water_route(img, v, js, t, a, t0=0.0):
@@ -694,7 +782,7 @@ EMM_PH = Image.open(B.SP + 'assets/rg/emm_open.png').convert('RGB')
 TU1 = 2.8
 UF = 6.4; UD = 8.3; UP = 9.2; UA = 10.2
 TV = 4.7          # «Cada generador tiene su propia válvula…»
-CA0 = 12.9; CB0 = 17.1; CC0 = 21.3; CD0 = 25.0; LU = 28.4
+CA0 = 12.9; CV0 = 16.9; CB0 = 22.1; CC0 = 26.3; CD0 = 30.0; LU = 33.4   # CV0: primer plano de la WF-VC
 CL_EMM = [B.Cloud(300 + i, 2200, 0.0, 7.0, (0.55, 1.25), 0.2, (300, 470)) for i in range(7)]
 UAC_BOX = (60, 230, 1020, 1100)
 P_N2 = [(352, 186), (360, 150), (385, 142), (405, 165), (412, 190), (437, 197), (527, 200), (615, 200), (705, 200)]
@@ -727,7 +815,7 @@ def pulse(d, p, t, t0, a, col=(214, 10, 32), n=3, rmax=46):
 
 
 def uac_route(img, v, js, t, a, t0=0.0, active=None, dry=0.0):
-    """batería UAC -> válvulas WF-PAV -> un colector por generador (+ sala de transformadores).
+    """batería UAC -> válvulas de control WF-VC -> colector de la sala de generadores (+ sala de transformadores).
     a: realce de la alimentación; active: índice del colector por el que circula el agua; dry: colectores en reposo"""
     if 'uac_feed' not in js:
         return None
@@ -745,6 +833,10 @@ def uac_route(img, v, js, t, a, t0=0.0, active=None, dry=0.0):
             ca = a * ss(t0 + 0.5, t0 + 1.0, t)
             _route(img, lambda q: q, c, WATER, ca, w=3.4)
             _dots(img, c, t - t0 - 0.5, ca, WATER, n=14, speed=0.22)
+            if active == 0 and 'uac_c2' in js:
+                c2 = [v(p) for p in js['uac_c2']]
+                _route(img, lambda q: q, c2, WATER, ca, w=3.4)
+                _dots(img, c2, t - t0 - 0.9, ca, WATER, n=8, speed=0.3)
     return feed
 
 
@@ -819,7 +911,7 @@ def _st_gen(t, L, second=False):
             sysa_ = ss(TU1 + 0.1, TU1 + 0.5, t) * (1 - ss(UF - 0.4, UF, t))
             tag(d, 70, 300, 'Cilindro de N₂', win(t, TU1 + 0.5, TV) * sysa_ * a, v(jg['uac_n2']))
             tag(d, 420, 262, 'Cilindros de agua', win(t, TU1 + 0.8, TV) * sysa_ * a, v(jg['uac']))
-            tag(d, 70, 1010, 'Válvulas WF-PAV: una por generador', win(t, TV, UF - 0.2) * sysa_ * a,
+            tag(d, 70, 1010, 'Válvulas de control WF-VC: una por sala', win(t, TV, UF - 0.2) * sysa_ * a,
                 v(jg['uac_pav'][1]) if 'uac_pav' in jg else None)
             tag(d, 600, 1010, 'Difusores abiertos EMM-416549', win(t, TU1 + 1.1, UF - 0.2) * sysa_ * a, v(jg['gen_noz']))
             tag(d, 70, 1010, 'Incendio en un grupo electrógeno', win(t, UF + 0.4, UD - 0.1) * a, v(jg['gfire_top']))
@@ -830,16 +922,16 @@ def _st_gen(t, L, second=False):
             tag(d, 70, 300, 'Central de extinción', win(t, UP + 0.2, CA0) * a, v(jg['gpanel']))
             if 'uac_pav' in jg:
                 pulse(d, v(jg['uac_pav'][0]), t, UA, win(t, UA, CA0) * a)
-                tag(d, 600, 262, 'Se abre solo esta válvula', win(t, UA + 0.1, CA0) * a, v(jg['uac_pav'][0]))
-                tag(d, 70, 1010, 'Resto de válvulas: cerradas', win(t, UA + 0.5, CA0) * a, v(jg['uac_pav'][2]))
+                tag(d, 600, 262, 'Se abre la válvula de esta sala', win(t, UA + 0.1, CA0) * a, v(jg['uac_pav'][0]))
+                tag(d, 70, 1010, 'Válvula de transformadores: cerrada', win(t, UA + 0.5, CA0) * a, v(jg['uac_pav'][1]))
         else:
-            tag(d, 600, 1010, 'Descarga sobre el generador afectado', win(t, CC0 + 0.6, CC0 + 2.6) * a, v(jg['gen_noz']))
+            tag(d, 600, 1010, 'Descarga en la sala de generadores', win(t, CC0 + 0.6, CC0 + 2.6) * a, v(jg['gen_noz']))
             tag(d, 70, 1010, 'Fuego extinguido', win(t, CC0 + 2.0, CD0 - DZP) * a, v(jg['gfire_top']))
     return lay, tags, {'uac': v(jg['uac']), 'room': v(jg['genroom']), 'noz': v(jg['gen_noz']), '_kp': kp_screen('gen', v)}
 
 
 def _uac_map(t):
-    k = UAC_K * (1.0 + 0.04 * ss(CA0, CB0, t))
+    k = UAC_K * (1.0 + 0.04 * ss(CA0, CV0, t))
     cx, cy = 540, 640
     return k, cx, cy, (lambda px, py: (cx + (px - UAC_PH.width / 2) * k, cy + (py - UAC_PH.height / 2) * k))
 
@@ -853,17 +945,45 @@ def _st_photo(t, L):
     if aa > 0.01:
         ld = ImageDraw.Draw(lay)
         _flow_dots(ld, [Pm(*q) for q in P_PIL], ta, aa * (1 - ss(1.6, 2.2, ta)), n=6, speed=0.6)
-        _flow_dots(ld, [Pm(*q) for q in P_N2], ta - 0.6, aa * ss(0.6, 1.0, ta), n=18, speed=0.35, col=(60, 170, 90))
+        # nitrógeno en rojo; agua en azul
+        _flow_dots(ld, [Pm(*q) for q in P_N2], ta - 0.6, aa * ss(0.6, 1.0, ta), n=18, speed=0.35)
         for k_, pw_ in enumerate(P_W):
-            _flow_dots(ld, [Pm(*q) for q in pw_], ta - 1.4 - 0.15 * k_, aa * ss(1.4, 1.9, ta), n=7, speed=0.45, col=(110, 170, 235))
-        _flow_dots(ld, [Pm(*q) for q in P_OUT], ta - 2.2, aa * ss(2.2, 2.6, ta), n=5, speed=0.7, col=(110, 170, 235))
-        pulse(ld, Pm(357, 300), t, CA0 + 0.3, aa * (1 - ss(2.4, 3.0, ta)), col=(40, 150, 80), rmax=70)
+            _flow_dots(ld, [Pm(*q) for q in pw_], ta - 1.4 - 0.15 * k_, aa * ss(1.4, 1.9, ta), n=7, speed=0.45, fc=WATER)
+        _flow_dots(ld, [Pm(*q) for q in P_OUT], ta - 2.2, aa * ss(2.2, 2.6, ta), n=5, speed=0.7, fc=WATER)
+        pulse(ld, Pm(357, 300), t, CA0 + 0.3, aa * (1 - ss(2.4, 3.0, ta)), rmax=70)
 
     def tags(d, a):
-        tag(d, 70, 1010, 'Cilindro de N₂: presuriza la batería', win(t, CA0 + 0.5, CB0) * a, Pm(357, 420))
-        tag(d, 600, 1010, 'Cilindros de agua', win(t, CA0 + 1.3, CB0) * a, Pm(700, 450))
-        tag(d, 600, 262, 'Salida hacia las válvulas WF-PAV', win(t, CA0 + 2.2, CB0) * a, Pm(572, 150))
+        tag(d, 70, 1010, 'Cilindro de N₂: presuriza la batería', win(t, CA0 + 0.5, CV0) * a, Pm(357, 420))
+        tag(d, 600, 1010, 'Cilindros de agua', win(t, CA0 + 1.3, CV0) * a, Pm(700, 450))
+        tag(d, 600, 262, 'Salida hacia las válvulas WF-VC', win(t, CA0 + 2.2, CV0) * a, Pm(572, 150))
     return lay, tags, {'bank': Pm(545, 450), 'out': Pm(570, 120), '_panel': True}
+
+
+
+def _st_vc(t, L):
+    """primer plano de la válvula de control WF-VC (foto): la central la abre y el agua pasa al colector de la sala"""
+    jv = B.SHOTS['vcd'][2]
+    v = B.View(1.0 + 0.04 * ss(CV0, CB0, t), 0, 20)
+    lay = Image.new('RGBA', (W * SS, H * SS), CLEAR)
+    B.draw_shot(lay, 'vcd', t, v.k * B.RES[0] / W, 1.0, dy=20, window=True)
+    tv = t - CV0
+    opn = ss(1.0, 1.4, tv)
+    _route(lay, v, jv['vc_wet'], WATER, 0.85, w=3.0, glow=False)              # entrada con agua de la batería
+    if opn < 0.99:
+        _route(lay, v, jv['vc_dry'], AIR, 1 - opn, w=3.0, dashed=True, glow=False)   # salida seca hasta abrir
+    if opn > 0.01:
+        _route(lay, v, jv['vc_dry'], WATER, opn, w=3.0, glow=False)
+        _dots(lay, [v(q) for q in jv['vc_wet']] + [v(q) for q in jv['vc_dry']], tv - 1.0, opn, WATER, n=12, speed=0.4)
+    ld = ImageDraw.Draw(lay)
+    pulse(ld, v(jv['vc_sol']), t, CV0 + 0.4, ss(0.4, 0.7, tv) * (1 - ss(2.2, 2.8, tv)))
+    pulse(ld, v(jv['vc_box']), t, CV0 + 1.8, ss(1.8, 2.1, tv), col=(40, 120, 220))
+
+    def tags(d, a):
+        tag(d, 640, 300, 'Solenoide: la abre la central', win(t, CV0 + 0.5, CB0) * a, v(jv['vc_sol']))
+        tag(d, 70, 300, 'Entrada desde la batería', win(t, CV0 + 0.8, CB0) * a, v(jv['vc_wet'][1]))
+        tag(d, 640, 1010, 'Presostato: confirma el paso de agua', win(t, CV0 + 1.9, CB0) * a, v(jv['vc_box']))
+        tag(d, 70, 1010, 'Salida al colector de generadores', win(t, CV0 + 1.3, CB0) * a, v(jv['vc_dry'][1]))
+    return lay, tags, {'in': v(jv['vc_wet'][1]), 'out': v(jv['vc_dry'][1]), 'body': v(jv['vc_body']), '_panel': True}
 
 
 def _st_noz(t, L):
@@ -892,8 +1012,8 @@ def _st_noz(t, L):
 
     def tags(d, a):
         tag(d, 640, 380, 'Difusor abierto EMM-416549', win(t, CB0 + 0.3, CC0) * a, v(jn['cn_hex']))
-        tag(d, 640, 820, 'Insertos de orificio', win(t, CB0 + 1.0, CC0) * a, v(jn['cn_ins']))
-        tag(d, 70, 1010, 'Descarga simultánea sobre el generador', win(t, CB0 + 1.8, CC0) * a, None)
+        tag(d, 640, 820, 'Microdifusores', win(t, CB0 + 1.0, CC0) * a, v(jn['cn_ins']))
+        tag(d, 70, 1010, 'Descarga simultánea sobre los grupos', win(t, CB0 + 1.8, CC0) * a, None)
     return lay, tags, {'head': hd, '_panel': True}
 
 
@@ -911,7 +1031,7 @@ def _st_site_end(t, L):
 
 
 def _uac_stage(i, t, L):
-    if i == 5:
+    if i == 6:
         return _st_site_end(t, L)
     if i == 0:
         return _st_site(t, L)
@@ -920,13 +1040,15 @@ def _uac_stage(i, t, L):
     if i == 2:
         return _st_photo(t, L)
     if i == 3:
+        return _st_vc(t, L)
+    if i == 4:
         return _st_noz(t, L)
     return _st_gen(t, L, True)
 
 
 # (instante, foco en A, foco en B, R) — R=None: ajuste exacto entre planos isométricos del mismo modelo
-UAC_TR = [(TU1, 'room', None, None), (CA0, 'uac', 'bank', 4.1), (CB0, 'out', 'head', 3.0), (CC0, 'head', 'noz', 1 / 8.0),
-          (CD0, 'room', None, None)]
+UAC_TR = [(TU1, 'room', None, None), (CA0, 'uac', 'bank', 4.1), (CV0, 'out', 'in', 1.4), (CB0, 'out', 'head', 2.2),
+          (CC0, 'head', 'noz', 1 / 8.0), (CD0, 'room', None, None)]
 
 
 def sc_uac(t, L, img):
@@ -950,7 +1072,7 @@ def sc_uac(t, L, img):
     if not done:
         bounds = [0.0] + [T for T, *_ in UAC_TR] + [L + 1]
         i = max(j for j in range(len(bounds) - 1) if t >= bounds[j]) if t >= 0 else 0
-        lay, tg, fo = _uac_stage(min(i, 5), t, L)
+        lay, tg, fo = _uac_stage(min(i, 6), t, L)
         if fo.get('_panel') and B.PANEL_BG[3] > 0:
             img.alpha_composite(V.mclip(Image.new('RGBA', img.size, B.PANEL_BG)))
         img.alpha_composite(V.mclip(lay))
@@ -959,11 +1081,14 @@ def sc_uac(t, L, img):
     title(d, 'OTROS RIESGOS DEL EDIFICIO', 'Generadores y transformadores · RG W-FOG UAC', ss(0.2, 0.7, t))
     subtitle(d, 'Generadores y transformadores: RG W-FOG UAC, baterías de agua y nitrógeno, sin bombas ni corriente eléctrica.',
              win(t, 0.5, TV))
-    subtitle(d, 'Cada generador tiene su propia válvula de preacción WF-PAV junto a la batería.', win(t, TV, UF))
-    subtitle(d, 'Ante un incendio en un generador, los detectores lo identifican y la central abre solo su válvula.',
+    subtitle(d, 'Cada sala tiene su propia válvula de control WF-VC junto a la batería: una para generadores y otra para transformadores.', win(t, TV, UF))
+    subtitle(d, 'Ante un incendio en un generador, los detectores lo identifican y la central abre solo la válvula de esa sala.',
              win(t, UF, CA0 + 1.0))
-    subtitle(d, 'El nitrógeno impulsa el agua por su colector hasta los difusores EMM-416549, que descargan sobre ese grupo.',
-             win(t, CA0 + 1.0, L))
+    subtitle(d, 'El nitrógeno presuriza la batería y empuja el agua hacia las válvulas de control WF-VC.', win(t, CA0 + 1.0, CV0 + 0.3))
+    subtitle(d, 'La central abre la WF-VC de esa sala: el agua entra por la izquierda, sale por abajo hacia su colector y el presostato lo confirma.',
+             win(t, CV0 + 0.3, CB0 + 0.4))
+    subtitle(d, 'El colector lleva el agua a los difusores EMM-416549, que descargan a la vez sobre los grupos y extinguen el fuego.',
+             win(t, CB0 + 0.4, L))
 
 # =====================================================================================
 # v2 (revisión de I+D): detección electrónica, preacción y casos de seguridad
@@ -1116,8 +1241,12 @@ def _v_pavd(t, t0, L):
 
 def _networks(img, v, js, t, a_wet, a_dry, water_dc=0.0, t0=0.0):
     wet = _route(img, v, js['wet_all'] + [], WATER, a_wet, w=3.6)
+    if 'wet_top' in js:
+        _route(img, v, js['wet_top'], WATER, a_wet, w=3.6)
     _route(img, v, js['wet'], WATER, a_wet, w=3.6, glow=False)
-    for k_ in ('dry_dc', 'dry_uf', 'dry_ctrl', 'dry_pump'):
+    if 'dry_ctrl' in js:                       # centro de control: red húmeda (válvula de sección WF-SV)
+        _route(img, v, js['dry_ctrl'], WATER, a_wet * 0.8, w=3.0, glow=False)
+    for k_ in ('dry_dc', 'dry_uf'):
         if k_ in js:
             _route(img, v, js[k_], AIR, a_dry, w=3.0, dashed=True, glow=False)
     if water_dc > 0.01:
@@ -1139,8 +1268,9 @@ def sc_preaction(t, L, img):
         _networks(la, vA, js, t, ss(0.5, 1.0, t) * ua, ss(1.6, 2.1, t) * ua)
         wm = vA(js['wet_all'][1]); dm = vA(js['dry_ctrl'][-1])
         tag(d, 70, 1010, 'Red húmeda: agua', win(t, 0.8, L) * ua, wm)
-        tag(d, 600, 262, 'Red seca: aire a presión', win(t, 1.9, L) * ua, vA(js['dry_pump'][-1]))
+        tag(d, 600, 262, 'Red seca: aire a presión', win(t, 1.9, L) * ua, vA(js['dry_dc'][3]))
         tag(d, 600, 1010, 'Válvulas WF-PAV: una por zona', win(t, 2.8, L) * ua, vA(js['pav'][1]))
+        tag(d, 70, 300, 'Válvula de sección WF-SV', win(t, 3.4, L) * ua, vA(js['pav'][2]))
     if t > TP_B - DZP:
         lb = Image.new('RGBA', (W * SS, H * SS), (0, 0, 0, 0))
         vB = _v_pavd(t, TP_B, L)
@@ -1154,8 +1284,11 @@ def sc_preaction(t, L, img):
             _dots(lb, [vB(q) for q in jv['pv_wet']] + [vB(q) for q in jv['pv_dry']], t - (L - 2.3), ss(L - 2.3, L - 1.9, t), WATER, n=10, speed=0.4)
         tag(d, 640, 300, 'Solenoide', win(t, TP_B + 1.0, L) * ub, vB(jv['pv_sol']))
         tag(d, 70, 960, 'Presostato de supervisión', win(t, TP_B + 1.6, L) * ub, vB(jv['pv_ps']))
-        tag(d, 70, 300, 'Disparo manual', win(t, TP_B + 2.2, L) * ub, vB(jv['pv_top']))
+        tag(d, 70, 300, 'Disparo manual', win(t, TP_B + 2.2, L - 2.4) * ub, vB(jv['pv_top']))
         tag(d, 640, 1010, 'Válvula abierta', win(t, L - 2.2, L) * ub, vB(jv['pv_body']))
+        if 'pv_conf' in jv:
+            tag(d, 70, 300, 'Confirmación de activación', win(t, L - 1.6, L) * ub, vB(jv['pv_conf']))
+            pulse(ImageDraw.Draw(lb), vB(jv['pv_conf']), t, L - 1.8, ss(L - 1.8, L - 1.5, t) * ub, col=(40, 120, 220))
     if la is not None and lb is not None:
         js = B.SHOTS['proom2'][2]; jv = B.SHOTS['pavd'][2]
         vA = _v_preA(t); vB = _v_pavd(t, TP_B, L)
@@ -1208,7 +1341,8 @@ def sc_pump2(t, L, img):
         _networks(LC, v, js, t, 1.0, 0.6, water_dc=ss(TC2 + 0.3, TC2 + 0.8, t), t0=TC2 + 0.3)
         uc = ss(TC2 + DZP - 0.1, TC2 + DZP + 0.2, t)
         tag(d, 600, 262, 'Hacia la zona activada', win(t, TC2 + 1.0, L) * uc, v(js['dry_dc'][1]))
-        tag(d, 70, 1010, 'Resto de válvulas: cerradas', win(t, TC2 + 1.6, L) * uc, v(js['pav'][2]))
+        tag(d, 70, 1010, 'Resto de válvulas: cerradas', win(t, TC2 + 1.6, L) * uc, v(js['pav'][1]))
+        tag(d, 70, 300, 'Válvula de sección WF-SV', win(t, TC2 + 2.2, L) * uc, v(js['pav'][2]))
     if LA is not None and LB is not None:
         v = _v_pump(t)
         Pm = _pump_map(t)
@@ -1229,7 +1363,7 @@ def sc_pump2(t, L, img):
         V.gauge(img, t, ss(0.4, 0.9, t) * (1 - ss(TZ2 - DZP, TZ2 - DZP + 0.3, t)), (720, 236, 1010, 480))
     d = ImageDraw.Draw(img)
     V.step_header(d, 5, 'ARRANQUE DEL BOMBEO', 'Grupo de bombeo W-FOG UAP · sala aledaña', ss(0.2, 0.7, t))
-    subtitle(d, 'La caída de presión arranca el grupo de bombeo W-FOG UAP, en una sala aledaña.', win(t, 0.5, TZ2 + 0.6))
+    subtitle(d, 'La caída de presión produce el arranque del grupo de bombeo W-FOG UAP, en una sala aledaña.', win(t, 0.5, TZ2 + 0.6))
     subtitle(d, 'El motor eléctrico acciona la bomba de pistones, y el agua circula solo hacia la válvula que se ha activado.',
              win(t, TZ2 + 0.6, L))
 
@@ -1288,7 +1422,7 @@ def sc_safety1(t, L, img):
     img.alpha_composite(V.mclip(lay))
     d = ImageDraw.Draw(img)
     title(d, 'SEGURIDAD DE LA PREACCIÓN', 'Rotura accidental de una ampolla', ss(0.2, 0.7, t))
-    subtitle(d, 'La preacción también protege frente a errores. Si una ampolla se rompe por accidente, el aire de la tubería se escapa.',
+    subtitle(d, 'La preacción también protege frente a falsas alarmas y accidentes. Si una ampolla se rompe por accidente, el aire de la tubería se escapa.',
              win(t, 0.5, TS1 + 0.4))
     subtitle(d, 'El presostato da la alarma, pero la válvula sigue cerrada porque no hay detección: no sale agua.', win(t, TS1 + 0.4, L))
 
@@ -1338,12 +1472,143 @@ def sc_safety2(t, L, img):
     subtitle(d, 'Sin fuego no se rompe ninguna ampolla y las boquillas permanecen cerradas.', win(t, TS2 + 0.4, L))
 
 
+
+# ---------------- CENTRO DE CONTROL: difusores MM-P50 + válvula de sección WF-SV (red húmeda) ----------------
+# A: plano de la sala con su red llena de agua · B: un MM-P50 rompe su ampolla y descarga · C: la WF-SV detecta el paso de agua
+TCA = 7.0           # zoom de la sala al difusor
+TCB = 12.8          # fundido al primer plano de la WF-SV
+L_CTRL = 19.4
+TCBR = 2.2          # rotura de la ampolla (s después de TCA)
+
+
+def _v_ctrlA(t):
+    return B.View(0.80 + 0.04 * ss(0, TCA, min(t, TCA)), 160, 80)
+
+
+def _v_ctrlB(t):
+    return B.View(1.0 + 0.05 * ss(TCA, TCB, t))
+
+
+def _v_svd(t, L):
+    return B.View(1.0 + 0.04 * ss(TCB, L, t), 0, 20)
+
+
+def sc_ctrl(t, L, img):
+    """otra sala del edificio: el centro de control, con difusores MM-P50 en red húmeda y válvula de sección WF-SV"""
+    d = ImageDraw.Draw(img)
+    js = B.SHOTS['proom2'][2]
+    la = lb = lc = None
+    if t < TCA + DZP:
+        la = Image.new('RGBA', (W * SS, H * SS), (0, 0, 0, 0))
+        vA = _v_ctrlA(t)
+        B.draw_shot(la, 'proom2', t, vA.k * B.RES[0] / W, 1.0, dx=vA.dx, dy=vA.dy, window=True)
+        ua = 1 - ss(TCA - DZP, TCA - DZP + 0.2, t)
+        net = ss(0.4, 1.0, t)
+        if 'dry_ctrl' in js:
+            _route(la, vA, js['wet_all'] + [], WATER, net * 0.8, w=3.2, glow=False)
+            _route(la, vA, js['dry_ctrl'], WATER, net, w=3.6)
+            for q in js.get('ctrl_noz', []):
+                pulse(ImageDraw.Draw(la), vA(q), t, 1.4, net * ss(1.4, 1.7, t), rmax=24, n=2, col=WATER)
+        tag(d, 70, 1010, 'Centro de control', win(t, 0.4, L) * ua, vA(js['ctrlroom']))
+        tag(d, 600, 1010, 'Difusores MM-P50', win(t, 1.4, L) * ua, vA(js['ctrl_noz'][2]))
+        tag(d, 70, 300, 'Válvula de sección WF-SV', win(t, 1.9, L) * ua, vA(js.get('sv', js['pav'][-1])))
+        _p4, _p5 = vA(js['dry_ctrl'][4]), vA(js['dry_ctrl'][5])
+        tag(d, 70, 300, 'Red llena de agua hasta los difusores', win(t, 2.6, L) * ua, (_p4[0] + 0.1 * (_p5[0] - _p4[0]), _p4[1] + 0.1 * (_p5[1] - _p4[1])))
+        B.tag_block((600, 240, 1020, 440))           # sitio de la tarjeta FM: las etiquetas no van encima
+        a = ss(3.0, 3.6, t) * ua
+        if a > 0.01 and B.UI[0]:
+            dy = 18 * (1 - a)
+            box = (610, 250 + dy, 1010, 420 + dy)
+            card(img, box, a)
+            B.fit_logo(img, V.FM_LOGO, (box[0] + 10, box[1] + 10, box[0] + 170, box[3] - 10), a, pad=14)
+            du = ImageDraw.Draw(B.uiimg(img))
+            du.text((S(box[0] + 186), S(box[1] + 40)), TR('Sistema aprobado'), font=B.F_SM, fill=B.ca(B.INK2, a))
+            du.text((S(box[0] + 182), S(box[1] + 56)), 'FM', font=V.F_STAT_S, fill=B.ca(B.RED, a))
+            du.text((S(box[0] + 185), S(box[1] + 122)), 'APPROVED', font=V.F_T1, fill=B.ca(B.RED, a))
+    if TCA - DZP < t < TCB + PUSH:
+        lb = Image.new('RGBA', (W * SS, H * SS), (0, 0, 0, 0))
+        vB = _v_ctrlB(t)
+        tb = t - TCA
+        jc = B.SHOTS['ceil_a'][2]
+        bulb = vB(jc['bulb'])
+        heat = ss(0.0, 1.6, tb) * (1 - ss(TCBR + 1.6, TCBR + 3.2, tb))
+        if heat > 0.01:
+            glow, gd = low()
+            for rr, al in ((420, 60), (260, 90), (140, 120)):
+                r = rr * (0.6 + 0.4 * heat) / 4
+                gd.ellipse([bulb[0] / 4 - r, (bulb[1] + 260) / 4 - r, bulb[0] / 4 + r, (bulb[1] + 260) / 4 + r], fill=(255, 110, 30, int(al * heat)))
+            lb.alpha_composite(up(glow, 14))
+        B.draw_shot(lb, 'ceil_a' if tb < TCBR else 'ceil_b', t, vB.k * B.RES[0] / W, 1.0, window=True)
+        over, od = full(); fog, fd = low()
+        if TCBR < tb < TCBR + 1.4:
+            q = tb - TCBR
+            rng = np.random.default_rng(11)
+            for i in range(16):
+                ang = rng.uniform(0, 6.28); spd = rng.uniform(160, 320)
+                px = bulb[0] + math.cos(ang) * spd * q; py = bulb[1] + math.sin(ang) * spd * q + 380 * q * q
+                od.ellipse([S(px - 3), S(py - 3), S(px + 3), S(py + 3)], fill=(225, 50, 40, int(220 * clamp(1 - q))))
+        sa = ss(TCBR + 0.2, TCBR + 0.6, tb)
+        if sa > 0.01:
+            for i_, (a_, b_) in enumerate(jc['orif']):
+                p0 = vB(a_); p1 = vB(b_)
+                ang = math.atan2(p1[1] - p0[1], p1[0] - p0[0])
+                k = math.hypot(p1[0] - p0[0], p1[1] - p0[1]) / 260
+                spray(od, fd, CL_UFD[i_ % len(CL_UFD)], tb - TCBR - 0.2 - 0.03 * i_, p0[0], p0[1], ang, max(0.6, k), sa,
+                      drag=2.2, grav=90, fog_a=34, dot_a=235)
+        lb.alpha_composite(up(fog, 6)); lb.alpha_composite(over)
+        ub = ss(TCA + DZP - 0.1, TCA + DZP + 0.2, t) * (1 - ss(TCB - PUSH, TCB, t))
+        tag(d, 640, 300, 'Difusor MM-P50', win(t, TCA + 0.8, TCB) * ub, vB(jc['hex']))
+        tag(d, 640, 820, 'Boquilla activada', win(t, TCA + TCBR + 0.3, TCB) * ub, vB(jc['bulb']))
+        tag(d, 70, 1010, 'Descarga sin esperar a la detección', win(t, TCA + TCBR + 1.0, TCB) * ub, None)
+    if t > TCB - PUSH:
+        lc = Image.new('RGBA', (W * SS, H * SS), (0, 0, 0, 0))
+        vC = _v_svd(t, L)
+        jv = B.SHOTS['svd'][2]
+        B.draw_shot(lc, 'svd', t, vC.k * B.RES[0] / W, 1.0, dy=20, window=True)
+        tc = t - TCB
+        flow = ss(0.6, 1.0, tc)
+        _route(lc, vC, jv['sv_wet'], WATER, 0.85, w=3.0, glow=False)
+        _route(lc, vC, jv['sv_dry'], WATER, 0.85, w=3.0, glow=False)
+        if flow > 0.01:
+            _dots(lc, [vC(q) for q in jv['sv_wet']] + [vC(q) for q in jv['sv_dry']], tc - 0.6, flow, WATER, n=12, speed=0.4)
+        pulse(ImageDraw.Draw(lc), vC(jv['sv_handle']), t, TCB + 1.4, ss(1.4, 1.7, tc), col=(40, 120, 220))
+        uc = ss(TCB + PUSH - 0.1, TCB + PUSH + 0.2, t)
+        tag(d, 70, 300, 'Entrada desde el grupo de bombeo', win(t, TCB + 0.5, L) * uc, vC(jv['sv_wet'][1]))
+        tag(d, 70, 1010, 'Salida hacia difusores MM-P50', win(t, TCB + 0.9, L) * uc, vC(jv['sv_dry'][1]))
+        tag(d, 640, 1010, 'Detector de paso de agua: confirma el flujo', win(t, TCB + 1.5, L) * uc, vC(jv['sv_handle']))
+        tag(d, 640, 300, 'Normalmente abierta: se cierra tras la extinción', win(t, TCB + 2.4, L) * uc, None)
+    if la is not None and lb is not None:
+        vA = _v_ctrlA(t); vB = _v_ctrlB(t)
+        p = clamp((t - (TCA - DZP)) / (2 * DZP))
+        lay, _ = zoom_pair(la, lb, p, vA(js['ctrl_noz'][2]), vB(B.SHOTS['ceil_a'][2]['bulb']), 9.0, False, False, clip=True)
+        img.alpha_composite(V.mclip(lay))
+    elif lb is not None and lc is not None:
+        p = clamp((t - (TCB - PUSH)) / (2 * PUSH))
+        img.alpha_composite(V.mclip(_push_pair(V.mclip(lb), _panel_layer(lc), p)))
+    elif la is not None:
+        img.alpha_composite(V.mclip(la))
+    elif lb is not None:
+        img.alpha_composite(V.mclip(lb))
+    else:
+        img.alpha_composite(_panel_layer(lc))
+    d = ImageDraw.Draw(img)
+    title(d, 'ZONAS DE PERSONAL', 'Difusores MM-P50 · válvula de sección WF-SV', ss(0.2, 0.7, t))
+    subtitle(d, 'Las zonas de personal, como oficinas, se pueden proteger con el difusor MM-P50, aprobado por FM para riesgos HC-1.',
+             win(t, 0.5, TCA + 0.4))
+    subtitle(d, 'Se emplean válvulas de sección WF-SV normalmente abiertas, que confirman el flujo de agua en caso de activación…',
+             win(t, TCA + 0.4, TCB + 0.4))
+    subtitle(d, '…y permiten cerrarlo para poner de nuevo el sistema en servicio una vez extinguido el incendio.',
+             win(t, TCB + 0.4, L))
+
+
+_SF = L_FLOOR - 8.0      # el falso suelo crece con la fase de aplicación local
 SCENES = [(0.0, 2.4, B.sc_intro, False), (2.4, 7.8, V.sc_fm, True), (7.8, 13.2, V.sc_start, False),
           (13.2, 21.2, sc_detect, False), (21.2, 33.2, sc_preaction, True), (33.2, 40.4, V.sc_activation, False),
-          (40.4, 52.4, sc_pump2, True), (52.4, 60.0, V.sc_discharge, False), (60.0, 68.0, sc_floor, False),
-          (68.0, 73.4, V.sc_ext, True), (73.4, 83.4, sc_safety1, False), (83.4, 92.4, sc_safety2, False),
-          (92.4, 120.8, sc_uac, True), (120.8, 123.8, V.sc_outro, False)]
-DUR = 123.8
+          (40.4, 52.4, sc_pump2, True), (52.4, 60.0, V.sc_discharge, False), (60.0, 60.0 + L_FLOOR, sc_floor, False),
+          (68.0 + _SF, 73.4 + _SF, V.sc_ext, True), (73.4 + _SF, 83.4 + _SF, sc_safety1, False), (83.4 + _SF, 92.4 + _SF, sc_safety2, False),
+          (92.4 + _SF, 92.4 + _SF + L_CTRL, sc_ctrl, False),
+          (92.4 + _SF + L_CTRL, 92.4 + _SF + L_CTRL + LU, sc_uac, True), (92.4 + _SF + L_CTRL + LU, 95.4 + _SF + L_CTRL + LU, V.sc_outro, False)]
+DUR = 95.4 + _SF + L_CTRL + LU
 
 # anclajes con la locución: (tiempo local original, bloque, frase ES/EN o None = inicio del bloque)
 ANCHORS = {
@@ -1354,11 +1619,12 @@ ANCHORS = {
     7: [(4.4, 6, {'es': 'Es eficaz', 'en': 'It is effective'})],
     10: [(TS1 + 0.4, 9, {'es': 'y el presostato', 'en': "and the valve's"})],
     11: [(TS2 + 0.4, 10, {'es': 'sin fuego no', 'en': 'with no fire'})],
-    12: [(TV, 11, {'es': 'Cada generador tiene', 'en': 'Each generator has'}), (UF, 12, None), (CA0 + 1.0, 13, None)],
+    13: [(TV, 11, {'es': 'Cada generador tiene', 'en': 'Each generator has'}), (UF, 12, None), (CA0 + 1.0, 13, None)],
 }
-SCENE_TAIL = {12: 4.0}   # tiempo extra tras la voz (escenas con varias fases después de la última frase)
+SCENE_TAIL = {13: 10.0, 8: 4.4}   # tiempo extra tras la voz (escenas con varias fases después de la última frase)
 # bloques de locución por escena (en orden)
-SCENE_BLOCKS = {1: [0], 2: [1], 3: [2], 4: [3], 5: [4], 6: [5], 7: [6], 8: [7], 9: [8], 10: [9], 11: [10], 12: [11, 12, 13]}
+SCENE_BLOCKS = {1: [0], 2: [1], 3: [2], 4: [3], 5: [4], 6: [5], 7: [6], 8: [7], 9: [8], 10: [9], 11: [10], 13: [11, 12, 13]}
+# escena 12 (centro de control): sin bloque de voz hasta la nueva locución; dura L_CTRL
 
 
 def M_wide_med(tA, LA, tB, LB):
@@ -1398,7 +1664,7 @@ def M_ceil_uac(tA, LA, tB, LB):
 
 # transición tras la escena i: (tipo, semiduración, función de cámara -> (fA, fB, R), -)
 TRANS = {1: ('zin', 0.8, M_wide_med, None), 2: ('match', 0.6, M_med_med, None), 3: ('zin', 0.8, M_det_pre, None),
-         7: ('zout', 0.8, M_med_floor, None), 8: ('zout', 0.8, M_det_ext, None), 11: ('zout', 0.8, M_ceil_uac, None)}
+         7: ('zout', 0.8, M_med_floor, None), 8: ('zout', 0.8, M_det_ext, None)}
 PUSH = 0.4
 PUSH_Z = 1.04
 LOCK_POS = (S(1010) - LOCK_S.width, S(60))
@@ -1506,7 +1772,7 @@ PIECES = [
     dict(slug='Falso-suelo', hook='Un centro de datos tiene dos zonas que proteger: la sala y el falso suelo.',
          scenes=[1, 8], steps=({}, 0)),
     dict(slug='Generadores', hook='¿Cómo se protege un generador sin bombas ni corriente eléctrica?',
-         scenes=[12], steps=({}, 0)),
+         scenes=[13], steps=({}, 0)),
 ]
 KICKER = 'RG W-FOG · CENTROS DE DATOS'
 PC_CUR = [0]

@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import cpd_final as F
 B, V = F.B, F.V
-OUT = B.SP + 'covers_v3/'
+OUT = B.SP + 'covers_v4/'
 import os
 os.makedirs(OUT, exist_ok=True)
 FD = '/usr/share/fonts/opentype/inter/'
@@ -14,12 +14,16 @@ INK, INK2, RED = B.INK, B.INK2, B.RED
 TXT = {
     'es': dict(kicker='RG W-FOG · AGUA NEBULIZADA', head=['Protección contra', 'incendios para', 'centros de datos'],
                sub='Del inicio del fuego a la extinción, paso a paso', b1='Sistema aprobado', b2='FM APPROVED',
-               noz=[('MM-P51', 'Ambiente'), ('MM-P52 / MM-P53', 'Falso suelo'), ('EMM-416549', 'Sala de máquinas')],
-               extra=[('WF-PAV', 'Válvula de preacción'), ('W-FOG UAP', 'Grupo de bombeo'), ('RG W-FOG UAC', 'Batería agua + N₂')]),
+               noz=[('MM-P51', 'Ambiente'), ('MM-P52 / MM-P53', 'Falso suelo\nÁrea de cobertura'), ('EMM-416549', 'Sala de máquinas'),
+                    ('MM-P50', 'Zonas de personal'), ('WF-SV', 'Válvula de sección'), ('MM-P51', 'Falso suelo\nAplicación local')],
+               extra=[('WF-PAV', 'Válvula de preacción'), ('W-FOG UAP', 'Grupo de bombeo'), ('RG W-FOG UAC', 'Batería agua + N₂'),
+                      ('WF-VC', 'Válvula de control')]),
     'en': dict(kicker='RG W-FOG · WATER MIST', head=['Fire protection', 'for data centers'],
                sub='From ignition to extinction, step by step', b1='Approved system', b2='FM APPROVED',
-               noz=[('MM-P51', 'Room'), ('MM-P52 / MM-P53', 'Raised floor'), ('EMM-416549', 'Machinery spaces')],
-               extra=[('WF-PAV', 'Pre-action valve'), ('W-FOG UAP', 'Pump unit'), ('RG W-FOG UAC', 'Water + N₂ bank')]),
+               noz=[('MM-P51', 'Room'), ('MM-P52 / MM-P53', 'Raised floor\nArea of coverage'), ('EMM-416549', 'Machinery spaces'),
+                    ('MM-P50', 'Staff areas'), ('WF-SV', 'Section valve'), ('MM-P51', 'Raised floor\nLocal application')],
+               extra=[('WF-PAV', 'Pre-action valve'), ('W-FOG UAP', 'Pump unit'), ('RG W-FOG UAC', 'Water + N₂ bank'),
+                      ('WF-VC', 'Control valve')]),
 }
 
 
@@ -54,7 +58,14 @@ ROUTE = ([[_o(p) for p in hj['gp_feed']] + [_o(hj['gp_main'][1])]] + [[_o(hj['gp
 # red de la batería UAC: alimentación, válvulas y un colector por generador / sala de transformadores
 if 'uac_feed' in hj:
     ROUTE = ROUTE + [[_o(p) for p in hj['uac_feed']]] + [[_o(p) for p in c[1:]] for c in hj.get('uac_c', [])]
+    if 'uac_c2' in hj:
+        ROUTE = ROUTE + [[_o(p) for p in hj['uac_c2']]]
     NOZ_PTS = NOZ_PTS + [_o(p) for c in hj.get('uac_noz', []) for p in c]
+# centro de control (WF-SV -> difusores MM-P50) y falso suelo
+for k_ in ('dry_ctrl', 'dry_uf', 'wet_all', 'wet_top'):
+    if k_ in hj:
+        ROUTE = ROUTE + [[_o(p) for p in hj[k_]]]
+NOZ_PTS = NOZ_PTS + [_o(p) for p in hj.get('ctrl_noz', [])]
 
 
 def draw_route(canvas, P, wpx):
@@ -85,12 +96,33 @@ def _crop(img, c, r):
     return img.crop((int(cx_ - R_), int(cy_ - R_), int(cx_ + R_), int(cy_ + R_)))
 
 
+# centro de control: difusor MM-P50 (misma boquilla que la MM-P51), cerrado, sin fuego
+B.UI[0] = False; B.NOFADE[0] = True
+n50 = Image.new('RGBA', (B.W * B.SS, B.H * B.SS), (255, 255, 255, 255))
+V.sc_activation(0.15, 7.2, n50)
+B.UI[0] = True; B.NOFADE[0] = False
+NOZ_P50 = n50.crop((int(cx - R0), int(cy - R0), int(cx + R0), int(cy + R0)))
+
+
+def _photo_inset(fn, body, r):
+    ph = Image.open(B.SP + 'assets/rg/' + fn).convert('RGBA')
+    wb = Image.new('RGBA', (ph.width + 2 * r, ph.height + 2 * r), (255, 255, 255, 255)); wb.alpha_composite(ph, (r, r))
+    return wb.crop((int(body[0]), int(body[1]), int(body[0] + 2 * r), int(body[1] + 2 * r)))
+
+
+VALVE_SV = _photo_inset('wfsv_cut.png', (728, 420 - 40), 330)
+VALVE_VC = _photo_inset('wfvc_cut.png', (600 + 20, 455 - 20), 400)
 # falso suelo: fotograma del primer plano MM-P52/53 descargando
 B.UI[0] = False; B.NOFADE[0] = True
 fl = Image.new('RGBA', (B.W * B.SS, B.H * B.SS), (255, 255, 255, 255))
 _tf, _Lf = F.T2 + 2.6, 8.0
 F.sc_floor(_tf, _Lf, fl)
 NOZ_UF = _crop(fl, F._v_ufd(_tf, _Lf)(B.SHOTS['ufd_a'][2]['bulb']), 330)
+# falso suelo, aplicación local: primer plano de la MM-P51 descargando sobre la bandeja
+fl2 = Image.new('RGBA', (B.W * B.SS, B.H * B.SS), (255, 255, 255, 255))
+_tl = F.T3F + 3.2
+F.sc_floor(_tl, F.L_FLOOR, fl2)
+NOZ_UFL = _crop(fl2, F._v_ufl(_tl, F.L_FLOOR)(B.SHOTS['ufl_a'][2]['bulb']), 330)
 # sala de máquinas: primer plano del difusor abierto EMM descargando
 em = Image.new('RGBA', (B.W * B.SS, B.H * B.SS), (255, 255, 255, 255))
 _te = F.CB0 + 2.2
@@ -98,13 +130,9 @@ _lay, _tg, _fo = F._st_noz(_te, F.LU)
 em.alpha_composite(_lay)
 NOZ_EMM = _crop(em, (_fo['head'][0], _fo['head'][1] + 120), 360)
 B.UI[0] = True; B.NOFADE[0] = False
-INSETS = [NOZ, NOZ_UF, NOZ_EMM]
+INSETS = [NOZ, NOZ_UF, NOZ_EMM, NOZ_P50, VALVE_SV, NOZ_UFL]
 # válvula WF-PAV (render de producto) y grupo de bombeo W-FOG UAP (foto), sin rótulo
-_pv = Image.open(B.SP + 'assets/rg/wfpav_cut.png').convert('RGBA')        # foto real de la WF-PAV
-_wb = Image.new('RGBA', (_pv.width + 800, _pv.height + 800), (255, 255, 255, 255)); _wb.alpha_composite(_pv, (400, 400))
-_vb = _pv.getchannel('A').point(lambda v: 255 if v > 8 else 0).getbbox()
-_cxv, _cyv = (_vb[0] + _vb[2]) / 2 + 400, (_vb[1] + _vb[3]) / 2 + 400 - 40; _rv = max(_vb[2] - _vb[0], _vb[3] - _vb[1]) * 0.50
-VALVE = _wb.crop((int(_cxv - _rv), int(_cyv - _rv), int(_cxv + _rv), int(_cyv + _rv)))
+VALVE = _photo_inset('wfpav_v_cut.png', (495 + 40, 480 - 10), 400)      # foto real de la WF-PAV vertical
 _pp = F.PUMP2
 _PAD = 400
 _wp = Image.new('RGBA', (_pp.width + 2 * _PAD, _pp.height + 2 * _PAD), (255, 255, 255, 255)); _wp.alpha_composite(_pp, (_PAD, _PAD))
@@ -116,11 +144,16 @@ _wu = Image.new('RGBA', (_ub.width + 800, _ub.height + 800), (255, 255, 255, 255
 _bb = _ub.getchannel('A').point(lambda v: 255 if v > 8 else 0).getbbox()
 _cxu, _cyu = (_bb[0] + _bb[2]) / 2 + 400, (_bb[1] + _bb[3]) / 2 + 400; _ru = max(_bb[2] - _bb[0], _bb[3] - _bb[1]) * 0.58
 UACB = _wu.crop((int(_cxu - _ru), int(_cyu - _ru), int(_cxu + _ru), int(_cyu + _ru)))
-EXTRA = [(VALVE, _o(hj['pav'][1]) if 'pav' in hj else None), (PUMP, _o(hj['motor_c']) if 'motor_c' in hj else None),
-         (UACB, _o(hj['uac']) if 'uac' in hj else None)]
+EXTRA = [(VALVE, _o(hj['pav'][0]) if 'pav' in hj else None), (PUMP, _o(hj['motor_c']) if 'motor_c' in hj else None),
+         (UACB, _o(hj['uac']) if 'uac' in hj else None), (VALVE_VC, _o(hj['uac_pav'][0]) if 'uac_pav' in hj else None)]
 TGT = [NOZ_PTS[10] if len(NOZ_PTS) > 10 else None,
        _o(hj['uf_noz'][1]) if 'uf_noz' in hj else None,
-       _o(hj['gnoz'][1]) if hj.get('gnoz') else None]
+       _o(hj['gnoz'][1]) if hj.get('gnoz') else None,
+       _o(hj['ctrl_noz'][2]) if 'ctrl_noz' in hj else None,
+       _o(hj['sv']) if 'sv' in hj else None,
+       _o(hj['uf_noz'][4]) if 'uf_noz' in hj else None]
+# fila inferior ordenada como aparecen los destinos en la planta (de izquierda a derecha), sin cruces
+ROW_ORDER = tuple(sorted(range(len(TGT)), key=lambda k: (TGT[k] or (0, 0))[0] - (TGT[k] or (0, 0))[1] * 0.0))
 
 FM_LOGO = V.FM_LOGO
 
@@ -201,10 +234,13 @@ def inset(canvas, cx_, cy_, d, target=None, im=None, label=None, s=1.0):
         code, desc = label
         f1 = font('InterDisplay-Bold.otf', 46 * s); f2 = font('InterDisplay-Medium.otf', 36 * s)
         y = cy_ + rb + 22 * s
-        dr.rounded_rectangle([cx_ - f1.getlength(code) / 2 - 22 * s, y - 6 * s, cx_ + f1.getlength(code) / 2 + 22 * s, y + 104 * s],
+        dl = desc.split('\n')
+        hw = max([f1.getlength(code)] + [f2.getlength(q) for q in dl]) / 2
+        dr.rounded_rectangle([cx_ - hw - 22 * s, y - 6 * s, cx_ + hw + 22 * s, y + (104 + 44 * (len(dl) - 1)) * s],
                              radius=int(14 * s), fill=(255, 255, 255, 235))
         dr.text((cx_, y), code, font=f1, fill=RED, anchor='mt')
-        dr.text((cx_, y + 56 * s), desc, font=f2, fill=INK2, anchor='mt')
+        for i_, q in enumerate(dl):
+            dr.text((cx_, y + (56 + 44 * i_) * s), q, font=f2, fill=INK2, anchor='mt')
 
 
 def insets_extra(canvas, P, pos, d, t, s=1.0):
@@ -213,7 +249,6 @@ def insets_extra(canvas, P, pos, d, t, s=1.0):
         inset(canvas, x, y, d, P(tg) if tg is not None else None, im, t['extra'][k], s)
 
 
-ROW_ORDER = (1, 0, 2)   # de izquierda a derecha como aparecen en la planta: falso suelo, ambiente, sala de máquinas (sin cruces)
 
 
 def insets_row(canvas, P, xs, y, d, t, s=1.0):
@@ -239,8 +274,8 @@ def cover_45(lang):
     d.text((140, y + 26), t['sub'], font=font('InterDisplay-Medium.otf', 56), fill=INK2)
     d.rounded_rectangle([140, y + 120, 268, y + 134], radius=7, fill=RED)
     badge(c, 1270, 130, t, 1.75)
-    insets_extra(c, P, ((1440, 700), (1705, 700), (1970, 700)), 240, t, 0.68)
-    insets_row(c, P, (400, 1080, 1760), 2230, 420, t, 1.0)
+    insets_extra(c, P, ((1440, 700), (1705, 700), (1970, 700), (2010, 1200)), 240, t, 0.68)
+    insets_row(c, P, (205, 555, 905, 1255, 1605, 1955), 2270, 300, t, 0.72)
     out = c.convert('RGB').resize((1080, 1350), Image.LANCZOS)
     fn = OUT + f'Portada_RG-WFOG_DataCenter_{lang.upper()}_1080x1350.png'
     out.save(fn); return fn
@@ -265,8 +300,8 @@ def cover_169(lang):
     d.text((180, y + 20), t['sub'], font=font('InterDisplay-Medium.otf', 50), fill=INK2)
     d.rounded_rectangle([180, y + 106, 308, y + 120], radius=7, fill=RED)
     badge(c, 180, 1830, t, 1.75)
-    insets_extra(c, P, ((2620, 330), (3050, 330), (3480, 330)), 300, t, 0.82)
-    insets_row(c, P, (1760, 2330, 2900), 1810, 330, t, 0.88)
+    insets_extra(c, P, ((2400, 330), (2790, 330), (3180, 330), (3570, 330)), 280, t, 0.78)
+    insets_row(c, P, (1560, 1968, 2376, 2784, 3192, 3600), 1790, 270, t, 0.74)
     out = c.convert('RGB').resize((1920, 1080), Image.LANCZOS)
     fn = OUT + f'Portada_RG-WFOG_DataCenter_{lang.upper()}_1920x1080.png'
     out.save(fn); return fn

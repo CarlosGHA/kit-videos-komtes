@@ -172,7 +172,7 @@ EV = []
 for k, (kind, *_r) in F.TRANS.items():
     if kind in ('zin', 'zout'):
         EV.append(('whoosh', new[k][1] - 0.55, 0.15))
-IP, IA, IS, IF_, IU, IDT, IPR, IS1, IS2 = 6, 5, 2, 8, 12, 3, 4, 10, 11
+IP, IA, IS, IF_, IU, IDT, IPR, IS1, IS2 = 6, 5, 2, 8, 13, 3, 4, 10, 11
 EV += [('whoosh', g(IP, F.TZ2 - 0.55), 0.13), ('whoosh', g(IP, F.TC2 - 0.55), 0.12), ('whoosh', g(IF_, F.T2 - 0.55), 0.13)]
 EV += [('fire', g(IS, 1.2), 0.25), ('fire', g(IDT, 0.0), 0.15), ('fire', g(IA, 0.0), 0.12)]
 EV += [('alarm', g(IDT, 0.6), 0.05), ('whoosh', g(IDT, F.TD_A - 0.55), 0.12), ('click', g(IDT, F.TD_A + 2.6), 0.3)]
@@ -186,7 +186,11 @@ EV += [('glass', g(IS1, 0.3), 1.0), ('alarm', g(IS1, F.TS1 + 0.6), 0.04), ('alar
 EV += [('whoosh', g(IU, F.TU1 - 0.55), 0.13), ('fire', g(IU, F.UF), 0.18), ('alarm', g(IU, F.UD + 0.1), 0.05),
        ('click', g(IU, F.UA), 0.35), ('whoosh', g(IU, F.CA0 - 0.55), 0.13), ('gas', g(IU, F.CA0 + 0.6), 0.06),
        ('whoosh', g(IU, F.CB0 - 0.55), 0.12), ('mist', g(IU, F.CB0 + 0.5), 0.12), ('whoosh', g(IU, F.CC0 - 0.55), 0.12),
-       ('whoosh', g(IU, F.CD0 - 0.55), 0.12)]
+       ('whoosh', g(IU, F.CD0 - 0.55), 0.12), ('whoosh', g(IU, F.CV0 - 0.55), 0.12), ('click', g(IU, F.CV0 + 0.4), 0.3)]
+# centro de control: zoom al difusor, rotura de la ampolla, descarga y detector de paso de agua de la WF-SV
+IC = 12
+EV += [('whoosh', g(IC, F.TCA - 0.55), 0.13), ('fire', g(IC, F.TCA), 0.12), ('glass', g(IC, F.TCA + F.TCBR - 0.05), 1.3),
+       ('mist', g(IC, F.TCA + F.TCBR + 0.2), 0.1), ('click', g(IC, F.TCB + 1.4), 0.3)]
 
 
 # ------------------------------------------------------------------ pieza autoconclusiva para LinkedIn (solo 4:5)
@@ -473,17 +477,42 @@ if __name__ == '__main__':
         sys.exit()
     if os.environ.get('VO_MODE') == '--audio':
         build_audio(os.environ['VO_VIDEO'], OUT); print('done', OUT); sys.exit()
-    from multiprocessing import Pool
+    from multiprocessing import Process
     tmpv = OUT + '.noaudio.mp4'
     n = int(DUR * F.FPS)
-    ff = subprocess.Popen(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{OW}x{OH}',
-                           '-r', str(F.FPS), '-i', '-', '-c:v', 'libx264', '-preset', 'slow', '-crf', '16', '-profile:v', 'high',
-                           '-pix_fmt', 'yuv420p', tmpv], stdin=subprocess.PIPE)
-    with Pool(2) as pool:
-        for i, fb in enumerate(pool.imap(render, range(n), chunksize=3)):
-            ff.stdin.write(fb)
-            if i % 300 == 0:
-                print(i, flush=True)
-    ff.stdin.close(); ff.wait()
+    # dos tramos CONTIGUOS renderizados en orden (las etiquetas se fijan con la historia de fotogramas anteriores):
+    # el corte va al inicio de una escena y el 2.º tramo "calienta" desde el inicio de la escena anterior sin escribir nada
+    starts = [int(round(sc[0] * F.FPS)) for sc in F.SCENES]
+    cands = [(starts[i] - max(0, starts[i - 1] - int(1.5 * F.FPS)), i) for i in range(2, len(starts))
+             if 0.38 * n <= starts[i] <= 0.62 * n]
+    _, ci_ = min(cands) if cands else (0, min(range(1, len(starts)), key=lambda i: abs(starts[i] - n / 2)))
+    cut = starts[ci_]; warm = max(0, starts[ci_ - 1] - int(1.5 * F.FPS))
+    segs = [(0, 0, cut, tmpv + '.p0.mp4'), (warm, cut, n, tmpv + '.p1.mp4')]
+    print('tramos', segs, flush=True)
+
+    def _work(w0, s0, s1, path):
+        ff = subprocess.Popen(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{OW}x{OH}',
+                               '-r', str(F.FPS), '-i', '-', '-c:v', 'libx264', '-preset', 'slow', '-crf', '16', '-profile:v', 'high',
+                               '-pix_fmt', 'yuv420p', path], stdin=subprocess.PIPE)
+        for fi in range(w0, s1):
+            fb = render(fi)
+            if fi >= s0:
+                ff.stdin.write(fb)
+            if fi % 300 == 0:
+                print(fi, flush=True)
+        ff.stdin.close(); ff.wait()
+
+    ps = [Process(target=_work, args=sg) for sg in segs]
+    for p_ in ps:
+        p_.start()
+    for p_ in ps:
+        p_.join()
+    assert all(p_.exitcode == 0 for p_ in ps), 'fallo en un tramo'
+    lst = tmpv + '.txt'
+    open(lst, 'w').write(''.join(f"file '{sg[3]}'\n" for sg in segs))
+    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', lst, '-c', 'copy', tmpv], check=True)
+    for sg in segs:
+        os.remove(sg[3])
+    os.remove(lst)
     build_audio(tmpv, OUT)
     print('done', OUT)

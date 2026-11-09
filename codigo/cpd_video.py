@@ -171,11 +171,11 @@ def _ud(d):
     return ImageDraw.Draw(UIL[0]) if UIL[0] is not None else d
 
 
-def draw_shot(img, name, t, zoom, a=1.0, dy=0, led=True, window=False):
+def draw_shot(img, name, t, zoom, a=1.0, dy=0, led=True, window=False, dx=0):
     if NOFADE[0]:
         a = 1.0
     base, alt, js = SHOTS[name]
-    v = View(zoom, 0, dy)
+    v = View(zoom, dx, dy)
     im = base
     if alt is not None and led:
         f = 0.5 + 0.5 * math.sin(t * 5.3) * math.sin(t * 2.1 + 1)
@@ -343,7 +343,7 @@ TAG_SH, TAG_H = 24, 38
 TAG_K = (56, 76, 96, 120, 150, 185, 220, 260)   # separación en cada eje (px a 1080): la más corta que no pisa pieza
 TAG_X0, TAG_X1, TAG_Y0, TAG_Y1 = 24, W - 24, 268, 1062
 TAG_FIXED = [__import__('os').environ.get('TAG_OLD') == '1']          # True = posiciones manuales antiguas
-_TPEND = {'key': None, 'items': []}
+_TPEND = {'key': None, 'items': [], 'block': []}
 _TCACHE = {}
 
 
@@ -375,23 +375,65 @@ def _hits(px, py, w, boxes):
     return any(px < bx1 + 10 and px + w > bx0 - 10 and py < by1 + 8 and py + TAG_H > by0 - 8 for bx0, by0, bx1, by1 in boxes)
 
 
-def tag_layout(x, y, w, anchor, boxes=(), busy=None, txt=None, a=1.0):
+def _seg_rect(p0, p1, r, m=4):
+    """¿el segmento p0-p1 cruza el rectángulo r (x0,y0,x1,y1) ampliado m px?"""
+    x0, y0, x1, y1 = r[0] - m, r[1] - m, r[2] + m, r[3] + m
+    for i in range(13):
+        u = i / 12
+        qx, qy = p0[0] + u * (p1[0] - p0[0]), p0[1] + u * (p1[1] - p0[1])
+        if x0 <= qx <= x1 and y0 <= qy <= y1:
+            return True
+    return False
+
+
+def _seg_seg(a, b, c, d):
+    def cr(o, p, q):
+        return (p[0] - o[0]) * (q[1] - o[1]) - (p[1] - o[1]) * (q[0] - o[0])
+    return (cr(a, b, c) * cr(a, b, d) < 0) and (cr(c, d, a) * cr(c, d, b) < 0)
+
+
+def _clash(px, py, w, pl, lines, dots):
+    """penalización por pisar líneas guía / puntos rojos de otras etiquetas (y por cruzar sus líneas)"""
+    r = (px, py, px + w, py + TAG_H)
+    if any(r[0] - 8 <= dx <= r[2] + 8 and r[1] - 8 <= dy <= r[3] + 8 for dx, dy in dots):
+        return None                                          # nunca tapar el punto rojo de otra etiqueta
+    c = 0.0
+    for L in lines:
+        for i in range(len(L) - 1):
+            if _seg_rect(L[i], L[i + 1], r):
+                c += 2.0
+            for j in range(len(pl) - 1):
+                if _seg_seg(L[i], L[i + 1], pl[j], pl[j + 1]):
+                    c += 1.0
+    return c
+
+
+def tag_layout(x, y, w, anchor, boxes=(), busy=None, txt=None, a=1.0, lines=(), dots=()):
     ax, ay = anchor
     sx0 = 1 if x + w / 2 >= ax else -1
     sy0 = -1 if y + TAG_H / 2 < ay else 1
-    c = _TCACHE.get(txt)
-    # mientras la etiqueta es invisible se recalcula libremente; en cuanto se ve, se queda donde está (no salta)
-    if c is not None and a > 0.04 and math.hypot(c[0][0] - ax, c[0][1] - ay) < 120:
-        sx, sy, D = c[1:]
-        px, py, pl = _cand(ax, ay, w, sx, sy, D)
-        if _inside(px, py, w) and not _hits(px, py, w, boxes):
-            _TCACHE[txt] = ((ax, ay), sx, sy, D)
-            return px, py, pl
+    lst = _TCACHE.setdefault(txt, [])
+    ci = next((i for i, c in enumerate(lst) if math.hypot(c[0][0] - ax, c[0][1] - ay) < 120), None)
+    # mientras la etiqueta es invisible se recalcula libremente; en cuanto se ve, la pastilla queda FIJA en pantalla
+    # (no sigue al anclaje ni salta): solo la línea guía se estira hasta el punto rojo
+    if ci is not None and a > 0.04:
+        sx, sy, D = lst[ci][1:4]
+        if len(lst[ci]) < 5:
+            px, py, _ = _cand(lst[ci][0][0], lst[ci][0][1], w, sx, sy, D)
+        else:
+            px, py = lst[ci][4]
+        lst[ci] = ((ax, ay), sx, sy, D, (px, py))
+        ey = py + TAG_H / 2
+        edge = px if sx > 0 else px + w
+        return px, py, [(ax, ay), (edge - sx * TAG_SH, ey), (edge, ey)]
     best = None
     for oi, (sx, sy) in enumerate(((sx0, sy0), (sx0, -sy0), (-sx0, sy0), (-sx0, -sy0))):
         for ki, D in enumerate(TAG_K):
             px, py, pl = _cand(ax, ay, w, sx, sy, D)
             if not _inside(px, py, w) or _hits(px, py, w, boxes):
+                continue
+            cl = _clash(px, py, w, pl, lines, dots)
+            if cl is None:
                 continue
             ov = 0.0
             if busy is not None:
@@ -399,49 +441,97 @@ def tag_layout(x, y, w, anchor, boxes=(), busy=None, txt=None, a=1.0):
                 x0, y0 = int((px - 6) * f), int((py - 6) * f); x1, y1 = int((px + w + 6) * f) + 1, int((py + TAG_H + 6) * f) + 1
                 sub = m[max(0, y0):y1, max(0, x0):x1]
                 ov = float(sub.mean()) if sub.size else 0.0
-            cost = ov * 6.0 + ki * 0.3 + oi * 0.4
+            cl += 1.5 * sum(1 for j in range(len(pl) - 1) for bb in boxes if _seg_rect(pl[j], pl[j + 1], bb, 0))
+            cost = ov * 6.0 + ki * 0.3 + oi * 0.4 + cl
             if best is None or cost < best[0]:
                 best = (cost, sx, sy, D)
     if best is None:
         px, py, pl = _cand(ax, ay, w, sx0, sy0, TAG_K[0])
         px2 = min(max(px, TAG_X0), TAG_X1 - w); py2 = min(max(py, TAG_Y0), TAG_Y1 - TAG_H)
         pl[-1] = (pl[-1][0] + px2 - px, pl[-1][1] + py2 - py)
+        if txt is not None:
+            sxf = 1 if px2 + w / 2 >= ax else -1
+            ent = ((ax, ay), sxf, sy0, TAG_K[0], (px2, py2))
+            if ci is None:
+                lst.append(ent); del lst[:-6]
+            else:
+                lst[ci] = ent
         return px2, py2, pl
     _, sx, sy, D = best
+    px, py, pl = _cand(ax, ay, w, sx, sy, D)
     if txt is not None:
-        _TCACHE[txt] = ((ax, ay), sx, sy, D)
-    return _cand(ax, ay, w, sx, sy, D)
+        if ci is None:
+            lst.append(((ax, ay), sx, sy, D, (px, py)))
+            del lst[:-6]
+        else:
+            lst[ci] = ((ax, ay), sx, sy, D, (px, py))
+    return px, py, pl
 
 
-def _draw_tag(d, x, y, w, txt, a, anchor, pl):
+def _draw_lead(d, a, anchor, pl):
+    if a <= 0.01 or not anchor:
+        return
+    d.line([(S(px), S(py)) for px, py in pl], fill=ca(INK, a * 0.8), width=SW(1.5), joint='curve')
+    d.ellipse([S(anchor[0] - 5), S(anchor[1] - 5), S(anchor[0] + 5), S(anchor[1] + 5)], fill=ca(RED, a))
+
+
+def _draw_box(d, x, y, w, txt, a):
     if a <= 0.01:
         return
-    if anchor:
-        d.line([(S(px), S(py)) for px, py in pl], fill=ca(INK, a * 0.8), width=SW(1.5), joint='curve')
-        d.ellipse([S(anchor[0] - 5), S(anchor[1] - 5), S(anchor[0] + 5), S(anchor[1] + 5)], fill=ca(RED, a))
     d.rounded_rectangle([S(x), S(y), S(x + w), S(y + TAG_H)], radius=S(19), fill=ca(WHITE, 0.94 * a), outline=ca(INK, 0.35 * a), width=SW(1))
     d.text((S(x + 13), S(y + 7)), txt, font=F_SMB, fill=ca(INK, a))
 
 
+def _draw_tag(d, x, y, w, txt, a, anchor, pl):
+    _draw_lead(d, a, anchor, pl)
+    _draw_box(d, x, y, w, txt, a)
+
+
+def tag_block(box):
+    """zona ocupada por una tarjeta u otro rótulo fijo en esta escena: las etiquetas no se colocan encima"""
+    _TPEND['block'].append(tuple(box))
+
+
 def flush_tags(content=None):
     """coloca y dibuja las etiquetas pendientes de la escena; content = imagen ya compuesta de la escena"""
-    items = _TPEND['items']; _TPEND['key'] = None; _TPEND['items'] = []
+    items = _TPEND['items']; blk = _TPEND['block']; _TPEND['key'] = None; _TPEND['items'] = []; _TPEND['block'] = []
     if not items:
         return
     busy = _busy_map(content) if content is not None else None
-    boxes = []
+    boxes = list(blk) + [(x, y, x + w, y + TAG_H) for target, x, y, w, txt, a, anchor in items if anchor is None]
+    def _frozen(it):
+        _, x_, y_, w_, txt_, a_, an_ = it
+        if an_ is None or a_ <= 0.04:
+            return 1
+        return 0 if any(math.hypot(c[0][0] - an_[0], c[0][1] - an_[1]) < 120 for c in _TCACHE.get(txt_, [])) else 1
+    items = sorted(items, key=_frozen)                 # las ya visibles (fijas) reservan su sitio antes que las nuevas
+    placed = []; lines = []
     for target, x, y, w, txt, a, anchor in items:
-        px, py, pl = tag_layout(x, y, w, anchor, boxes, busy, txt, a)
+        if anchor is None:
+            if target is not None:
+                x = max(30, min(x, target.width / SS - w - 30))    # sin anclaje: nunca se sale del encuadre
+            placed.append((target, x, y, w, txt, a))
+            continue
+        dots = [it[6] for it in items if it[6] is not None and it[6] is not anchor and it[4] != txt]
+        px, py, pl = tag_layout(x, y, w, anchor, boxes, busy, txt, a, lines, dots)
+        lines.append(pl)
         boxes.append((px, py, px + w, py + TAG_H))       # reserva el sitio aunque aún no se vea: sin saltos
-        _draw_tag(ImageDraw.Draw(target), px, py, w, txt, a, anchor, pl)
+        _draw_lead(ImageDraw.Draw(target), a, anchor, pl)  # 1.º todas las líneas...
+        placed.append((target, px, py, w, txt, a))
+    for target, x, y, w, txt, a in placed:               # ...2.º todas las pastillas: ninguna línea pisa un letrero
+        _draw_box(ImageDraw.Draw(target), x, y, w, txt, a)
+
+
+TXT_TR = [lambda s_: s_]       # traducción (la fija el script de composición): el ancho de la pastilla se mide ya traducido
 
 
 def tag(d, x, y, txt, a, anchor=None):
     if not UI[0]:
         return
     d = _ud(d)
+    txt = TXT_TR[0](txt)
     w = F_SMB.getlength(txt) / SS + 26
-    if anchor and not TAG_FIXED[0]:
+    if not TAG_FIXED[0]:
         target = getattr(d, '_image', None)
         if _TPEND['key'] is not target and _TPEND['items']:
             flush_tags(None)                              # restos de otra escena sin flush: se dibujan tal cual

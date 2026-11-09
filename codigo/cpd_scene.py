@@ -1,7 +1,7 @@
 """Escena Blender: CPD isométrico protegido con RG W-FOG. Renderiza fotogramas fijos por plano
 y exporta coordenadas 2D de puntos clave para la animación compuesta en 2D.
 Uso: python3 cpd_scene.py <out_dir> <shot> [samples] [scale]"""
-import bpy, bmesh, math, json, sys, random
+import bpy, bmesh, math, json, sys, random, os
 from mathutils import Vector, Euler
 from bpy_extras.object_utils import world_to_camera_view
 import os as _os
@@ -131,8 +131,12 @@ def sph(name, loc, r, m, scale=(1, 1, 1)):
     bpy.ops.object.shade_smooth(); return o
 
 
+PIPELOG = []
+
+
 def pipe(name, a, b, r, m):
     a, b = Vector(a), Vector(b); d = b - a
+    PIPELOG.append((name, tuple(a), tuple(b), r))
     o = cyl(name, (a + b) / 2, r, d.length, m, verts=20)
     o.rotation_euler = d.to_track_quat('Z', 'Y').to_euler()
     return o
@@ -558,11 +562,16 @@ def build_hall():
             for j in range(6):
                 pipe(f'ufc{k}{j}', (UXA, yy - 0.12 + j * 0.05, 0.075 + (j % 2) * 0.03), (4.6, yy - 0.12 + j * 0.05, 0.075 + (j % 2) * 0.03), 0.026, M[mt])
         KEY['underfloor'] = [(0.4, -4.1, 0.3), (2.6, -4.1, 0.3), (3.8, -3.9, 0.3)]
-        # red bajo suelo: ramal bajo las baldosas con boquillas colgantes
-        UFZ = FH - 0.04
-        pipe('ufmain', (UXA, -4.08, UFZ), (4.6, -4.08, UFZ), 0.022, M['steel'])
+    # red bajo suelo: colector bajo las baldosas (siempre, aunque solo se vea con el suelo abierto) con boquillas colgantes
+    UFZ = FH - 0.04
+    UFX = (-3.8, -2.2, -0.6, 1.0, 2.6, 4.2) if SHOT == 'site_cov' else (0.0, 1.6, 3.2)
+    UFE = min(UFX) - 0.02                              # el colector termina en el último difusor (entra por la derecha)
+    pipe('ufmain', (UFE, -4.08, UFZ), (X1 - 0.45, -4.08, UFZ), 0.022, M['steel'])
+    cyl('ufcap', (UFE - 0.008, -4.08, UFZ), 0.026, 0.02, M['steel'], rot=(0, math.pi / 2, 0), verts=20)
+    KEY['uf_main'] = [(X1 - 0.45, -4.08, UFZ), (UFE, -4.08, UFZ)]
+    if cut:
         KEY['uf_noz'] = []
-        for k, x in enumerate((-3.8, -2.2, -0.6, 1.0, 2.6, 4.2) if SHOT == 'site_cov' else (0.0, 1.6, 3.2)):
+        for k, x in enumerate(UFX):
             pipe(f'ufdr{k}', (x, -4.08, UFZ), (x, -4.08, UFZ - 0.03), 0.014, M['steel'])
             nz = make_mmp50((x, -4.08, UFZ - 0.03), 0.00085, f'ufnz{k}', 'm32', broken=(SHOT == 'floor_det_b' and k == 1), detail=True)
             KEY['uf_noz'].append(nz['tip'])
@@ -604,13 +613,15 @@ def build_hall():
     PZ = FH + RH + 1.0
     KEY['nozzles'] = []
     MX = X1 - 0.3
-    pipe('main', (X0 + 0.2, -3.6, PZ), (X0 + 0.2, 2.1, PZ), 0.04, M['steel'])
+    XE = -4.6 - 0.03                                   # los ramales terminan en el último difusor, no en la pared
     # colector del CPD: alimentado desde la sala de bombeo aledaña
-    pipe('mainR', (MX, -3.6, PZ), (MX, Y1 - 0.15, PZ), 0.05, M['steel'])
-    KEY['gp_main'] = [(MX, Y1 - 0.15, PZ), (MX, -3.6, PZ)]
-    KEY['gp_br'] = [(MX, yy, PZ) for yy in (-3.6, -0.9, 2.1)] + [(X0 + 0.2, yy, PZ) for yy in (-3.6, -0.9, 2.1)]
+    # colector del CPD entre el primer y el último ramal (la alimentación entra desde la WF-PAV de racks a la altura de y = 1.2)
+    pipe('mainR', (MX, -3.6, PZ), (MX, 2.1, PZ), 0.05, M['steel'])
+    KEY['gp_main'] = [(MX, 2.1, PZ), (MX, -3.6, PZ)]
+    KEY['gp_br'] = [(MX, yy, PZ) for yy in (-3.6, -0.9, 2.1)] + [(XE, yy, PZ) for yy in (-3.6, -0.9, 2.1)]
     for yy in (-3.6, -0.9, 2.1):
-        pipe(f'br{yy}', (X0 + 0.2, yy, PZ), (MX, yy, PZ), 0.03, M['steel'])
+        pipe(f'br{yy}', (XE, yy, PZ), (MX, yy, PZ), 0.03, M['steel'])
+        cyl(f'brcap{yy}', (XE - 0.01, yy, PZ), 0.036, 0.024, M['steel'], rot=(0, math.pi / 2, 0), verts=24)
         for k in range(7):
             x = -4.6 + k * 1.75
             pipe(f'dr{yy}{k}', (x, yy, PZ), (x, yy, PZ - 0.12), 0.018, M['steel'])
@@ -669,7 +680,7 @@ def build_ceiling_detail(broken):
 
 
 
-def build_underfloor_detail(broken):
+def build_underfloor_detail(broken, local=False):
     """primer plano de la boquilla MM-P52/53 bajo el suelo técnico, mismo nivel de detalle que la de techo:
     baldosas por encima (corte), ramal de la red seca, boquilla colgante y bandeja de cables debajo"""
     k = 0.0034
@@ -688,11 +699,13 @@ def build_underfloor_detail(broken):
         box(f'ufpedh{px}{py}', (px, py, 0.745), (0.1, 0.1, 0.02), M['ped'])
         box(f'ufpedb{px}{py}', (px, py, -1.53), (0.16, 0.16, 0.02), M['ped'])
     # ramal de la red seca bajo el suelo y bajada a la boquilla
+    # local=True: aplicación local con MM-P51 (adaptador M31) bajada junto a la bandeja, apuntando a ella
+    NZ0 = -0.12 if local else 0.0
     pipe('ufp', (-2.8, 0.9, 0.55), (2.8, 0.9, 0.55), 0.13, M['steel'])
     pipe('ufd1', (0.0, 0.9, 0.55), (0.0, 0.0, 0.55), 0.075, M['steel'])
     sph('ufd1e', (0.0, 0.0, 0.55), 0.076, M['steel'])
-    pipe('ufd2', (0.0, 0.0, 0.55), (0.0, 0.0, 0.0), 0.07, M['steel'])
-    nz = make_mmp50((0, 0, 0.0), k, 'det', 'm32', broken=broken, detail=True)
+    pipe('ufd2', (0.0, 0.0, 0.55), (0.0, 0.0, NZ0), 0.07, M['steel'])
+    nz = make_mmp50((0, 0, NZ0), k, 'det', 'floor' if local else 'm32', broken=broken, detail=True)
     # bandejas con mazos de cables justo debajo de la boquilla (la niebla descarga sobre ellos)
     TZ = -1.50
     for ti, (ty, cols) in enumerate(((-0.05, ('cable_b', 'cable_y', 'cable_g')), (1.25, ('cable_y', 'cable_g', 'cable_b')))):
@@ -862,66 +875,70 @@ def build_pump_annex(X1h, Y0h, Y1h, PZ, MX):
 
 
 def build_preaction_station(X1h, PZ, MX):
-    """puesto de válvulas de preacción junto al muro medianero de la sala de bombeo: red húmeda desde el grupo
-    (entrada inferior de cada válvula), una válvula por zona y red seca presurizada que sube desde la salida derecha"""
-    VX = X1h + 0.85           # eje de las válvulas (paralelas al muro)
-    WZ = 0.42                 # colector húmedo
-    ZC = 0.95                 # eje de los cuerpos
-    zones = [('dc', 0.0), ('uf', -0.8), ('ctrl', -1.6), ('pump', -2.4)]
-    g0 = (X1h + 6.85, 0.55, 1.25); g1 = (X1h + 6.5, 0.55, 1.25); g2 = (X1h + 6.5, 0.55, WZ); g3 = (VX, 0.55, WZ)
-    yl = zones[-1][1] + 0.02
-    for i_, (a_, b_) in enumerate(((g1, g2), (g2, g3), (g3, (VX, yl, WZ)))):
+    """puesto de válvulas junto al muro medianero de la sala de bombeo. Válvulas VERTICALES: el agua del grupo
+    llega por un colector horizontal junto al muro y entra en cada válvula por su tubo izquierdo (-x); cada válvula
+    sale por su tubo inferior, que baja, vuelve hacia el muro y sube como montante hasta su red.
+    Zonas: racks (WF-PAV), falso suelo (WF-PAV) y centro de control (WF-SV, la de más a la izquierda en la vista)."""
+    VX = X1h + 0.95           # eje de las válvulas (paralelas al muro)
+    ZC = 1.15                 # centro de los cuerpos
+    ZH = ZC + 0.05            # colector de entrada
+    XH = VX - 0.36            # colector de entrada (entre el muro y las válvulas)
+    XR = VX - 0.62            # montantes de salida (junto al muro)
+    ZB = 0.30                 # cota de la salida inferior
+    zones = [('dc', 1.2, 'pav'), ('uf', 0.4, 'pav'), ('ctrl', -0.4, 'sv')]
+    g0 = (X1h + 6.85, 0.55, 1.25); g1 = (X1h + 6.5, 0.55, 1.25); g2 = (X1h + 6.5, 0.55, ZH); g3 = (XH, 0.55, ZH)
+    yl = zones[-1][1]; yh = zones[0][1]
+    for i_, (a_, b_) in enumerate(((g1, g2), (g2, g3), (g3, (XH, yl, ZH)), (g3, (XH, yh, ZH)))):
         pipe(f'wet{i_}', a_, b_, 0.045, M['steel'])
-    for q in (g2, g3):
-        sph(f'wetel{q[0]:.2f}', q, 0.05, M['steel'])
-    KEY['wet'] = [g0, g1, g2, g3, (VX, 0.02, WZ), (VX, 0.02, ZC - 0.12)]
-    KEY['wet_all'] = [g1, g2, g3, (VX, yl, WZ)]
+    for q in (g2, g3, (XH, yl, ZH), (XH, yh, ZH)):
+        sph(f'wetel{q[0]:.2f}{q[1]:.2f}', q, 0.05, M['steel'])
+    KEY['wet'] = [g0, g1, g2, g3, (XH, yh, ZH), (VX - 0.10, yh, ZH)]
+    KEY['wet_all'] = [g1, g2, g3, (XH, yl, ZH)]
+    KEY['wet_top'] = [g3, (XH, yh, ZH)]
     KEY['pav'] = []
-    for zi, (zn, yv) in enumerate(zones):
-        v = make_preaction(VX, yv, f'pav{zi}', zin=WZ, zc=ZC, detail=(SHOT in ('pav', 'proom2')))
+    for zi, (zn, yv, kind) in enumerate(zones):
+        v = make_vvalve(VX, yv, f'pav{zi}', kind=kind, zc=ZC, zin=ZH, zout=ZB, xin=XH, detail=(SHOT in ('pav', 'proom2')))
         KEY['pav'].append(v['body'])
         if zi == 0:
-            KEY['pav_sol'] = v['sol']; KEY['pav_ps'] = v['ps']; KEY['pav_top'] = v['top']; KEY['pav_in'] = v['in']
-        yo = v['out'][1]
-        sph(f'dryel{zi}', v['out'], 0.036, M['steel'])
-        ztop = {'dc': PZ, 'uf': 1.55, 'ctrl': 3.0, 'pump': 3.35}[zn]
-        pipe(f'dryr{zi}', v['out'], (VX, yo, ztop), 0.032, M['steel'])
-        sph(f'drytop{zi}', (VX, yo, ztop), 0.036, M['steel'])
+            KEY['pav_sol'] = v['sol']; KEY['pav_ps'] = v['ps']; KEY['pav_top'] = v['top']; KEY['pav_in'] = v['in_b']
+        if kind == 'sv':
+            KEY['sv'] = v['body']
+        sph(f'wtee{zi}', (XH, yv, ZH), 0.045, M['steel'])
+        # salida inferior -> vuelta hacia el muro -> montante
+        pipe(f'dryb{zi}', (VX, yv, ZB), (XR, yv, ZB), 0.032, M['steel'])
+        for q in ((VX, yv, ZB), (XR, yv, ZB)):
+            sph(f'drybel{zi}{q[0]:.2f}', q, 0.036, M['steel'])
+        ztop = {'dc': PZ, 'uf': 1.55, 'ctrl': 3.0}[zn]
+        pipe(f'dryr{zi}', (XR, yv, ZB), (XR, yv, ztop), 0.032, M['steel'])
+        sph(f'drytop{zi}', (XR, yv, ztop), 0.036, M['steel'])
+        base = [v['out_b'], (VX, yv, ZB), (XR, yv, ZB), (XR, yv, ztop)]
         if zn == 'dc':
-            pipe('drydc', (VX, yo, ztop), (MX, yo, ztop), 0.04, M['steel'])
-            KEY['dry_dc'] = [v['out'], (VX, yo, ztop), (MX, yo, ztop)]
+            pipe('drydc', (XR, yv, ztop), (MX, yv, ztop), 0.04, M['steel'])
+            KEY['dry_dc'] = base + [(MX, yv, ztop)]
         elif zn == 'uf':
-            # sube y entra en la sala de datos por encima del muro bajo, y baja al falso suelo
-            XU = X1h - 0.45
-            pipe('dryuf1', (VX, yo, ztop), (XU, yo, ztop), 0.032, M['steel'])
-            sph('dryufel', (XU, yo, ztop), 0.036, M['steel'])
-            pipe('dryuf2', (XU, yo, ztop), (XU, yo, 0.30), 0.032, M['steel'])
-            KEY['dry_uf'] = [v['out'], (VX, yo, ztop), (XU, yo, ztop), (XU, yo, 0.30)]
-        elif zn == 'ctrl':
-            KEY['dry_ctrl'] = [v['out'], (VX, yo, ztop), (VX, -4.15, ztop), (16.7, -4.15, ztop)]
-            pipe('dryctrl0', (VX, yo, ztop), (VX, -4.15, ztop), 0.032, M['steel'])
-            sph('dryctrlel', (VX, -4.15, ztop), 0.036, M['steel'])
-            pipe('dryctrl1', (VX, -4.15, ztop), (16.7, -4.15, ztop), 0.03, M['steel'])
+            # pasa sobre el muro bajo, baja al falso suelo de la sala de datos y enlaza con el colector bajo baldosas
+            XU = X1h - 0.45; UFZ_ = 0.38
+            pipe('dryuf1', (XR, yv, ztop), (XU, yv, ztop), 0.032, M['steel'])
+            sph('dryufel', (XU, yv, ztop), 0.036, M['steel'])
+            pipe('dryuf2', (XU, yv, ztop), (XU, yv, UFZ_), 0.032, M['steel'])
+            sph('dryufel2', (XU, yv, UFZ_), 0.034, M['steel'])
+            pipe('dryuf3', (XU, yv, UFZ_), (XU, -4.08, UFZ_), 0.028, M['steel'])
+            sph('dryufel3', (XU, -4.08, UFZ_), 0.03, M['steel'])
+            KEY['dry_uf'] = base + [(XU, yv, ztop), (XU, yv, UFZ_), (XU, -4.08, UFZ_), (-1.4, -4.08, UFZ_)]
+        else:
+            # centro de control: red con difusores MM-P50 desde la válvula de sección WF-SV
+            KEY['dry_ctrl'] = base + [(XR, -4.15, ztop), (16.7, -4.15, ztop)]
+            pipe('dryctrl0', (XR, yv, ztop), (XR, -4.15, ztop), 0.032, M['steel'])
+            sph('dryctrlel', (XR, -4.15, ztop), 0.036, M['steel'])
+            pipe('dryctrl1', (XR, -4.15, ztop), (16.7, -4.15, ztop), 0.03, M['steel'])
             KEY['ctrl_noz'] = []
             for xn in (8.3, 10.3, 12.3, 14.3, 16.3):
                 pipe(f'cdr{xn}', (xn, -4.15, ztop), (xn, -4.15, ztop - 0.12), 0.016, M['steel'])
                 nz = make_mmp50((xn, -4.15, ztop - 0.12), 0.00085, f'cnz{xn}', 'm32', detail=False)
                 KEY['ctrl_noz'].append(nz['tip'])
-        else:
-            KEY['dry_pump'] = [v['out'], (VX, yo, ztop), (VX, -1.2, ztop)]
-            pipe('drypm0', (VX, yo, ztop), (VX, -1.2, ztop), 0.03, M['steel'])
-            pipe('drypm1', (VX, -1.2, ztop), (16.3, -1.2, ztop), 0.03, M['steel'])
-            pipe('drypm2', (16.3, -1.2, ztop), (16.3, 1.9, ztop), 0.03, M['steel'])
-            pipe('drypm3', (9.9, 1.9, ztop), (16.3, 1.9, ztop), 0.03, M['steel'])
-            for q in ((VX, -1.2, ztop), (16.3, -1.2, ztop), (16.3, 1.9, ztop)):
-                sph(f'drypmel{q[0]:.1f}{q[1]:.1f}', q, 0.034, M['steel'])
-            KEY['pump_noz'] = []
-            for (xn, yn) in ((9.4, -1.2), (11.9, -1.2), (14.4, -1.2), (11.4, 1.9), (13.9, 1.9)):
-                pipe(f'pdr{xn}{yn}', (xn, yn, ztop), (xn, yn, ztop - 0.12), 0.016, M['steel'])
-                nz = make_mmp50((xn, yn, ztop - 0.12), 0.00085, f'pnz{xn}{yn}', 'm32', detail=False)
-                KEY['pump_noz'].append(nz['tip'])
-    KEY['gp_feed'] = [g0, g1, g2, g3, (VX, 0.02, WZ), (VX, 0.02, ZC - 0.12)] + KEY['dry_dc']
-    KEY['pav_station'] = (VX, -1.2, 1.0)
+            KEY['ctrl_net'] = [(XR, -4.15, ztop), (16.7, -4.15, ztop)]
+    KEY['gp_feed'] = [g0, g1, g2, g3, (XH, yh, ZH), (VX - 0.10, yh, ZH), (VX, yh, ZC)] + KEY['dry_dc']
+    KEY['pav_station'] = (VX, 0.4, 1.0)
 
 
 
@@ -1060,6 +1077,118 @@ def make_preaction(x, y, name, zin=0.42, zc=0.95, detail=True):
     return out
 
 
+def make_vvalve(x, y, name, kind='pav', zc=1.15, zin=None, zout=0.30, xin=None, detail=True):
+    """Válvula vertical RG (según fotos de producto): WF-PAV (preacción), WF-SV (sección) o WF-VC (control).
+    Cuerpo inox VERTICAL; ENTRADA de agua por el tubo de la izquierda (horizontal hacia -x, que en la isométrica
+    sube hacia la izquierda) y SALIDA por el tubo inferior (vertical, hacia abajo).
+    Arriba: brida, actuador (anillo inox + collar de latón + manguito) y palanca de disparo de latón con anilla.
+    WF-PAV: solenoide negra en el actuador, manómetro pequeño al frente, a la derecha presostato (bloque de latón)
+    con el manómetro grande encima, a la izquierda llave de bola + interruptor azul de confirmación de activación.
+    WF-SV: palanca directamente sobre la brida, manómetro pequeño al frente, mando gris a la derecha.
+    WF-VC: solenoide negra en el actuador, manómetro pequeño al frente, a la derecha llave de bola + caja negra.
+    Ejes en planta (cámara isométrica az 45°): frente = (+x, -y), derecha = (+x, +y), izquierda = (-x, -y)."""
+    st = M['steel_sat']; br = M['brass']; sd = M['steel_d']; bk = M['black']
+    bv = (lambda v: v) if detail else (lambda v: 0.0)
+    r2 = math.sqrt(0.5)
+    FR = Vector((r2, -r2, 0)); RT = Vector((r2, r2, 0)); LF = Vector((-r2, -r2, 0))
+    C = Vector((x, y, zc))
+    RXa = (0, math.pi / 2, 0)
+    out = {}
+
+    def at(v, dz=0.0):
+        return tuple(C + v + Vector((0, 0, dz)))
+
+    def along(nm, a, b, r, m, verts=24):
+        a = Vector(a); b = Vector(b); d = b - a
+        o = cyl(nm, tuple((a + b) / 2), r, d.length, m, verts=verts)
+        o.rotation_euler = d.normalized().to_track_quat('Z', 'Y').to_euler()
+        return o
+    # ---- cuerpo ----
+    cyl(f'{name}_core', (x, y, zc), 0.068, 0.20, st, verts=64, bevel=bv(0.008))
+    box(f'{name}_cast', (x, y, zc - 0.01), (0.12, 0.12, 0.13), st, bevel=bv(0.022))
+    cyl(f'{name}_fl', (x, y, zc + 0.115), 0.09, 0.035, st, verts=64, bevel=bv(0.006))
+    cyl(f'{name}_fl2', (x, y, zc + 0.092), 0.076, 0.014, st, verts=64)
+    if detail:
+        for k in range(4):
+            a_ = math.radians(45 + 90 * k)
+            cyl(f'{name}_bolt{k}', (x + math.cos(a_) * 0.072, y + math.sin(a_) * 0.072, zc + 0.134), 0.006, 0.006, sd, verts=12)
+    # ---- actuador + palanca de disparo ----
+    ztop = zc + 0.135
+    if kind in ('pav', 'vc'):
+        cyl(f'{name}_ring', (x, y, zc + 0.165), 0.046, 0.05, st, verts=48, bevel=bv(0.004))
+        cyl(f'{name}_act', (x, y, zc + 0.215), 0.045, 0.05, br, verts=48, bevel=bv(0.004))
+        cyl(f'{name}_sl', (x, y, zc + 0.258), 0.040, 0.036, st, verts=48, bevel=bv(0.003))
+        ztop = zc + 0.276
+        # solenoide negra (conector DIN) en el lado derecho del actuador
+        sc_ = C + RT * 0.065 + Vector((0, 0, 0.165))
+        so = box(f'{name}_sol', tuple(sc_), (0.055, 0.05, 0.06), bk, bevel=bv(0.005))
+        so.rotation_euler = (0, 0, math.radians(45))
+        o = along(f'{name}_solg', tuple(sc_ + FR * 0.03), tuple(sc_ + FR * 0.05), 0.011, bk, verts=16)
+        out['sol'] = tuple(sc_ + FR * 0.03)
+    cyl(f'{name}_tip', (x, y, ztop + 0.045), 0.028, 0.09, br, verts=40, bevel=bv(0.003))
+    cyl(f'{name}_tip2', (x, y, ztop + 0.098), 0.022, 0.018, br, verts=40)
+    lev = box(f'{name}_lev', tuple(C + RT * 0.02 + Vector((0, 0, ztop - zc + 0.125))), (0.024, 0.024, 0.075), br, bevel=bv(0.005))
+    lev.rotation_euler = (math.radians(-30), math.radians(30), math.radians(45))
+    if detail:
+        bpy.ops.mesh.primitive_torus_add(major_radius=0.013, minor_radius=0.0018,
+                                         location=tuple(C + LF * 0.035 + Vector((0, 0, ztop - zc + 0.09))), rotation=(math.pi / 2, 0, math.radians(-45)))
+        bpy.context.object.data.materials.append(sd)
+    out['top'] = tuple(C + Vector((0, 0, ztop - zc + 0.12)))
+    # ---- entrada (izquierda, -x) ----
+    zi = zc + 0.05 if zin is None else zin
+    xi = x - 0.36 if xin is None else xin
+    cyl(f'{name}_inu', (x - 0.095, y, zi), 0.056, 0.045, st, rot=RXa, verts=6, bevel=bv(0.004))
+    cyl(f'{name}_inu2', (x - 0.125, y, zi), 0.042, 0.025, st, rot=RXa, verts=40)
+    pipe(f'{name}_in', (x - 0.13, y, zi), (xi, y, zi), 0.032, M['steel'])
+    out['in'] = (xi, y, zi); out['in_b'] = (x - 0.10, y, zi)
+    # ---- salida (abajo) ----
+    cyl(f'{name}_ou', (x, y, zc - 0.125), 0.06, 0.045, st, verts=6, bevel=bv(0.004))
+    cyl(f'{name}_ou2', (x, y, zc - 0.158), 0.045, 0.024, st, verts=40)
+    pipe(f'{name}_out', (x, y, zc - 0.165), (x, y, zout), 0.032, M['steel'])
+    out['out_b'] = (x, y, zc - 0.165); out['out'] = (x, y, zout)
+    # ---- manómetro pequeño al frente ----
+    face = mat('gauge_face', (0.95, 0.95, 0.93), 0.35)
+    gc = C + FR * 0.085 + Vector((0, 0, -0.04))
+    g = cyl(f'{name}_g1', tuple(gc), 0.032, 0.02, st, verts=40, bevel=bv(0.003))
+    g.rotation_euler = FR.to_track_quat('Z', 'Y').to_euler()
+    gf = cyl(f'{name}_g1f', tuple(gc + FR * 0.011), 0.027, 0.002, face, verts=40)
+    gf.rotation_euler = g.rotation_euler
+    out['gauge'] = tuple(gc + FR * 0.012)
+    if kind == 'pav':
+        # derecha: presostato (bloque de latón) con el manómetro grande encima
+        along(f'{name}_psa', tuple(C + RT * 0.06 + Vector((0, 0, -0.03))), tuple(C + RT * 0.15 + Vector((0, 0, -0.03))), 0.012, st, verts=16)
+        pc = C + RT * 0.18 + Vector((0, 0, -0.035))
+        pb = box(f'{name}_ps', tuple(pc), (0.055, 0.055, 0.05), br, bevel=bv(0.006)); pb.rotation_euler = (0, 0, math.radians(45))
+        cyl(f'{name}_psn', tuple(pc + Vector((0, 0, -0.045))), 0.012, 0.04, st, verts=16)
+        cyl(f'{name}_psst', tuple(pc + Vector((0, 0, 0.05))), 0.009, 0.05, br, verts=12)
+        G = pc + Vector((0, 0, 0.115))
+        gg = cyl(f'{name}_g0', tuple(G), 0.05, 0.026, st, verts=48, bevel=bv(0.003)); gg.rotation_euler = FR.to_track_quat('Z', 'Y').to_euler()
+        gf = cyl(f'{name}_g0f', tuple(G + FR * 0.014), 0.044, 0.002, face, verts=48); gf.rotation_euler = gg.rotation_euler
+        out['ps'] = tuple(pc + FR * 0.03); out['gauge_big'] = tuple(G + FR * 0.015)
+        # izquierda: llave de bola + interruptor azul de confirmación de activación
+        along(f'{name}_cfa', tuple(C + LF * 0.06 + Vector((0, 0, -0.06))), tuple(C + LF * 0.16 + Vector((0, 0, -0.06))), 0.011, br, verts=16)
+        sph(f'{name}_cfk', tuple(C + LF * 0.13 + Vector((0, 0, -0.035))), 0.013, st)
+        cc = C + LF * 0.21 + Vector((0, 0, -0.075))
+        cb = box(f'{name}_conf', tuple(cc), (0.07, 0.05, 0.075), mat('ps_blue', (0.08, 0.30, 0.66), 0.42), bevel=bv(0.006))
+        cb.rotation_euler = (0, 0, math.radians(45))
+        out['conf'] = tuple(cc + FR * 0.03)
+    elif kind == 'sv':
+        mc = C + RT * 0.09 + FR * 0.03 + Vector((0, 0, -0.04))
+        along(f'{name}_hda', tuple(C + RT * 0.05 + Vector((0, 0, -0.04))), tuple(mc), 0.014, st, verts=16)
+        hb = box(f'{name}_hd', tuple(mc + RT * 0.03), (0.07, 0.05, 0.05), mat('sv_grey', (0.42, 0.44, 0.45), 0.55), bevel=bv(0.012))
+        hb.rotation_euler = (0, 0, math.radians(45))
+        out['handle'] = tuple(mc + RT * 0.03 + FR * 0.02)
+    else:   # vc
+        along(f'{name}_bva', tuple(C + RT * 0.06 + Vector((0, 0, -0.05))), tuple(C + RT * 0.16 + Vector((0, 0, -0.05))), 0.012, st, verts=16)
+        sph(f'{name}_bvk', tuple(C + RT * 0.12 + Vector((0, 0, -0.02))), 0.012, bk)
+        bc = C + RT * 0.21 + Vector((0, 0, -0.07))
+        bb = box(f'{name}_box', tuple(bc), (0.06, 0.07, 0.07), bk, bevel=bv(0.006)); bb.rotation_euler = (0, 0, math.radians(45))
+        out['box'] = tuple(bc + FR * 0.03)
+    out['body'] = tuple(C + FR * 0.05)
+    return out
+
+
+
 def uac_cyl(x, y, name, n2=False, r=0.135, h=1.45):
     """cilindro UAC (agua o N2) con etiqueta blanca RG Systems"""
     cyl(name + 'b', (x, y, 0.06 + h / 2), r, h, M['red'], verts=40)
@@ -1092,7 +1221,7 @@ def build_front_rooms():
         box(f'vwall{cxn}', (cxn, Y1f - 0.25, 1.35), (3.2, 0.12, 1.25), dark, bevel=0.01)
         box(f'vwalls{cxn}', (cxn, Y1f - 0.32, 1.35), (3.0, 0.02, 1.1), scr)
         box(f'vwallst{cxn}', (cxn, Y1f - 0.22, 0.38), (0.25, 0.25, 0.75), dark)
-        for r_, yy in enumerate((yc + 0.05, yc - 0.95)):
+        for r_, yy in enumerate((yc - 0.30,)):     # una sola fila, con aire hasta el videowall
             for dx in (-1.25, 1.25):
                 x0 = cxn + dx
                 box(f'desk{cxn}{r_}{dx}', (x0, yy, 0.74), (1.9, 0.75, 0.05), deskm, bevel=0.01)
@@ -1154,57 +1283,74 @@ def build_gen_annex(X1h, Y1h):
     box('uacact', (xs[0], WY - 0.06, 2.05), (0.1, 0.1, 0.22), M['brass'])
     pipe('uacn2', tops[0], (xs[0], WY - 0.06, 1.94), 0.01, M['black'])
     pipe('uacn2b', (xs[0] + 0.05, WY - 0.06, 2.1), (xs[1] - 0.1, MY, MZ), 0.008, M['steel'])
-    # válvulas de preacción WF-PAV junto a la batería (lado sala de generadores, contra el muro bajo):
-    # v0 -> generador 1, v1 -> generador 2, v2 -> sala de transformadores
-    VXu, WZu, ZCu = 17.32, 0.55, 1.05
+    # válvulas de control WF-VC junto a la batería (lado sala de generadores, contra el muro bajo), VERTICALES:
+    # entrada por el tubo izquierdo (-x) desde el colector de la batería y salida por el tubo inferior.
+    # v0 -> sala de generadores (colector con ramales sobre los dos grupos), v1 -> sala de transformadores
+    VXu, ZCu = 17.75, 1.15
+    ZHu = ZCu + 0.05
+    XHu = VXu - 0.36            # colector de entrada desde la batería
+    XRu = VXu - 0.58            # montantes de salida (junto al muro medianero)
+    ZBu = 0.30
     rx = xs[-1] + 0.2
-    vys = (2.3, 3.05, 3.8)
-    pipe('uacf0', (rx, MY, MZ), (VXu, MY, MZ), 0.035, M['steel'])
-    sph('uacel0', (VXu, MY, MZ), 0.04, M['steel'])
-    pipe('uacf1', (VXu, MY, MZ), (VXu, MY, WZu), 0.035, M['steel'])
-    sph('uacel1', (VXu, MY, WZu), 0.04, M['steel'])
-    pipe('uacf2', (VXu, MY, WZu), (VXu, vys[0] + 0.02, WZu), 0.035, M['steel'])
-    KEY['uac_feed'] = [(xs[-1], MY, MZ), (rx, MY, MZ), (VXu, MY, MZ), (VXu, MY, WZu), (VXu, vys[0] + 0.02, WZu)]
+    vys = (3.55, 4.3)
+    pipe('uacf0', (rx, MY, MZ), (XHu, MY, MZ), 0.035, M['steel'])
+    sph('uacel0', (XHu, MY, MZ), 0.04, M['steel'])
+    pipe('uacf1', (XHu, MY, MZ), (XHu, MY, ZHu), 0.035, M['steel'])
+    sph('uacel1', (XHu, MY, ZHu), 0.04, M['steel'])
+    pipe('uacf2', (XHu, MY, ZHu), (XHu, vys[0], ZHu), 0.035, M['steel'])
+    sph('uacel2', (XHu, vys[0], ZHu), 0.04, M['steel'])
+    KEY['uac_feed'] = [(xs[-1], MY, MZ), (rx, MY, MZ), (XHu, MY, MZ), (XHu, MY, ZHu)]
     KEY['uac_pav'] = []; KEY['uac_c'] = []; KEY['uac_noz'] = []
-    zcol = (3.15, 3.35, 2.95)
+    zcol = (3.15, 2.95)
     for vi, yv in enumerate(vys):
-        v = make_preaction(VXu, yv, f'upav{vi}', zin=WZu, zc=ZCu, detail=(SHOT in ('gen',)))
+        v = make_vvalve(VXu, yv, f'uvc{vi}', kind='vc', zc=ZCu, zin=ZHu, zout=ZBu, xin=XHu, detail=(SHOT in ('gen',)))
         KEY['uac_pav'].append(v['body'])
         if vi == 0:
             KEY['upav_sol'] = v['sol']
-        yo = v['out'][1]; zt = zcol[vi]
-        sph(f'uout{vi}', v['out'], 0.036, M['steel'])
-        pipe(f'urise{vi}', v['out'], (VXu, yo, zt), 0.032, M['steel'])
-        sph(f'urtop{vi}', (VXu, yo, zt), 0.036, M['steel'])
-        if vi < 2:
-            gx = (19.2, 22.6)[vi]
-            pipe(f'ucol{vi}', (VXu, yo, zt), (gx, yo, zt), 0.032, M['steel'])
-            sph(f'ucolel{vi}', (gx, yo, zt), 0.036, M['steel'])
-            pipe(f'ubr{vi}', (gx, yo, zt), (gx, -1.0, zt), 0.028, M['steel'])
-            KEY['uac_c'].append([v['in'], v['out'], (VXu, yo, zt), (gx, yo, zt), (gx, -1.0, zt)])
-            nzs = []
-            for ni, ny in enumerate((-0.75, 0.6, 1.95)):
-                pipe(f'gdr{vi}{ni}', (gx, ny, zt), (gx, ny, zt - 0.1), 0.014, M['steel'])
-                nz = make_emm_open((gx, ny, zt - 0.1), 0.00027, f'gnz{vi}{ni}', detail=(SHOT in ('gen', 'gnoz', 'emm')))
-                KEY.setdefault('gnoz', []).append(nz['tip']); nzs.append(nz['tip'])
-                if vi == 0 and ni == 0:
-                    KEY['cn_orif'] = [[p_, tuple(Vector(p_) + Vector(d_) * 0.25)] for p_, d_ in nz['orifices']]
-                    KEY['cn_tip'] = nz['tip']; KEY['cn_head'] = nz['head']
+        zt = zcol[vi]
+        sph(f'uin{vi}', (XHu, yv, ZHu), 0.04, M['steel'])
+        pipe(f'uback{vi}', (VXu, yv, ZBu), (XRu, yv, ZBu), 0.032, M['steel'])
+        for q in ((VXu, yv, ZBu), (XRu, yv, ZBu)):
+            sph(f'ubel{vi}{q[0]:.2f}', q, 0.036, M['steel'])
+        pipe(f'urise{vi}', (XRu, yv, ZBu), (XRu, yv, zt), 0.032, M['steel'])
+        sph(f'urtop{vi}', (XRu, yv, zt), 0.036, M['steel'])
+        head = [(XHu, MY, ZHu), (XHu, yv, ZHu), v['in_b'], v['out_b'], (VXu, yv, ZBu), (XRu, yv, ZBu), (XRu, yv, zt)]
+        if vi == 0:
+            # colector de la sala de generadores: a lo largo de x por encima de los alternadores, ramal sobre cada grupo
+            GXS = (19.2, 22.6)
+            pipe('ucolg', (XRu, yv, zt), (GXS[-1], yv, zt), 0.034, M['steel'])
+            nzs = []; br_ = []
+            for gi, gx in enumerate(GXS):
+                sph(f'ucolgel{gi}', (gx, yv, zt), 0.038, M['steel'])
+                pipe(f'ubr{gi}', (gx, yv, zt), (gx, -1.0, zt), 0.028, M['steel'])
+                br_.append([(gx, yv, zt), (gx, -1.0, zt)])
+                for ni, ny in enumerate((-0.75, 0.6, 1.95)):
+                    pipe(f'gdr{gi}{ni}', (gx, ny, zt), (gx, ny, zt - 0.1), 0.014, M['steel'])
+                    nz = make_emm_open((gx, ny, zt - 0.1), 0.00027, f'gnz{gi}{ni}', detail=(SHOT in ('gen', 'gnoz', 'emm')))
+                    KEY.setdefault('gnoz', []).append(nz['tip']); nzs.append(nz['tip'])
+                    if gi == 0 and ni == 0:
+                        KEY['cn_orif'] = [[p_, tuple(Vector(p_) + Vector(d_) * 0.25)] for p_, d_ in nz['orifices']]
+                        KEY['cn_tip'] = nz['tip']; KEY['cn_head'] = nz['head']
+            KEY['uac_c'].append(head + [(GXS[0], yv, zt), (GXS[0], -1.0, zt)])
+            KEY['uac_c2'] = [(GXS[0], yv, zt), (GXS[-1], yv, zt), (GXS[-1], -1.0, zt)]
             KEY['uac_noz'].append(nzs)
         else:
-            XT = 17.75
-            pipe('ucolt0', (VXu, yo, zt), (XT, yo, zt), 0.032, M['steel'])
-            sph('ucoltel0', (XT, yo, zt), 0.036, M['steel'])
-            pipe('ucolt1', (XT, yo, zt), (XT, -4.15, zt), 0.032, M['steel'])
+            # colector de la sala de transformadores: cruza por debajo del de generadores y baja a la franja delantera
+            XT = XRu + 0.30
+            pipe('ucolt0', (XRu, yv, zt), (XT, yv, zt), 0.032, M['steel'])
+            sph('ucoltel0', (XT, yv, zt), 0.036, M['steel'])
+            pipe('ucolt1', (XT, yv, zt), (XT, -4.15, zt), 0.032, M['steel'])
             sph('ucoltel1', (XT, -4.15, zt), 0.036, M['steel'])
             pipe('ucolt2', (XT, -4.15, zt), (24.6, -4.15, zt), 0.03, M['steel'])
-            KEY['uac_c'].append([v['in'], v['out'], (VXu, yo, zt), (XT, yo, zt), (XT, -4.15, zt), (24.6, -4.15, zt)])
+            KEY['uac_c'].append(head + [(XT, yv, zt), (XT, -4.15, zt), (24.6, -4.15, zt)])
             nzs = []
             for xn in (18.3, 19.8, 21.3, 22.8, 24.3):
                 pipe(f'tdr{xn}', (xn, -4.15, zt), (xn, -4.15, zt - 0.1), 0.014, M['steel'])
                 nz = make_emm_open((xn, -4.15, zt - 0.1), 0.00027, f'tnz{xn}', detail=False)
                 nzs.append(nz['tip'])
             KEY['uac_noz'].append(nzs)
+    pipe('uacf3', (XHu, vys[0], ZHu), (XHu, vys[-1], ZHu), 0.035, M['steel'])
+    sph('uacel3', (XHu, vys[-1], ZHu), 0.04, M['steel'])
     FZ = 3.15
     # ---- sala de generadores ----
     box('gfloor', ((GX0 + GX1) / 2, (RY0 + Y1h) / 2, 0.01), (GX1 - GX0, Y1h - RY0, 0.02), mat('epoxyg', (0.66, 0.68, 0.70), 0.55))
@@ -1254,7 +1400,7 @@ def build_gen_annex(X1h, Y1h):
     KEY['uac'] = (xs[3], by_ - 0.14, 1.0)
     KEY['uac_n2'] = (xs[0], by_ - 0.1, 1.7)
     KEY['uac_route'] = KEY['uac_feed'] + KEY['uac_c'][0][:1]
-    KEY['uac_br'] = [KEY['uac_c'][0][1], KEY['uac_c'][0][-1], KEY['uac_c'][1][1], KEY['uac_c'][1][-1]]
+    KEY['uac_br'] = [KEY['uac_c'][0][2], KEY['uac_c'][0][-1], KEY['uac_c'][1][2], KEY['uac_c'][1][-1]]
     KEY['genroom'] = ((GX0 + GX1) / 2, 1.2, 1.0)
     KEY['gen_noz'] = (19.2, 0.6, FZ - 0.2)
 
@@ -1453,11 +1599,17 @@ elif SHOT == 'pavd':
 elif SHOT in ('ufd_a', 'ufd_b'):
     build_underfloor_detail(SHOT == 'ufd_b')
     cam = camera_persp((2.0, -2.7, -0.35), (0.05, 0.0, -0.80), lens=46)
+elif SHOT in ('ufl_a', 'ufl_b'):
+    build_underfloor_detail(SHOT == 'ufl_b', local=True)
+    cam = camera_persp((2.0, -2.7, -0.47), (0.05, 0.0, -0.92), lens=46)
 elif SHOT in ('ceil_a', 'ceil_b'):
     build_ceiling_detail(SHOT == 'ceil_b')
     cam = camera_persp((1.9, -2.55, -1.15), (0, 0, -0.18), lens=60)
 elif SHOT in ('nozzle_a', 'nozzle_b'):
     build_nozzle(); cam = camera_persp((3.4, -5.0, -0.35), (0, 0, 0.18), lens=75)
+if os.environ.get('PIPEDUMP'):
+    json.dump({'pipes': PIPELOG, 'key': {k: v for k, v in KEY.items() if isinstance(v, (tuple, list))}}, open(os.environ['PIPEDUMP'], 'w'), default=list)
+    print('PIPEDUMP'); sys.exit(0)
 lights()
 if SHOT in ('__off__',):
     # tiras luminosas (softbox) para reflejos en el acero pulido
