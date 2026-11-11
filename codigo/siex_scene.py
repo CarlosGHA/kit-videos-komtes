@@ -159,13 +159,24 @@ def build_hall():
                 pipe(f'ufc{k}{j}', (-1.4, yy - 0.12 + j * 0.05, 0.075 + (j % 2) * 0.03), (4.6, yy - 0.12 + j * 0.05, 0.075 + (j % 2) * 0.03), 0.026, M[mt])
         # red de gas bajo suelo técnico, por encima de los cables
         UFZ = FH - 0.09
-        pipe('ufmain', (-1.4, -4.08, UFZ), (4.6, -4.08, UFZ), 0.028, M['gal'])
+        # colector en H alimentado por el centro: 4 difusores, uno en cada extremo
+        ux, ub, uy, ua = 1.7, 1.5, -4.12, 0.66
+        pipe('ufstem', (ux, -3.0, UFZ), (ux, uy, UFZ), 0.028, M['gal'])
+        pipe('ufbar', (ux - ub, uy, UFZ), (ux + ub, uy, UFZ), 0.028, M['gal'])
         KEY['uf_noz'] = []
-        for k, x in enumerate((0.5, 2.9)):
-            nz = make_silent((x, -4.08, UFZ - 0.11), 0.17, f'ufnz{k}', yaw=math.pi / 2)
-            pipe(f'ufdr{k}', (x, -4.08, UFZ), nz['top'], 0.018, M['gal'])
-            KEY['uf_noz'].append(nz['center'])
-            KEY[f'uf_ends{k}'] = nz['ends']
+        k = 0
+        for sx in (-1, 1):
+            pipe(f'ufleg{sx}', (ux + sx * ub, uy - ua, UFZ), (ux + sx * ub, uy + ua, UFZ), 0.024, M['gal'])
+            sph(f'uftee{sx}', (ux + sx * ub, uy, UFZ), 0.034, M['gal'])
+            for sy in (-1, 1):
+                x, y = ux + sx * ub, uy + sy * ua
+                sph(f'ufel{k}', (x, y, UFZ), 0.03, M['gal'])
+                nz = make_silent((x, y, UFZ - 0.11), 0.17, f'ufnz{k}', yaw=math.pi / 2)
+                pipe(f'ufdr{k}', (x, y, UFZ), nz['top'], 0.018, M['gal'])
+                KEY['uf_noz'].append(nz['center'])
+                KEY[f'uf_ends{k}'] = nz['ends']
+                k += 1
+        sph('uftee0', (ux, uy, UFZ), 0.034, M['gal'])
     WH = 3.4
     box('wallL', (X0 - 0.1, 0, WH / 2), (0.2, Y1 - Y0 + 0.2, WH), M['wall'])
     box('wallB', (0, Y1 + 0.1, WH / 2), (X1 - X0 + 0.4, 0.2, WH), M['wall'])
@@ -215,36 +226,52 @@ def build_hall():
     # red de gas (acero galvanizado) con difusores silenciosos
     PZ = FH + RH + 0.95
     TOP = 3.95
-    pipe('gmain', (X0 + 0.25, -3.6, PZ), (X0 + 0.25, 2.1, PZ), 0.055, M['gal'])
-    MX = X1 - 0.3          # colector de la sala, alimentado desde la sala de cilindros
-    pipe('gmainR', (MX, -3.6, PZ), (MX, Y1 - 0.22, PZ), 0.06, M['gal'])
-    for y in (-3.0, 0.0, 3.0):
-        hanger(MX, y, PZ + 0.06, TOP)
-    for y in (-3.0, 0.0, 3.0):
-        hanger(X0 + 0.25, y, PZ + 0.055, TOP)
+    MX = X1 - 0.3          # entrada desde la sala de cilindros
+    # colector en H alimentado por el centro: 4 difusores, uno en cada extremo (en los pasillos)
+    HX, HB, HY, HA = 0.0, 3.0, -0.75, 2.85
+    YB = Y1 - 0.22
+    pipe('gin', (MX, YB, PZ), (HX, YB, PZ), 0.06, M['gal'])
+    pipe('gstem', (HX, YB, PZ), (HX, HY, PZ), 0.06, M['gal'])
+    pipe('gbar', (HX - HB, HY, PZ), (HX + HB, HY, PZ), 0.05, M['gal'])
+    for p_ in ((MX, YB), (HX, YB), (HX, HY)):
+        sph('gj', (p_[0], p_[1], PZ), 0.075, M['gal'])
+    for x in (4.2, 2.0):
+        hanger(x, YB, PZ + 0.06, TOP)
+    for y in (3.0, 1.0):
+        hanger(HX, y, PZ + 0.06, TOP)
+    for x in (-1.6, 1.6):
+        hanger(x, HY, PZ + 0.05, TOP)
     KEY['nozzles'] = []
     KEY['noz_ends'] = []
-    for yy in (-3.6, -0.9, 2.1):
-        pipe(f'br{yy}', (X0 + 0.25, yy, PZ), (MX, yy, PZ), 0.04, M['gal'])
-        for hx in (-3.0, 0.0, 3.0):
-            hanger(hx, yy, PZ + 0.04, TOP)
-        for k, x in enumerate((-3.7, -1.3, 1.1, 3.5, 5.6)):
-            nz = make_silent((x, yy, PZ - 0.26), 0.2, f'nz{yy}{k}', yaw=math.pi / 2)
-            pipe(f'dr{yy}{k}', (x, yy, PZ), nz['top'], 0.025, M['gal'])
-            KEY['nozzles'].append(nz['center'])
-            KEY['noz_ends'].append(nz['ends'])
+    KEY['gp_br'] = []
+    for sx in (1, -1):
+        lx = HX + sx * HB
+        pipe(f'gleg{sx}', (lx, HY - HA, PZ), (lx, HY + HA, PZ), 0.045, M['gal'])
+        sph(f'gtee{sx}', (lx, HY, PZ), 0.065, M['gal'])
+        for y in (HY - 1.5, HY + 1.5):
+            hanger(lx, y, PZ + 0.045, TOP)
+        KEY['gp_br'] += [(HX, HY, PZ), (lx, HY, PZ)]
+    for sx in (1, -1):
+        lx = HX + sx * HB
+        for sy in (-1, 1):
+            KEY['gp_br'] += [(lx, HY, PZ), (lx, HY + sy * HA, PZ)]
+    for k, (x, y) in enumerate([(HX + HB, HY - HA), (HX - HB, HY - HA), (HX + HB, HY + HA), (HX - HB, HY + HA)]):
+        sph(f'gel{k}', (x, y, PZ), 0.06, M['gal'])
+        nz = make_silent((x, y, PZ - 0.26), 0.2, f'nz{k}', yaw=math.pi / 2)
+        pipe(f'dr{k}', (x, y, PZ), nz['top'], 0.03, M['gal'])
+        KEY['nozzles'].append(nz['center'])
+        KEY['noz_ends'].append(nz['ends'])
+    KEY['gp_main'] = [(MX, YB, PZ), (HX, YB, PZ), (HX, HY, PZ)]
     # detección: detectores puntuales en la losa
-    KEY['gp_main'] = [(MX, Y1 - 0.22, PZ), (MX, -3.6, PZ)]
-    KEY['gp_br'] = [(MX, yy, PZ) for yy in (-3.6, -0.9, 2.1)] + [(X0 + 0.25, yy, PZ) for yy in (-3.6, -0.9, 2.1)]
     KEY['det'] = []
     for yy in (-3.05, -0.3, 2.75):
         for x in (-3.4, -0.4, 2.3):
             KEY['det'].append(detector(x, yy, PZ + 0.12, TOP, f'det{x}{yy}'))
     KEY['fire'] = (-4.3 + 4 * RW, -2.4 - RD / 2 - 0.05, FH + 1.3)
     KEY['fire_top'] = (-4.3 + 4 * RW, -2.4, FH + RH)
-    KEY['fire_nozzle'] = (-1.3, -3.6, PZ - 0.26)
+    KEY['fire_nozzle'] = (HX - HB, HY - HA, PZ - 0.26)
     KEY['det_fire'] = [(-3.4, -3.05, PZ + 0.09), (-0.4, -3.05, PZ + 0.09)]
-    KEY['inlet'] = (X0 + 0.25, -4.2, PZ)
+    KEY['inlet'] = (MX, YB, PZ)
     # caja del recinto (para la inundación total)
     KEY['room'] = [(X0, Y0, z) for z in (0.0,)] + [(X1, Y0, 0.0), (X1, Y1, 0.0), (X0, Y1, 0.0)]
     KEY['room_top'] = [(X0, Y0, 3.4), (X1, Y0, 3.4), (X1, Y1, 3.4), (X0, Y1, 3.4)]

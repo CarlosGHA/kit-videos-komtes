@@ -43,7 +43,8 @@ hb = hall.getchannel('A').point(lambda v: 255 if v > 8 else 0).getbbox()
 HALL = hall.crop(hb)
 NOZ_PTS = [(p[0] - hb[0], p[1] - hb[1]) for p in hj['nozzles']]
 _o = lambda p: (p[0] - hb[0], p[1] - hb[1])
-ROUTE = [[_o(p) for p in hj['gp_feed']] + [_o(hj['gp_main'][1])]] + [[_o(hj['gp_br'][k]), _o(hj['gp_br'][k + 3])] for k in range(3)]
+_g = hj['gp_br']
+ROUTE = [[_o(p) for p in hj['gp_feed']] + [_o(p) for p in hj['gp_main'][1:]]] + [[_o(_g[k]), _o(_g[k + 1])] for k in range(0, len(_g) - 1, 2)]
 
 
 def draw_route(canvas, P, wpx):

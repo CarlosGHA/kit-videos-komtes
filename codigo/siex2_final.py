@@ -444,8 +444,9 @@ TZ = 3.4; DZP = 0.8
 
 
 def route_paths(v, js):
-    feed = [v(p) for p in js['gp_feed']] + [v(js['gp_main'][1])]
-    brs = [[v(js['gp_br'][k]), v(js['gp_br'][k + 3])] for k in range(3)]
+    feed = [v(p) for p in js['gp_feed']] + [v(p) for p in js['gp_main'][1:]]
+    g = js['gp_br']
+    brs = [[v(g[k]), v(g[k + 1])] for k in range(0, len(g) - 1, 2)]     # colector en H: tramos hacia los 4 extremos
     return feed, brs
 
 
@@ -727,7 +728,7 @@ def sc_flood(t, L, img):
     for e in js['noz_ends']:
         c = ((e[0][0] + e[1][0]) / 2, (e[0][1] + e[1][1]) / 2)
         pairs += [(v(e[0]), v(lerp(c, e[0], 3.0))), (v(e[1]), v(lerp(c, e[1], 3.0)))]
-    for k in range(2):
+    for k in range(4):
         e = js.get(f'uf_ends{k}')
         if e:
             c = ((e[0][0] + e[1][0]) / 2, (e[0][1] + e[1][1]) / 2)
