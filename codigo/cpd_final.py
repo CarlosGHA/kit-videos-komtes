@@ -3,7 +3,7 @@ Uso: python3 cpd_final.py es|en salida.mp4   |   python3 cpd_final.py still es|e
 import sys, subprocess, math, re
 MISSING = set()
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageChops
 
 LANG = sys.argv[2] if sys.argv[1] == 'still' else sys.argv[1]
 
@@ -14,7 +14,9 @@ EN = {
     'Salida al colector de generadores': 'Outlet to the generator manifold',
     'El nitrógeno presuriza la batería y empuja el agua hacia las válvulas de control WF-VC.': 'Nitrogen pressurizes the bank and pushes the water towards the WF-VC control valves.',
     'La central abre la WF-VC de esa sala: el agua entra por la izquierda, sale por abajo hacia su colector y el presostato lo confirma.': "The panel opens that room's WF-VC: water enters from the left, leaves from the bottom to its manifold, and the pressure switch confirms it.",
-    'El colector lleva el agua a los difusores EMM-416549, que descargan a la vez sobre los grupos y extinguen el fuego.': 'The manifold carries the water to the EMM-416549 nozzles, which discharge simultaneously over the gensets and put out the fire.',
+    'El colector lleva el agua a los difusores EMM-416549, que descargan a la vez sobre los grupos y extinguen el fuego.': 'The manifold feeds the EMM-416549 nozzles, which discharge together over the gensets and put out the fire.',
+    'La central abre la WF-VC de esa sala.': "The panel opens that room's WF-VC.",
+    'El agua entra por la izquierda, sale por abajo hacia su colector y el presostato lo confirma.': 'Water enters from the left, leaves from the bottom to its manifold, and the pressure switch confirms it.',
     'Red llena de agua hasta los difusores': 'Pipework full of water up to the nozzles',
     'Ampolla rota por el calor': 'Bulb broken by the heat',
     'Bandejas de cables': 'Cable trays',
@@ -44,6 +46,8 @@ EN = {
     'Válvula de sección WF-SV': 'WF-SV section valve',
     'Confirmación de activación': 'Activation confirmation',
     'La caída de presión produce el arranque del grupo de bombeo W-FOG UAP, en una sala aledaña.': 'The pressure drop starts the W-FOG UAP pump unit, in an adjacent room.',
+    'La preacción también protege frente a falsas alarmas y accidentes.': 'Pre-action also protects against false alarms and accidents.',
+    'Si una ampolla se rompe por accidente, el aire de la tubería se escapa.': 'If a bulb breaks by accident, the air in the pipe escapes.',
     'La preacción también protege frente a falsas alarmas y accidentes. Si una ampolla se rompe por accidente, el aire de la tubería se escapa.': 'Pre-action also protects against false alarms and accidents. If a bulb breaks by accident, the air in the pipe escapes.',
     'Válvulas de control WF-VC: una por sala': 'WF-VC control valves: one per room',
     'Se abre la válvula de esta sala': "This room's valve opens",
@@ -165,7 +169,7 @@ EN = {
     'La sala de bombeo, junto al CPD, se conecta por tubería con el colector y los ramales de boquillas de la sala.':
         'The pump room, next to the data center, is piped to the room manifold and the nozzle branches.',
     'Sistema aprobado': 'Approved system',
-    'Protección contra incendios aprobada por FM para centros de datos, en ambiente y en falso suelo.': 'FM Approved fire protection for data centers, above and below the raised floor.',
+    'Protección contra incendios aprobada por FM para centros de datos, en ambiente y en falso suelo.': 'FM Approved fire protection for data centers, in the room and under the raised floor.',
     'El calor, el humo y los gases tóxicos de un solo equipo amenazan a toda la sala.': 'The heat, smoke and toxic gases from a single unit threaten the entire room.',
     'Boquilla cerrada RG MMP · ambiente': 'RG MMP closed nozzle · room',
     'Cuando la temperatura alcanza su valor de disparo, se rompe la ampolla de la boquilla RG MMP más cercana al foco.': 'When the temperature reaches its rating, the bulb of the RG MMP nozzle closest to the fire bursts.',
@@ -1085,8 +1089,9 @@ def sc_uac(t, L, img):
     subtitle(d, 'Ante un incendio en un generador, los detectores lo identifican y la central abre solo la válvula de esa sala.',
              win(t, UF, CA0 + 1.0))
     subtitle(d, 'El nitrógeno presuriza la batería y empuja el agua hacia las válvulas de control WF-VC.', win(t, CA0 + 1.0, CV0 + 0.3))
-    subtitle(d, 'La central abre la WF-VC de esa sala: el agua entra por la izquierda, sale por abajo hacia su colector y el presostato lo confirma.',
-             win(t, CV0 + 0.3, CB0 + 0.4))
+    _tm = CV0 + 0.3 + 0.3 * (CB0 + 0.1 - CV0)                                   # dos subtítulos: máx. 2 líneas
+    subtitle(d, 'La central abre la WF-VC de esa sala.', win(t, CV0 + 0.3, _tm))
+    subtitle(d, 'El agua entra por la izquierda, sale por abajo hacia su colector y el presostato lo confirma.', win(t, _tm, CB0 + 0.4))
     subtitle(d, 'El colector lleva el agua a los difusores EMM-416549, que descargan a la vez sobre los grupos y extinguen el fuego.',
              win(t, CB0 + 0.4, L))
 
@@ -1239,7 +1244,9 @@ def _v_pavd(t, t0, L):
     return B.View(1.0 + 0.04 * ss(t0, L, t), 0, 20)
 
 
-def _networks(img, v, js, t, a_wet, a_dry, water_dc=0.0, t0=0.0):
+def _networks(base, v, js, t, a_wet, a_dry, water_dc=0.0, t0=0.0):
+    """redes de tubería sobre el plano; se recortan al propio render para que nada sobresalga por el margen blanco"""
+    img = Image.new('RGBA', base.size, (0, 0, 0, 0))
     wet = _route(img, v, js['wet_all'] + [], WATER, a_wet, w=3.6)
     if 'wet_top' in js:
         _route(img, v, js['wet_top'], WATER, a_wet, w=3.6)
@@ -1252,6 +1259,8 @@ def _networks(img, v, js, t, a_wet, a_dry, water_dc=0.0, t0=0.0):
     if water_dc > 0.01:
         pts = _route(img, v, js['dry_dc'], WATER, water_dc, w=3.6)
         _dots(img, [v(q) for q in js['wet']] + pts[1:], t - t0, water_dc, WATER, n=16, speed=0.25)
+    img.putalpha(ImageChops.multiply(img.getchannel('A'), base.getchannel('A')))
+    base.alpha_composite(img)
     return wet
 
 
@@ -1422,8 +1431,8 @@ def sc_safety1(t, L, img):
     img.alpha_composite(V.mclip(lay))
     d = ImageDraw.Draw(img)
     title(d, 'SEGURIDAD DE LA PREACCIÓN', 'Rotura accidental de una ampolla', ss(0.2, 0.7, t))
-    subtitle(d, 'La preacción también protege frente a falsas alarmas y accidentes. Si una ampolla se rompe por accidente, el aire de la tubería se escapa.',
-             win(t, 0.5, TS1 + 0.4))
+    subtitle(d, 'La preacción también protege frente a falsas alarmas y accidentes.', win(t, 0.5, 2.5))     # dos subtítulos: máx. 2 líneas
+    subtitle(d, 'Si una ampolla se rompe por accidente, el aire de la tubería se escapa.', win(t, 2.5, TS1 + 0.4))
     subtitle(d, 'El presostato da la alarma, pero la válvula sigue cerrada porque no hay detección: no sale agua.', win(t, TS1 + 0.4, L))
 
 

@@ -71,6 +71,15 @@ for i in range(1, len(orig)):
     new.append((t, t + L, fn, band, L / L0))
     t += L
 DUR = t
+
+
+def dump_scenes(path):
+    """Tiempos de cada escena (para el control de calidad: un fotograma por escena)."""
+    import json as _j
+    _j.dump({'dur': round(DUR, 3), 'fps': F.FPS, 'lang': LANG, 'aspect': ASPECT,
+             'scenes': [[round(s_[0], 3), round(s_[1], 3), getattr(s_[2], '__name__', str(s_[2]))] for s_ in new]},
+            open(path, 'w'))
+
 print('blocks', [(round(a, 2), round(b - a, 2)) for a, b in blocks])
 print('scenes', [(round(s[0], 2), round(s[1] - s[0], 2)) for s in new], 'DUR', round(DUR, 2))
 
@@ -271,7 +280,7 @@ def build_audio(video_in, out):
         sfx_labels.append(f'[s{j}]')
     mix_in = '[vo][mus][amb]' + ''.join(sfx_labels)
     n = 3 + len(sfx_labels)
-    fl.append(f"{mix_in}amix=inputs={n}:normalize=0:duration=first,apad,atrim=0:{DUR:.3f},loudnorm=I=-15:TP=-1.5:LRA=11,apad,atrim=0:{DUR:.3f}[aout]")
+    fl.append(f"{mix_in}amix=inputs={n}:normalize=0:duration=first,apad,atrim=0:{DUR:.3f},loudnorm=I=-15:TP=-2.0:LRA=11,apad,atrim=0:{DUR:.3f}[aout]")
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error'] + inp + ['-filter_complex', ';'.join(fl), '-map', f'{vi}:v',
                     '-map', '[aout]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-movflags', '+faststart', out],
                    check=True)
@@ -469,6 +478,8 @@ else:
 
 
 if __name__ == '__main__':
+    if os.environ.get('VO_MODE') == '--scenes':
+        dump_scenes(OUT); print('done', OUT); sys.exit()
     if os.environ.get('VO_MODE') == '--still':
         for ts in os.environ['VO_TS'].split(','):
             Image.frombytes('RGB', (OW, OH), render(int(float(ts) * F.FPS))).save(f'{OUT}_{ts}.png')
@@ -515,4 +526,5 @@ if __name__ == '__main__':
         os.remove(sg[3])
     os.remove(lst)
     build_audio(tmpv, OUT)
+    dump_scenes(os.path.splitext(OUT)[0] + '.scenes.json')
     print('done', OUT)

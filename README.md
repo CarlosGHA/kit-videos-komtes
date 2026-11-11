@@ -18,7 +18,8 @@ Lo usa automáticamente la skill `videos-tecnicos-komtes`: al empezar una sesió
 | `trabajo/` | Directorio de trabajo: renders 3D de referencia (`r3`–`r12`, `rs1`; el script usa la carpeta más reciente que tenga cada plano), recursos (`assets`), locuciones (`vo`, `vo_siex2`), música y efectos (`sfx`), tipografías (`fuentes`) y salidas (`out`, `out_siex2`, `covers`, `chk`) |
 | `marcas/` | Logotipos oficiales de las divisiones y de Group Komtes |
 | `fichas/` | Hechos de producto ya confirmados por I+D, uno por sistema (`RG-WFOG.md`…). Se leen antes del guion y se amplían en cada ronda de feedback |
-| `skill/` | Copia de la skill `videos-tecnicos-komtes` (v1.7) |
+| `skill/` | Copia de la skill `videos-tecnicos-komtes` (v2.0) |
+| `referencia/` | Fotogramas de la línea gráfica común (para la «hoja de familia» del control de calidad) |
 
 ## Instalación (una vez por equipo o sesión)
 
@@ -48,6 +49,11 @@ python3 cpd_scene.py ../trabajo/rtest gnoz 8 0.3                                
 | Fotogramas de control | `VO_MODE=--still VO_TS=t1,t2 python3 cpd_master.py <es\|en> <locución.mp3> <45\|169> <prefijo>` |
 | Prueba de un tramo en orden (etiquetas tal como quedan en el vídeo) | `python3 t_seq.py <es\|en> <locución.mp3> <45\|169> <t0> <t1>` |
 | Avisar de etiquetas con el punto fuera de la ventana | `TAG_WARN=1` delante de cualquier comando de montaje (líneas `TAG_FUERA`) |
+| Locución provisional gratuita (antes de pagar la voz, o versión sin voz) | `python3 vo_borrador.py <texto_voz.txt> <es\|en> <salida.wav>` |
+| Hoja de textos (todo lo que se lee en pantalla) | `python3 qc_pantalla.py <cpd_master\|siex2_master> <es\|en> <locución> <salida.md> --ficha ../fichas/<ficha>.md` |
+| Términos prohibidos en guion y scripts | `python3 qc_textos.py ../fichas/<ficha>.md <guion.md> <texto_voz.txt> …` |
+| Control de calidad de vídeos terminados | `python3 qc_video.py <vídeos…> --hoja <carpeta> --familia ../referencia [--prev <anterior.mp4>]` |
+| Tiempos de cada escena (para las hojas) | `VO_MODE=--scenes python3 cpd_master.py <es\|en> <locución> <45\|169> <vídeo>.scenes.json` (el render lo escribe solo) |
 | Tiempos de cada transición | `VO_TRT=1 python3 cpd_master.py <es\|en> <locución.mp3> 45 x` |
 | Vídeo completo | `python3 cpd_master.py <es\|en> <locución.mp3> <45\|169> <salida.mp4>` (≈50–70 min por versión con 2 núcleos; **uno por trabajo en segundo plano y de uno en uno**) |
 | Solo remezclar audio | `VO_MODE=--audio VO_VIDEO=<salida.mp4>.noaudio.mp4 python3 cpd_master.py <es\|en> <locución.mp3> <45\|169> <salida.mp4>` |
@@ -65,3 +71,5 @@ Para SIEX se usan `siex2_master.py` / `siex2_final.py` en lugar de `cpd_master.p
 4. El sistema gráfico (`cpd_video.py`) y el audio no se modifican, salvo el cambio de logotipo de la firma (§3 del manual). Las etiquetas se colocan solas con la regla fija (§6.4): basta con llamar a `tag()` con el componente y el lado preferido.
 5. Las piezas de LinkedIn se definen en la lista `PIECES` del script de composición (§10.1 del manual).
 6. Las tuberías acaban en el último difusor, y las rutas animadas y las etiquetas se anclan a los puntos `KEY` que exporta el render 3D: nunca coordenadas a mano (§7.4 del manual).
+7. Nada se entrega sin pasar el control de calidad (§12 del manual): automático, hoja de textos, escena a escena, hoja de familia y, en toda corrección, control de regresión (`qc_video.py --prev`).
+8. El contenido se adapta a cada petición (aplicación, división, sistema, escenario); la línea gráfica común no se toca (§0.2 del manual).

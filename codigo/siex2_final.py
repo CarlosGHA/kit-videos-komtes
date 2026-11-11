@@ -118,6 +118,8 @@ if LANG == 'en':
 
 import cpd_video as B
 B.TXT_TR[0] = TR
+B.TAG_FIXED[0] = True      # este vídeo usa las posiciones de etiqueta validadas a mano (23/10/2026):
+                             # en estas escenas la colocación automática deja pastillas sobre las piezas
 if LANG == 'en':
     _wrap = B.wrap
     B.wrap = lambda text, f, maxw: _wrap(TR(text), f, maxw)

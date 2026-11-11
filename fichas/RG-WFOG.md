@@ -51,14 +51,20 @@ Hechos validados por I+D durante la producción del vídeo «Centros de datos» 
 
 ## Textos: sí y no
 
+Esta tabla la comprueba `codigo/qc_textos.py` contra el guion, la locución y los textos de pantalla (ES y EN). En «No», varias formas se separan con « / » y «*» vale por cualquier terminación.
+
 | Sí | No |
 |---|---|
-| ambiente y falso suelo | sobre y bajo suelo técnico |
+| aprobado por FM · FM APPROVED | certificad* / certified |
+| ambiente y falso suelo | sobre y bajo suelo técnico / sobre y bajo suelo |
+| in the room and under the raised floor | above and below the raised floor |
 | bandejas de cables | mazos |
 | boquilla activada | ampolla rota |
-| gases tóxicos | gases corrosivos |
-| detectores | detectores de llama |
-| actúa por enfriamiento y desplazamiento de oxígeno | sofocar el vapor |
+| la caída de presión produce el arranque | arranca el grupo |
+| frente a falsas alarmas y accidentes | falsas alarmas y errores |
+| gases tóxicos | gases corrosivos / corrosive gases |
+| detectores | detectores de llama / flame detectors |
+| actúa por enfriamiento y desplazamiento de oxígeno | sofocar el vapor / sofoca el vapor |
 | — | equipos en tensión |
 | — | 400 V · 50 Hz (puede ser 60 Hz) |
 

@@ -1,13 +1,15 @@
-# Manual de producción de vídeos técnicos de aplicación · Grupo Komtes
+# Manual de producción de vídeos técnicos · Grupo Komtes
 
-**Versión 1.7 · noviembre de 2026 · Responsable: Marketing y Comunicación**
+**Versión 2.0 · noviembre de 2026 · Responsable: Marketing y Comunicación**
 Referencia de origen: vídeos «Centros de datos» de RG W-FOG (agua nebulizada) y SIEX (agentes limpios de inundación total), en ES/EN, 4:5 y 16:9.
 
 ---
 
 ## 0. Para qué sirve este documento
 
-Permite que una persona de I+D, con conocimiento de producto pero sin formación en diseño, produzca junto a Claude un vídeo técnico de aplicación (vertical + sistema) con el mismo nivel visual que los vídeos de referencia.
+Permite que una persona de I+D, con conocimiento de producto pero sin formación en diseño, produzca junto a Claude un vídeo técnico de cualquier división, sistema y aplicación (centros de datos, residencial, oil & gas, cocinas…) con el mismo nivel visual que los vídeos de referencia.
+
+**Tres ideas mandan sobre todo lo demás:** el contenido se adapta a cada petición; la línea gráfica es común y no se toca; nada se entrega sin pasar el control de calidad (§12).
 
 **Toda la estética ya está decidida en este documento.** El ingeniero no elige colores, tipografías, encuadres, transiciones ni música: aporta la verdad técnica y valida. Si algo no está aquí, se pregunta a Marketing; no se improvisa.
 
@@ -21,19 +23,61 @@ Permite que una persona de I+D, con conocimiento de producto pero sin formación
 
 ---
 
+## 0.1 Qué se puede pedir
+
+| Petición | Qué es | Qué cambia en el proceso |
+|---|---|---|
+| **Vídeo de aplicación nuevo** | Un sistema en una aplicación (centro de datos, residencial, oil & gas, cocinas…), de cualquier división | Todas las fases |
+| **Mismo sistema, otra aplicación** | Reutiliza los productos 3D y las escenas del sistema; escenario y guion nuevos | Todas las fases; el 3D de producto ya está validado |
+| **Vídeo de producto** | Un equipo o componente: qué es, sus piezas, cómo actúa | 3–5 pasos; el escenario puede ser solo estudio blanco |
+| **Actualización o corrección** | Cambia un producto, un texto, una aprobación o un plano de un vídeo entregado | Ronda de feedback + control de regresión (§12.7) |
+| **Otra versión** | Idioma nuevo, versión sin voz (pantalla de feria) o piezas cortas (§10.1) | Sale del máster ya aprobado |
+
+Si la petición no encaja en ninguna, se consulta a Marketing antes de empezar.
+
+## 0.2 La línea común y lo que se adapta
+
+| No se toca (igual en todos los vídeos) | Se adapta (propio de cada vídeo) |
+|---|---|
+| Formatos, retícula y zonas de pantalla (§6) | Aplicación y escenario: edificio, planta, cocina, vivienda, vehículo… |
+| Colores y tipografía (§6) | División: logotipo, firma, web y etiqueta de producto (§3) |
+| Firma, intro y cierre (§3, §4) | Sistema, componentes y secuencia real de actuación |
+| Sistema de etiquetas (§6.4) | Número y nombre de los pasos (3–8) y zonas secundarias |
+| Cámara isométrica, luz y materiales neutros del 3D; red del sistema en rojo (§7) | Modelos 3D del escenario y de los productos |
+| Transiciones de cámara única y gramática de efectos (§8) | Agente y su efecto (agua, gas, espuma, polvo…) |
+| Música, mezcla y voces (§9) | Aprobaciones, cifras, duración |
+| Esqueleto narrativo (§4) y portada (§6.6) | Textos, guion e idiomas |
+
+**Regla de decisión:** si el ingeniero pide cambiar el contenido (qué se enseña, en qué orden, qué escenario, qué producto), Claude se adapta. Si pide cambiar la forma (colores, letras, sitio de los rótulos, música, logotipo, estilo del 3D), Claude le explica que es la línea común y consulta a Marketing.
+
+**Cómo adaptar sin romper la cohesión**
+- **Escenario nuevo** = modelo 3D nuevo construido con la base común (`siex_base.py`: mismos materiales neutros en grises, misma cámara, misma luz). Un único modelo en corte, con 3–5 zonas coherentes y el riesgo protagonista en primer término. El producto y el rojo de marca son lo único que destaca.
+- **Sistema que no extingue** (detección, control, compartimentación): los pasos son riesgo → qué hace el sistema → resultado para las personas y el edificio.
+- **Agente o efecto nuevo:** misma gramática (§8.2): sale del orificio real, con el color del agente. Un color que no esté en la paleta se propone a Marketing y se añade para todos los vídeos.
+- **Dos divisiones en un vídeo:** se consulta la firma a Marketing antes de empezar. SIEX firma siempre sola.
+- **Comprobación obligatoria:** hoja de familia (§12.6) antes de enseñar fotogramas al ingeniero.
+
+---
+
 ## 1. Flujo de trabajo (7 fases con puertas de validación)
 
 No se pasa de fase sin la validación indicada. Cada corrección posterior a una puerta cuesta más (horas de render y créditos de voz).
 
 | Fase | Qué se hace | Entregable | Puerta (quién aprueba) |
 |---|---|---|---|
-| **1. Briefing** | El ingeniero rellena la ficha del §2 y adjunta los materiales del §11 | Ficha completa | Claude confirma que no falta nada |
-| **2. Guion técnico** | Claude redacta el guion por escenas (§4 y §5) | Tabla escena · texto · imagen | **Ingeniero:** exactitud técnica |
-| **3. Locución** | Claude genera la voz ES y EN con ElevenLabs, **una sola toma por idioma** | Audio ES + EN | **Ingeniero:** pronunciación de marcas y términos |
-| **4. Fotogramas clave** | Claude modela el 3D y entrega 1 fotograma por escena (y tiras de cada transición) | Hoja de fotogramas | **Ingeniero:** fidelidad de producto y de la secuencia. **Marketing:** encuadre |
-| **5. Render** | Render de las 4 versiones (ES/EN × 4:5/16:9), **un vídeo por trabajo en segundo plano y de uno en uno** (≈50–70 min cada uno con 2 núcleos) | 4 vídeos MP4 | — |
-| **6. Revisión y feedback** | Visionado completo con el checklist del §12 y rondas de feedback hasta el OK | Lista de cambios numerada, aplicada y respondida punto por punto | **Ingeniero + Marketing** (OK explícito) |
-| **7. Entrega** | Correcciones, portadas, piezas autoconclusivas para LinkedIn (§10.1) y entrega unificada | 4 vídeos + 4 portadas + piezas en un solo mensaje | **Marketing** publica |
+| **1. Encargo** | Tipo de petición (§0.1), ficha del §2, materiales del §11 y vídeos de la competencia | Lo que falta, en un solo mensaje | Ficha completa |
+| **2. Guion técnico** | Guion por escenas (§4 y §5), **esquema de instalación** y **tabla de afirmaciones** (§2); duración estimada con `vo_borrador.py` | Tabla escena · voz · imagen | **Ingeniero:** exactitud técnica. El guion queda **congelado** |
+| **3. Fotogramas clave** | 3D y un fotograma por escena con **locución provisional gratuita**; **hoja de textos** ES y EN (`qc_pantalla.py`); hoja de familia | Hojas de contactos + hoja de textos | **Ingeniero:** fidelidad, instalación y todos los textos. **Marketing:** encuadre y línea gráfica |
+| **4. Locución** | Aviso de créditos; voz ES y EN con ElevenLabs, **una sola toma por idioma** | Audio ES + EN | **Ingeniero:** la escucha entera (Claude no puede oírla) |
+| **5. Piloto** | **Un solo vídeo** (ES 4:5) + control de calidad (§12) | 1 MP4 `_BORRADOR` + informe de control | **Ingeniero:** OK al vídeo completo |
+| **6. Versiones** | Las otras tres versiones + portadas + control completo, **un vídeo por trabajo en segundo plano y de uno en uno** (≈50–70 min cada uno con 2 núcleos) | 4 MP4 + 4 portadas + informe | — |
+| **7. Entrega** | Tabla de afirmaciones validada; después, piezas autoconclusivas para LinkedIn (§10.1) | 8 archivos + informe de control | **I+D+i y Marketing.** Publica Marketing |
+
+- **La voz de pago se genera una vez, con el guion congelado y los fotogramas validados.** Hasta entonces se trabaja con la locución provisional (silenciosa, con los tiempos estimados).
+- **No se renderizan las cuatro versiones hasta que el piloto tiene OK.** En rondas posteriores: si cambian tres escenas o más, o geometría 3D, primero el piloto; si es menor, las cuatro tras probar el tramo.
+- **Publicable** = locución del guion vigente + control sin fallos + afirmaciones validadas + OK explícito. Si falta algo, el archivo lleva `_BORRADOR` en el nombre y se dice en el mensaje.
+- **Se cambia solo lo pedido.** En un vídeo ya validado no se aprovecha para «mejorar» otra cosa; si Claude ve algo, lo propone aparte.
+- **Claude dice siempre qué ha comprobado y qué no.** Nunca afirma «lo demás no cambia» sin el control de regresión (§12.7).
 
 **Ronda de feedback (después de cada generación):** Claude entrega y pregunta él mismo «¿Lo ves todo bien o tienes alguna observación?», con 3–5 puntos concretos que mirar. Acepta observaciones en cualquier forma (texto, minuto y segundo, foto, captura, nota de voz), las numera, confirma qué hará, **revisa y corrige todos los planos y salas con el mismo problema (no solo el minuto citado)**, aplica todo en una pasada, responde punto por punto («1. Hecho…») y vuelve a preguntar. Ninguna fase se cierra sin el OK explícito del técnico. En lo técnico manda el ingeniero; si una observación choca con el estilo, se consulta a Marketing.
 
@@ -56,7 +100,7 @@ No se pasa de fase sin la validación indicada. Cada corrección posterior a una
 Copiar, rellenar y entregar a Claude al inicio de la sesión.
 
 ```text
-FICHA DE BRIEFING · VÍDEO TÉCNICO DE APLICACIÓN
+FICHA DE BRIEFING · VÍDEO TÉCNICO
 
 1. División de Grupo Komtes:      [ AG Fire | RG Systems | SIEX | Koneba | Komttech | Ribo-Macoin ]
 2. Sistema / línea de producto:    (p. ej. RG W-FOG alta presión; SIEX agentes limpios)
@@ -76,6 +120,10 @@ FICHA DE BRIEFING · VÍDEO TÉCNICO DE APLICACIÓN
 13. Público y uso: LinkedIn / web / feria / comercial. Idiomas: ES + EN (por defecto)
 14. Vídeos de la competencia sobre este sistema o aplicación (enlaces o archivos; opcional)
 ```
+
+Con el guion, Claude entrega dos tablas que el ingeniero valida **antes de modelar**:
+- **Esquema de instalación**, una fila por zona: riesgo · producto de descarga o detección · válvula o equipo que la gobierna · tipo de red (húmeda, seca, presurizada…) · de dónde viene el agente · dónde acaba la red · aprobación.
+- **Tabla de afirmaciones**: cada aprobación, cifra o prestación que se dice o se ve (voz, pantalla, portada) · fuente · quién la valida. Ninguna se publica con la validación vacía.
 
 ### 2.1 Vídeos de la competencia: aprendizajes sin copiar el estilo
 
@@ -108,7 +156,7 @@ FICHA DE BRIEFING · VÍDEO TÉCNICO DE APLICACIÓN
 
 ## 4. Estructura narrativa estándar
 
-Duración objetivo: **90–210 s**. La marca la locución: cada escena dura lo que su bloque de voz + 0,3 s antes + 0,55 s después.
+Duración objetivo: **90–210 s**. La marca la locución: cada escena dura lo que su bloque de voz + 0,3 s antes + 0,55 s después. **La duración se mide al cerrar el guion** con `vo_borrador.py` y se vuelve a medir cada vez que el guion crece; si pasa de 210 s, se recorta o se propone dividir el vídeo.
 
 | # | Escena | Imagen | Rótulo superior | Fondo |
 |---|---|---|---|---|
@@ -141,7 +189,8 @@ Reglas:
 - Vocabulario técnico correcto y constante (el mismo término para el mismo equipo en todo el vídeo).
 - Sin superlativos («el mejor», «el único») salvo que estén certificados.
 - Solo cifras y aprobaciones de la ficha de briefing, con la fórmula exacta del emisor («aprobado por FM» / «FM APPROVED», nunca «certificado por FM»).
-- Subtítulos en pantalla: versión condensada del bloque, **máximo 2 líneas** (≈110 caracteres).
+- Subtítulos en pantalla: versión condensada del bloque, **máximo 2 líneas** (≈110 caracteres); si no cabe, se parte en dos subtítulos seguidos.
+- **El inglés no se traduce literal:** se usa el glosario ES↔EN de la ficha del sistema. Si cambia un término, se cambia a la vez en guion, texto de voz, subtítulos, etiquetas y portadas de los dos idiomas.
 
 ### Generación de voz (ElevenLabs)
 | Parámetro | ES | EN |
@@ -257,7 +306,7 @@ No se usa negro puro en ningún texto ni fondo.
 9. **Posición de montaje y sentido del flujo del fabricante** (p. ej. válvulas verticales con entrada por un lado y salida por abajo). Cada pieza visible se identifica con el ingeniero antes de etiquetarla (solenoide, presostato, interruptor de confirmación…).
 10. **Sentido hidráulico:** una válvula por zona o sala, el número exacto que indica el ingeniero; cada red llega solo a los difusores de su sala, sin cruzarse con otra.
 11. **Las tuberías acaban en el último difusor, con su tapón.** Ningún tramo ni colector sigue hasta la pared. Se comprueba en todas las salas (techo y falso suelo).
-12. **Rutas animadas y etiquetas desde los puntos `KEY`:** el JSON de cada plano guarda la posición en pantalla de cada componente y de cada tramo de tubería. Las rutas de agua, aire o nitrógeno se dibujan siempre desde esos puntos, nunca con coordenadas a mano, para que coincidan con la tubería. Si cambia una tubería, se actualizan sus `KEY` y se re-renderizan todos los planos que la muestran (y la portada).
+12. **Rutas animadas y etiquetas desde los puntos `KEY`:** el JSON de cada plano guarda la posición en pantalla de cada componente y de cada tramo de tubería. Las rutas de agua, aire o nitrógeno se dibujan siempre desde esos puntos, nunca con coordenadas a mano, para que coincidan con la tubería. Se recortan al propio render: nada sobresale por el margen blanco ni entra en la cabecera. Si cambia una tubería, se actualizan sus `KEY` y se re-renderizan todos los planos que la muestran (y la portada).
 
 ---
 
@@ -297,7 +346,7 @@ Reglas fijas:
 | Música | Pista corporativa (100,1 BPM) | 0,26, atenuada bajo la voz con compresión por cadena lateral (umbral 0,03, ratio 6, ataque 20 ms, liberación 400 ms). Entrada en 1,2 s y salida en los últimos 2,5 s |
 | Ambiente | Zumbido de sala técnica en bucle | 0,06 |
 | Efectos | whoosh 0,13 · fuego 0,15–0,25 · alarma 0,05 · clic 0,35 · gas 0,06 · niebla 0,08–0,12 · cristal (ampolla) 1,1–1,5 · motor 0,4 | Sincronizados con la imagen |
-| Máster | Normalización de sonoridad | −15 LUFS integrados, pico real −1,5 dBTP, AAC 192 kbps, 48 kHz |
+| Máster | Normalización de sonoridad | −15 LUFS integrados; pico real ≤ −1 dBTP medido en el archivo final (el montaje apunta a −2 para dejar margen a la codificación); AAC 192 kbps, 48 kHz |
 
 **Regla de música:** si la pista es más corta que el vídeo, se alarga **con un único empalme cuya distancia sea un número entero de compases** (1 compás = 2,397 s a 100,1 BPM), en dos puntos de intensidad parecida. Un empalme fuera de compás hace que la música suene «dos veces a la vez».
 
@@ -345,9 +394,37 @@ Del vídeo completo salen 3–5 piezas que **se entienden solas**, porque se pub
 **Cómo pedírselos (texto que Claude envía al ingeniero):**
 > «Para el vídeo de [sistema] en [vertical] necesito: 1) renders o fotos de [producto] en vista frontal y ¾ con fondo blanco, en su posición real de montaje; 2) la etiqueta real de [cilindro/equipo]; 3) dónde se instala cada equipo, por dónde entra y sale el agua y hasta dónde llega cada tubería; 4) qué es cada pieza visible de las válvulas; 5) la ficha técnica con las aprobaciones vigentes; 6) si los tienes, vídeos de la competencia.»
 
+**Renders más realistas (opcional; lo hace el ingeniero antes de enviar el material).** Para que el producto se vea más real, cada render se puede pasar antes por Google Nano Banana (el generador de imágenes de Gemini): se sube el render, se pega este texto tal cual y se descarga el resultado. Una imagen por vista (frontal y ¾); a Claude se le envían las dos versiones de cada una, el render original y la realista.
+
+```text
+Convert this CAD render into a photorealistic studio product photograph.
+Keep the product EXACTLY as it is: same geometry, proportions and viewing angle; same number, shape and position of every part, hole, thread, bolt, gauge, hose, label and engraved text. Do not rotate, mirror, crop, simplify or redesign anything. Do not add or remove parts, and do not invent logos, markings or text.
+Only improve realism: true-to-life materials (machined stainless steel, brass, painted steel, rubber, glass) in their real colours, fine surface detail and natural reflections.
+Pure white seamless background (#FFFFFF), soft even studio lighting from the upper left, a faint soft contact shadow, the whole product in frame with a margin around it, sharp focus from front to back.
+No props, no hands, no people, no watermark, no added text. High resolution.
+```
+
+- **Claude compara siempre la imagen realista con el render original, pieza a pieza** (número de orificios, roscas, manómetros, textos, proporciones), puestas lado a lado, y enseña la comparación al ingeniero para que la confirme. Si la IA ha cambiado, añadido o quitado algo, esa imagen no se usa: se pide otra o se trabaja con el render.
+- La imagen realista se usa como una foto real: primeros planos y portada, recortada sobre blanco. El modelo 3D del escenario se sigue construyendo a partir del render original.
+
 ---
 
-## 12. Checklist de calidad (antes de cada entrega)
+## 12. Control de calidad (antes de cada entrega)
+
+**Completo en el piloto y en la entrega final. En rondas intermedias: lo cambiado + regresión (12.7).** Todas las comprobaciones son gratuitas.
+
+1. **Automático** — `qc_video.py <vídeos> --hoja <carpeta>`: formato, sonoridad y pico, silencios, fotogramas negros, vacíos o congelados, y que ES/EN y 4:5/16:9 cuadran. Ningún ✖.
+2. **Textos** — `qc_pantalla.py … --ficha <ficha>` en ES y EN: hoja con **todos** los textos de pantalla; ningún subtítulo de más de 2 líneas, nada sin traducir, ningún término prohibido. `qc_textos.py` sobre el guion y el texto de voz. La hoja de textos se entrega al ingeniero para que la lea entera.
+3. **Escena a escena** — hojas de las **cuatro** versiones (un fotograma por escena), mirando en cada uno: producto fiel · cada componente nombrado tiene etiqueta en su pieza · pastillas fuera de las piezas y de las tarjetas, sin guías cruzadas · redes hasta su último punto de descarga, sin sobresalir del render · nada fuera de la ventana · firma de la división correcta.
+4. **Etiquetas en movimiento** — tramo en orden con `t_seq.py` y `TAG_WARN=1` (avisa de puntos fuera de la ventana).
+5. **Transiciones** — tira de 6 fotogramas (p = 0,02–0,98; tiempos con `VO_TRT=1`): nada salta, rótulos quietos, ninguno residual.
+6. **Línea gráfica** — `qc_video.py … --familia referencia/`: los fotogramas del vídeo nuevo junto a los de referencia. Deben parecer hermanos: cabecera, tamaños de letra, etiquetas, franja, luz y materiales.
+7. **Regresión** (toda corrección) — `qc_video.py <nuevo> --prev <anterior>` lista los segundos que han cambiado: deben coincidir con lo pedido y con nada más. Si cambia algo que no tocaba, se arregla antes de entregar. **Si se modifica código común** (`cpd_video.py`, `mz_tools.py`, base 3D), la regresión se pasa a todos los vídeos que lo usan.
+8. **Voz** — n.º de bloques de la locución = bloques del guion. Claude no puede oírla: el ingeniero la escucha entera.
+9. **Coherencia** — portada ↔ vídeo (mismos productos y nombres) · ES ↔ EN · guion ↔ pantalla ↔ ficha · tabla de afirmaciones al día.
+10. **Informe de control** en cada entrega: una tabla breve con lo comprobado (✔/✖), lo que queda **sin comprobar** y lo que conviene que mire el ingeniero.
+
+### Lista de repaso
 
 **Técnico (lo valida el ingeniero)**
 - [ ] Todos los nombres comerciales, cifras y certificaciones coinciden con la ficha.
@@ -411,6 +488,19 @@ Del vídeo completo salen 3–5 piezas que **se entienden solas**, porque se pub
 | Ruta animada que invade la cabecera | Recortar la capa a la ventana de imagen |
 | Corregir solo el minuto citado | Revisar todos los planos y salas con el mismo problema |
 | Dos vídeos a la vez o encadenados en un mismo trabajo | Un vídeo por trabajo, de uno en uno (§1) |
+| Voz de pago generada antes de congelar el guion y validar los fotogramas | Locución provisional gratuita hasta la fase 4 (§1) |
+| Las cuatro versiones renderizadas antes de que el ingeniero vea una | Primero el piloto (§1) |
+| Revisar por muestreo y afirmar que «lo demás no cambia» | Control de regresión con `qc_video.py --prev` (§12.7) |
+| Re-renderizar un vídeo validado con el código común más reciente sin comprobarlo (las etiquetas cambiaron de sitio en todas las escenas) | Regresión antes de entregar; se cambia solo lo pedido |
+| Entregar con la locución antigua sin decirlo | `_BORRADOR` en el nombre y aviso en el mensaje (§1) |
+| Guion que crece ronda a ronda sin volver a medir la duración | `vo_borrador.py` al cerrar cada versión del guion (§4) |
+| Término corregido en el guion pero no en pantalla, en el otro idioma o en la portada | Hoja de textos + tabla «Sí/No» de la ficha (§12.2) |
+| Subtítulos de 3 líneas | Partir en dos subtítulos seguidos (§5) |
+| Pastilla sobre el producto o sobre el objeto que nombra otra etiqueta; guías cruzadas | Corregir la escena (lado o anclaje) y revisar escena a escena (§12.3) |
+| Ruta animada que sobresale del render por el margen blanco | Recortada al propio render (§7.4) |
+| Pico real de audio por encima de −1 dBTP | Medido en el archivo final (§9) |
+| Imagen generada por IA usada sin compararla con el render original | Comparación pieza a pieza confirmada por el ingeniero (§11) |
+| Cambiar colores, letras o el motor de etiquetas para un solo vídeo | La línea común no se toca (§0.2) |
 
 ---
 
@@ -419,9 +509,9 @@ Del vídeo completo salen 3–5 piezas que **se entienden solas**, porque se pub
 Pegar al inicio de cada sesión nueva, junto con este manual y la ficha de briefing:
 
 ```text
-Vamos a producir un vídeo técnico de aplicación siguiendo el «Manual de producción de vídeos técnicos de aplicación · Grupo Komtes» (adjunto). 
+Vamos a producir un vídeo técnico siguiendo el «Manual de producción de vídeos técnicos · Grupo Komtes» (adjunto). 
 Aplícalo de forma estricta: no tomes decisiones estéticas fuera de él.
-División: [ ]   Sistema: [ ]   Vertical: [ ]
+División: [ ]   Sistema: [ ]   Aplicación: [ ]   Tipo de petición (§0.1): [ ]
 Adjunto la ficha de briefing y los materiales.
 Trabaja por fases (§1) y no pases de fase sin mi validación. 
 Las generaciones de pago (voz/música) se hacen una sola vez por corrección.
@@ -442,6 +532,17 @@ El código de producción (escenas 3D, composición, transiciones con cámara ú
 | `cpd_master.py` / `siex2_master.py` | Sincronización con la locución, mezcla de audio, versión 16:9 y exportación |
 | `rg_covers.py` / `siex_covers.py` | Portadas 4:5 y 16:9 |
 | `t_seq.py` | Prueba rápida de un tramo renderizado en orden (etiquetas tal como quedan en el vídeo) |
+| `vo_borrador.py` | Locución provisional gratuita (silenciosa, con los tiempos estimados) para fotogramas clave, hoja de textos, piloto sin voz y versión de feria |
+| `qc_video.py` | Control automático de vídeos terminados, hojas con un fotograma por escena, hoja de familia y control de regresión (`--prev`) |
+| `qc_pantalla.py` | Hoja de textos: todos los textos de pantalla en orden, con comprobación de líneas, traducción y términos prohibidos |
+| `qc_textos.py` | Busca en guiones y scripts los términos que la ficha del sistema prohíbe |
+| `siex_base.py` | Base 3D común: materiales neutros, primitivas, cámaras y luces (se usa en cualquier escenario nuevo) |
+| `sfx/` | Música corporativa (con el empalme a compás) y efectos de sonido |
+| `marcas/` | Logotipos oficiales de las seis divisiones y de Group Komtes (PNG con fondo transparente) |
+| `fichas/` | Hechos de producto confirmados por I+D, uno por sistema (plantilla en `_PLANTILLA.md`) |
+| `referencia/` | Fotogramas de la línea gráfica común para la hoja de familia |
+
+**Capas del kit.** *Común (se usa tal cual):* `cpd_video.py`, `mz_tools.py`, `siex_base.py`, la mezcla de audio del montaje y las herramientas de control. *De cada vídeo (se crea nueva):* escenario 3D, escenas, montaje (copia de `cpd_master.py` adaptando el módulo de escenas y los eventos de sonido; la mezcla y los niveles no se tocan), portadas y ficha del sistema. «Centros de datos» de SIEX conserva las posiciones de etiqueta validadas a mano (`TAG_FIXED`); los vídeos nuevos usan la colocación automática.
 
 **Mapa de observaciones → dónde se cambia**
 
@@ -455,5 +556,3 @@ El código de producción (escenas 3D, composición, transiciones con cámara ú
 | Duración u orden de escenas | `SCENES` y `SCENE_BLOCKS` de `cpd_final.py` | Vídeos |
 | Locución | Guion + ElevenLabs (regla de créditos, §1) | Voz + vídeos |
 | Portada | `rg_covers.py` | Portadas |
-| `sfx/` | Música corporativa (con el empalme a compás) y efectos de sonido |
-| `marcas/` | Logotipos oficiales de las seis divisiones y de Group Komtes (PNG con fondo transparente) |
