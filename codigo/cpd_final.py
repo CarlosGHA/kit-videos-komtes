@@ -210,7 +210,7 @@ EN = {
     'SEGURIDAD DE LA PREACCIÓN': 'PRE-ACTION SAFETY',
     'Rotura accidental de una ampolla': 'Accidental bulb breakage',
     'Falsa alarma de detección': 'False detection alarm',
-    'Ampolla rota sin incendio': 'Bulb broken, no fire',
+    'Rotura accidental, sin incendio': 'Accidental breakage, no fire',
     'Sale el aire de la tubería': 'Air escapes from the pipe',
     'Presostato: alarma': 'Pressure switch: alarm',
     'Válvula cerrada: sin detección': 'Valve closed: no detection',
@@ -1408,7 +1408,7 @@ def sc_safety1(t, L, img):
             spray(od, fd, cl, t - 0.4, p0[0], p0[1], ang, 0.7, air, drag=3.0, grav=-10, fog_a=18, dot_a=120, col=(185, 192, 200))
         la.alpha_composite(V.mclip(up(fog, 6))); la.alpha_composite(V.mclip(over))
         ua = 1 - ss(TS1 - DZP, TS1 - DZP + 0.2, t)
-        tag(d, 640, 820, 'Ampolla rota sin incendio', win(t, 0.6, L) * ua, v(jc['bulb']))
+        tag(d, 640, 820, 'Rotura accidental, sin incendio', win(t, 0.6, L) * ua, v(jc['bulb']))
         tag(d, 70, 1010, 'Sale el aire de la tubería', win(t, 1.4, L) * ua, v(jc['orif'][3][0]))
     if t > TS1 - DZP:
         lb = Image.new('RGBA', (W * SS, H * SS), (0, 0, 0, 0))

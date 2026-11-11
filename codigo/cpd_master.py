@@ -245,6 +245,23 @@ if os.environ.get('VO_TRT'):
     print('TRT', __import__('json').dumps(_tr)); sys.exit()
 
 
+
+def _loudnorm2(inp, fl):
+    """Sonoridad en dos pasadas: mide la mezcla y aplica una ganancia lineal a −15 LUFS con pico real ≤ −2 dBTP
+    (una sola pasada se queda corta cuando hay picos y deja el máster por debajo de −15)."""
+    import json as _j, re as _r
+    probe = fl[:-1] + [fl[-1].replace('LN_TAG', 'loudnorm=I=-15:TP=-2.0:LRA=11:print_format=json')]
+    r = subprocess.run(['ffmpeg', '-hide_banner', '-nostats'] + inp + ['-filter_complex', ';'.join(probe), '-map', '[aout]', '-f', 'null', '-'],
+                       capture_output=True, text=True).stderr
+    m = _r.search(r'\{[^{}]*"input_i"[^{}]*\}', r, _r.S)
+    if not m:
+        return 'loudnorm=I=-15:TP=-2.0:LRA=11'
+    v = _j.loads(m.group(0))
+    return (f"loudnorm=I=-15:TP=-2.0:LRA=20:linear=true:measured_I={v['input_i']}:measured_TP={v['input_tp']}:"
+            f"measured_LRA={v['input_lra']}:measured_thresh={v['input_thresh']}:offset={v['target_offset']},"
+            "aresample=192000,alimiter=limit=0.76:level=disabled:attack=2:release=60,aresample=48000")   # limitador a ~−2,4 dBFS con sobremuestreo
+
+
 def build_audio(video_in, out):
     vow = out + '.vo.wav'
     fl = []
@@ -280,7 +297,8 @@ def build_audio(video_in, out):
         sfx_labels.append(f'[s{j}]')
     mix_in = '[vo][mus][amb]' + ''.join(sfx_labels)
     n = 3 + len(sfx_labels)
-    fl.append(f"{mix_in}amix=inputs={n}:normalize=0:duration=first,apad,atrim=0:{DUR:.3f},loudnorm=I=-15:TP=-2.0:LRA=11,apad,atrim=0:{DUR:.3f}[aout]")
+    fl.append(f"{mix_in}amix=inputs={n}:normalize=0:duration=first,apad,atrim=0:{DUR:.3f},LN_TAG,apad,atrim=0:{DUR:.3f}[aout]")
+    fl[-1] = fl[-1].replace('LN_TAG', _loudnorm2(inp, fl))
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error'] + inp + ['-filter_complex', ';'.join(fl), '-map', f'{vi}:v',
                     '-map', '[aout]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-movflags', '+faststart', out],
                    check=True)

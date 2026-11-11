@@ -541,7 +541,14 @@ def tag(d, x, y, txt, a, anchor=None):
         _TPEND['key'] = target
         _TPEND['items'].append((target, x, y, w, txt, a, anchor))
         return
-    pl = [anchor, (x + 12, y + 18)] if anchor else None
+    if anchor and a > 0.5 and __import__('os').environ.get('TAG_LOG'):
+        print(f'TAG_POS {txt!r} x={x} y={y} w={w:.0f} ancla={tuple(round(v) for v in anchor)}', flush=True)
+    pl = None
+    if anchor:                                    # guía al extremo más cercano de la pastilla, con tramo horizontal de 24 px
+        right = anchor[0] > x + w / 2
+        ex, ey = (x + w - 2, y + 19) if right else (x + 2, y + 19)
+        el = (ex + 24, ey) if right else (ex - 24, ey)
+        pl = [anchor, el, (ex, ey)]
     _draw_tag(d, x, y, w, txt, a, anchor, pl)
 
 

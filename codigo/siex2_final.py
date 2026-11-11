@@ -36,11 +36,11 @@ EN = {
     'Nivel sonoro': 'Sound level',
     'El gas entra en la sala por difusores silenciosos, por debajo de 90 dB, para proteger los equipos sensibles.':
         'Gas enters the room through silent nozzles, below 90 dB, to protect sensitive equipment.',
-    'INUNDACIÓN TOTAL': 'TOTAL FLOODING', 'Sobre y bajo el suelo técnico': 'Above and below the raised floor',
+    'INUNDACIÓN TOTAL': 'TOTAL FLOODING', 'En ambiente y en falso suelo': 'In the room and under the raised floor',
     'Concentración de diseño': 'Design concentration', 'Alcanzada': 'Reached',
     'Difusores de sala': 'Room nozzles', 'Difusores bajo suelo': 'Underfloor nozzles',
-    'El agente inunda todo el recinto, sobre y bajo el suelo técnico, hasta la concentración de extinción.':
-        'The agent floods the whole enclosure, above and below the raised floor, up to the extinguishing concentration.',
+    'El agente inunda todo el recinto, en ambiente y en falso suelo, hasta la concentración de extinción.':
+        'The agent floods the whole enclosure, in the room and under the raised floor, up to the extinguishing concentration.',
     'Sin agua y sin residuos.': 'No water, no residue.',
     'EXTINCIÓN': 'EXTINCTION', 'Vuelta a la actividad': 'Back in service',
     'Sin agua': 'No water', 'Sin residuos': 'No residue', 'Sin daños en los equipos': 'No damage to equipment',
@@ -89,6 +89,8 @@ EN = {
     'Criterios de diseño': 'Design criteria', 'Validados': 'Validated',
     'El software analiza cada CPD, calcula los niveles acústicos finales y las distancias de seguridad, y valida los criterios de diseño.':
         'The software analyses each data center, calculates final sound levels and safety distances, and validates the design criteria.',
+    'El software analiza cada CPD y calcula los niveles acústicos finales y las distancias de seguridad.': 'The software analyses each data center and calculates the final acoustic levels and safety distances.',
+    'Después valida los criterios de diseño.': 'It then validates the design criteria.',
     'Sustitución de difusores': 'Nozzle replacement', 'Difusor tradicional  →  Difusor silencioso': 'Traditional nozzle  →  Silent nozzle',
     'Sustitución viable': 'Replacement feasible', 'Instalación existente': 'Existing installation',
     'Sin cálculos manuales': 'No manual calculations', 'Cálculo automático': 'Automatic calculation',
@@ -363,8 +365,8 @@ def sc_detect(t, L, img):
     d = ImageDraw.Draw(img)
     step(d, 1, 'DETECCIÓN', 'Detección temprana del humo', ss(0.2, 0.7, t))
     tag(d, pt[0] + 60, pt[1] + 150, 'Foco en rack', win(t, 1.0, L - 0.3), (pt[0], pt[1] + 20))
-    tag(d, 70, 300, 'Detector 1 · alarma', win(t, T_D1 + 0.1, L - 0.2), dets[0])
-    tag(d, 600, 300, 'Detector 2 · confirmación', win(t, T_D2 + 0.1, L - 0.2), dets[1])
+    tag(d, 414, 336, 'Detector 1 · alarma', win(t, T_D1 + 0.1, L - 0.2), dets[0])
+    tag(d, 378, 622, 'Detector 2 · confirmación', win(t, T_D2 + 0.1, L - 0.2), dets[1])
     subtitle(d, 'Un rack se sobrecalienta y empieza a generar humo.', win(t, 0.5, T_D1))
     subtitle(d, 'Los detectores lo identifican en su fase más temprana.', win(t, T_D1, L))
 
@@ -426,9 +428,9 @@ def sc_alarm(t, L, img):
         img.alpha_composite(up(glow, 5))
     d = ImageDraw.Draw(img)
     step(d, 2, 'ALARMA', 'Prealarma y evacuación', ss(0.2, 0.7, t))
-    tag(d, 70, 960, 'Central de extinción', win(t, 0.9, L - 0.2), v(js['panel']))
-    tag(d, 640, 330, 'Sirena y flash', win(t, 1.2, L - 0.2), fp)
-    tag(d, 70, 330, 'Rótulo de extinción', win(t, 1.5, L - 0.2), q[0])
+    tag(d, 518, 588, 'Central de extinción', win(t, 0.9, L - 0.2), v(js['panel']))
+    tag(d, 798, 664, 'Sirena y flash', win(t, 1.2, L - 0.2), fp)
+    tag(d, 432, 412, 'Rótulo de extinción', win(t, 1.5, L - 0.2), q[0])
     countdown_card(img, t, ss(T_AL + 0.3, T_AL + 0.8, t), (740, 760, 1010, 1060), T_AL + 0.6)
     for k, (txt, tc) in enumerate((('Evacuación del personal', 2.4), ('Climatización detenida', 3.0))):
         chip(img, 70 + k * 300, 1060, txt, win(t, tc, L - 0.1))
@@ -487,10 +489,10 @@ def sc_cylroom(t, L, img):
         ua = 1 - ss(TZ - DZP, TZ - DZP + 0.2, t)
         gas_route(layS, vS, jsS, t, ss(0.6, 1.0, t) * ua, t0=0.8)
         d = ImageDraw.Draw(img)
-        tag(d, 90, 330, 'Centro de datos', win(t, 0.3, L) * ua, vS(jsS['fire_top']))
+        tag(d, 292, 662, 'Centro de datos', win(t, 0.3, L) * ua, vS(jsS['fire_top']))
         tag(d, 640, 960, 'Sala de cilindros', win(t, 0.6, L) * ua, fc)
         feed, _ = route_paths(vS, jsS)
-        tag(d, 600, 330, 'Red de tuberías hasta los difusores', win(t, 1.2, L) * ua, feed[2])
+        tag(d, 312, 566, 'Red de tuberías hasta los difusores', win(t, 1.2, L) * ua, feed[2])
     if t > TZ - DZP:
         zc = 1.0 + 0.05 * ss(TZ, L, t)
         vC = B.View(zc, 0, 120)
@@ -505,14 +507,14 @@ def sc_cylroom(t, L, img):
             layC.alpha_composite(up(glow, 4)); layC.alpha_composite(lay2)
             flow_dots(ImageDraw.Draw(layC), fpts, t - TZ - 0.3, aa, n=10, speed=0.3, col=(255, 255, 255))
         d = ImageDraw.Draw(img)
-        tag(d, 70, 330, 'Hacia los difusores del CPD', win(t, TZ + 0.6, L - 0.1), _visible_end(fpts))
-        tag(d, 70, 960, 'Batería principal', win(t, TZ + 0.5, L - 0.1), vC(jsC['main_bank']))
+        tag(d, 544, 288, 'Hacia los difusores del CPD', win(t, TZ + 0.6, L - 0.1), _visible_end(fpts))
+        tag(d, 130, 702, 'Batería principal', win(t, TZ + 0.5, L - 0.1), vC(jsC['main_bank']))
         T_R = TZ + 2.6
-        tag(d, 640, 1010, 'Batería de reserva', win(t, T_R, L - 0.1), vC(jsC['res_bank']))
+        tag(d, 602, 984, 'Batería de reserva', win(t, T_R, L - 0.1), vC(jsC['res_bank']))
         if t > T_R:
             pr = ((t - T_R) * 1.1) % 1
             ring(d, vC(jsC['res_bank']), 20 + 50 * pr, (1 - pr) * ss(T_R, T_R + 0.4, t))
-        tag(d, 640, 330, 'Válvulas direccionales', win(t, TZ + 1.0, L - 0.1), vC(jsC['dirv'][2]))
+        tag(d, 374, 834, 'Válvulas direccionales', win(t, TZ + 1.0, L - 0.1), vC(jsC['dirv'][2]))
         chip(img, 70, 1060, 'Anclaje a la pared', win(t, TZ + 1.8, L - 0.1))
     if layS is not None and layC is not None:
         fA, fB, R = MZ.matched(fc, MZ.kp_screen('gsite', vS), MZ.kp_screen('gcyl', vC))
@@ -573,9 +575,9 @@ def sc_release(t, L, img):
         ring(d, pp, 14 + 44 * pr, (1 - pr) * ss(T_FIRE, T_FIRE + 0.2, t))
     flow_dots(d, [P(*q) for q in SYS_PATH], t - 1.6, ss(1.6, 2.0, t))
     tag(d, 640, 900, 'Cilindro piloto', win(t, 0.4, L - 0.1), P(*SYS_PILOTB))
-    tag(d, 70, 300, 'Colector', win(t, 1.4, L - 0.1), P(*SYS_MAN))
-    tag(d, 70, 960, 'Latiguillos', win(t, 1.8, L - 0.1), P(*SYS_HOSE))
-    tag(d, 640, 300, 'Línea de pilotaje', win(t, 1.0, L - 0.1), P(*SYS_CU))
+    tag(d, 442, 386, 'Colector', win(t, 1.4, L - 0.1), P(*SYS_MAN))
+    tag(d, 78, 560, 'Latiguillos', win(t, 1.8, L - 0.1), P(*SYS_HOSE))
+    tag(d, 690, 478, 'Línea de pilotaje', win(t, 1.0, L - 0.1), P(*SYS_CU))
     charge_card(img, t, ss(2.6, 3.1, t), (640, 990, 1010, 1100), 1.6)
     d = ImageDraw.Draw(img)
     step(d, 4, 'DISPARO', 'Cilindro piloto y colector', ss(0.2, 0.7, t))
@@ -635,12 +637,12 @@ def sc_valves(t, L, img):
         pr = ((t - T_OPEN) * 1.3) % 1
         ring(d, sp, 14 + 40 * pr, (1 - pr) * ss(T_OPEN, T_OPEN + 0.2, t) * (1 - ss(T_LEV - 0.4, T_LEV, t)))
     flow_dots(d, [P(*V_TEE2), P(V_RISERS[1], 0)], t - T_OPEN - 0.3, ss(T_OPEN + 0.3, T_OPEN + 0.7, t), n=10, speed=0.5)
-    tag(d, 70, 360, 'Actuador', win(t, T_OPEN + 0.2, L - 0.1), sp)
+    tag(d, 522, 604, 'Actuador', win(t, T_OPEN + 0.2, L - 0.1), sp)
     lp = P(*V_LEV2)
     if t > T_LEV:
         pr = ((t - T_LEV) * 1.2) % 1
         ring(d, lp, 14 + 40 * pr, (1 - pr) * ss(T_LEV, T_LEV + 0.2, t))
-    tag(d, 70, 1020, 'Palanca de accionamiento manual', win(t, T_LEV, L - 0.1), lp)
+    tag(d, 568, 838, 'Palanca de accionamiento manual', win(t, T_LEV, L - 0.1), lp)
     d = ImageDraw.Draw(img)
     step(d, 5, 'VÁLVULAS DIRECCIONALES', 'El gas, solo a la sala afectada', ss(0.2, 0.7, t))
     subtitle(d, 'Las válvulas direccionales envían el gas solo a la sala afectada: una batería protege varias salas.', win(t, 0.5, T_LEV))
@@ -663,7 +665,7 @@ def sc_nozzle(t, L, img):
     img.alpha_composite(V.mclip(up(fog, 3))); img.alpha_composite(V.mclip(over))
     d = ImageDraw.Draw(img)
     step(d, 6, 'DESCARGA', 'Difusor silencioso SALCXX', ss(0.2, 0.7, t))
-    tag(d, 70, 860, 'Orificios de descarga', win(t, 1.0, L - 0.2), v(js['holes']))
+    tag(d, 504, 520, 'Orificios de descarga', win(t, 1.0, L - 0.2), v(js['holes']))
     db_card(img, t, ss(1.4, 1.9, t), (590, 250, 1010, 470))
     d = ImageDraw.Draw(img)
     subtitle(d, 'El gas entra en la sala por los difusores silenciosos SALCXX, por debajo de 90 dB.', win(t, 0.5, L))
@@ -746,16 +748,16 @@ def sc_flood(t, L, img):
         lay = lay.filter(ImageFilter.GaussianBlur(SS * 1.2))
         img.alpha_composite(V.mclip(lay))
     d = ImageDraw.Draw(img)
-    step(d, 7, 'INUNDACIÓN TOTAL', 'Sobre y bajo el suelo técnico', ss(0.2, 0.7, t))
+    step(d, 7, 'INUNDACIÓN TOTAL', 'En ambiente y en falso suelo', ss(0.2, 0.7, t))
     noz = [v(q) for q in js['nozzles']]
     noz = [q for q in noz if 280 < q[1] < 1000]
     if noz:
         tag(d, 640, 300, 'Difusores de sala', win(t, 0.6, 4.4), min(noz, key=lambda q: q[1]))
     if js.get('uf_noz'):
-        tag(d, 70, 1000, 'Difusores bajo suelo', win(t, 1.0, 4.4), v(js['uf_noz'][0]))
+        tag(d, 112, 866, 'Difusores bajo suelo', win(t, 1.0, 4.4), v(js['uf_noz'][0]))
     conc_card(img, t, ss(0.8, 1.3, t), (740, 760, 1010, 900))
     d = ImageDraw.Draw(img)
-    subtitle(d, 'El agente inunda todo el recinto, sobre y bajo el suelo técnico, hasta la concentración de extinción.', win(t, 0.5, L - 1.8))
+    subtitle(d, 'El agente inunda todo el recinto, en ambiente y en falso suelo, hasta la concentración de extinción.', win(t, 0.5, L - 1.8))
     subtitle(d, 'Sin agua y sin residuos.', win(t, L - 1.8, L))
 
 
@@ -919,7 +921,8 @@ def sc_soft1(t, L, img):
         result_row(du, xr, y0 + 545, wr, 'Distancias de seguridad', a * ss(3.6, 3.9, t), a * ss(3.9, 4.1, t), 'Calculadas')
         result_row(du, xr, y0 + 620, wr, 'Criterios de diseño', a * ss(4.0, 4.3, t), a * ss(4.3, 4.5, t), 'Validados')
     d = ImageDraw.Draw(img)
-    subtitle(d, 'El software analiza cada CPD, calcula los niveles acústicos finales y las distancias de seguridad, y valida los criterios de diseño.', win(t, 0.5, L))
+    subtitle(d, 'El software analiza cada CPD y calcula los niveles acústicos finales y las distancias de seguridad.', win(t, 0.5, L * 0.55))   # máx. 2 líneas
+    subtitle(d, 'Después valida los criterios de diseño.', win(t, L * 0.55, L))
 
 
 def sc_soft2(t, L, img):
