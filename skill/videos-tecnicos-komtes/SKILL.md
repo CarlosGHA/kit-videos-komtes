@@ -98,7 +98,7 @@ Si la petición no encaja en ninguna, descríbesela a Marketing antes de empezar
 - **Créditos:** antes de voz, transcripciones, efectos o música de pago, avisa (qué, por qué, coste estimado, saldo si lo conoces, alternativa gratuita) y espera el OK. Agrupa todas las correcciones de voz de una ronda en una sola generación. Las transcripciones también cuestan. Sin saldo: para y ofrece opciones; mientras, lo visual se monta con la locución anterior como `_BORRADOR` y recuerdas la voz pendiente en cada entrega. Nunca repitas una generación para reintentar.
 - **Renders:** un vídeo por trabajo en segundo plano, de uno en uno, con límite de 2 h (≈50–70 min cada uno con 2 núcleos). En 3D, solo los planos que cambian, a una carpeta nueva (`r13/`…) puesta la primera en `_DIRS`. Las portadas se regeneran en segundos.
 - **Antes de renderizar:** prueba el tramo afectado en orden con `t_seq.py`; un fotograma suelto no muestra cómo quedan las etiquetas en el vídeo.
-- **Conversación:** revisa con hojas de contactos, no con fotogramas sueltos; no leas los scripts enteros, busca la función; copia de seguridad (`.bak_vN`) antes de cada tanda; guarda el guion vigente y los pendientes en el proyecto de Komtes.
+- **Conversación:** revisa con hojas de contactos, no con fotogramas sueltos, y amplía solo la zona dudosa; no leas los scripts enteros, busca la función; copia de seguridad (`.bak_vN`) antes de cada tanda; guarda el guion vigente y los pendientes en el proyecto de Komtes.
 
 ## 6. Ficha de briefing y documentos del guion
 
@@ -172,12 +172,12 @@ Reglas: un mensaje por escena; todo componente nombrado está en pantalla con su
 - Subtítulo en pantalla: versión condensada, máximo 2 líneas (≈110 caracteres); si no cabe, se parte en dos subtítulos seguidos.
 - **El inglés no se traduce literal:** usa el glosario ES↔EN de la ficha. Si cambia un término, cámbialo a la vez en guion, texto de voz, subtítulos, etiquetas y portadas de los dos idiomas.
 - ElevenLabs: modelo expresivo (eleven_v4) con `[warmly]` (apertura y cierre), `[serious]` (riesgo), `[confident]` (sistema) y `[pause]` entre bloques (las pausas sincronizan las escenas). Velocidad en montaje: ES 1,00 · EN 1,06–1,08.
-- Siglas como se leen y cifras en letra. **Referencias deletreadas y separadas por comas** (MM-P51 → «eme, eme, pe cincuenta y uno»). Revisa la lista con el ingeniero antes de generar.
+- Siglas como se leen («efe eme», «Erre-ge») y cifras en letra. **Referencias deletreadas y separadas por comas** (MM-P51 → «eme, eme, pe cincuenta y uno»). Revisa la lista con el ingeniero antes de generar.
 
 ## 9. Sistema gráfico (fijo; implementado en `cpd_video.py`)
 
 - **Lienzo:** 4:5 1080×1350 y 16:9 1920×1080, trabajo interno ×2, 30 fps.
-- **Colores:** INK #2B2D2F (textos) · INK2 #5F6368 · RED #D60A20 (marca, franja, anclajes, red del sistema) · WHITE · pendiente #D7D9DC · agua #6096D2 · gas #78AAE1 · halo de fuego #FF6E1E. Nunca negro puro. En flujos animados: agua en azul, gases (nitrógeno, aire, agentes gaseosos) en rojo.
+- **Colores:** INK #2B2D2F (textos) · INK2 #5F6368 · RED #D60A20 (marca, franja, anclajes, red del sistema) · WHITE · pendiente #D7D9DC · agua #6096D2 · gas #78AAE1 · tubería de nitrógeno #289650 · halo de fuego #FF6E1E. Nunca negro puro. En flujos animados: agua en azul, gases (nitrógeno, aire, agentes gaseosos) en rojo.
 - **Tipografía (px a 1080):** Inter Display Bold 34 (título/paso) · Inter Display Medium 28 (subtítulo de cabecera) · Inter Medium 29, interlínea 42 (locución) · Inter SemiBold 21 (etiquetas) · Inter Regular 20 (tarjetas) · Inter Display Bold 64 (cifra).
 - **4:5:** firma de 22 px con borde derecho en x = 1010, y = 60; paso en (70, 112), subtítulo (70, 156), barras de progreso en y = 206; ventana de imagen y = 250–1100 con desvanecidos; subtítulos centrados, ancho 900, centro en y = 1170; tarjetas arriba a la derecha (≈590–1010 × 250–470); franja roja desde (0, 420), pendiente 0,5, grosor 180, solo en planos generales.
 - **16:9:** columna de texto a la izquierda; imagen 4:5 recortada (y = 200–1150), escalada ×1,137, con desvanecido de 170 px hacia el texto; franja desde y = 650, grosor 150.
@@ -203,7 +203,7 @@ Reglas: un mensaje por escena; todo componente nombrado está en pantalla con su
 - Una sola cámara: la escena que sale y la que entra comparten punto de anclaje y escala; nada salta.
 - Mismo modelo: `matched()` (ajuste por puntos 3D comunes); zoom geométrico de 1,6 s con máscara circular suave. Del 3D a la foto del mismo producto: anclaje en el objeto. Encuadres sin solape: barrido con relleno (`under`). Sin relación espacial: fundido de 0,8 s con acercamiento común del 4 %.
 - **Logotipos, títulos, subtítulos, tarjetas y franja nunca se escalan.** Los rótulos que salen desaparecen en el primer 30 % de la transición y los que entran aparecen en el último 30 %. Cada zoom lleva un «whoosh».
-- **Gramática de efectos:** riesgo (halo + llamas + humo, o el aviso que corresponda); agente (partículas desde cada orificio real, con su color); flujo por tubería (puntos con borde blanco); avisos (anillos rojos); datos (tarjetas animadas).
+- **Gramática de efectos:** riesgo (halo + llamas + humo, o el aviso que corresponda); agente (partículas o chorros desde cada orificio real, con su color; los gases, además, inundan la sala); flujo por tubería (puntos con borde blanco); avisos (anillos rojos); datos (tarjetas animadas).
 
 ## 12. Audio
 
@@ -222,7 +222,7 @@ Reglas: un mensaje por escena; todo componente nombrado está en pantalla con su
 5. **Transiciones** — tira de 6 fotogramas (p = 0,02–0,98; tiempos con `VO_TRT=1`): nada salta, rótulos quietos, ninguno residual.
 6. **Línea gráfica** — `qc_video.py … --familia referencia/`: los fotogramas del vídeo nuevo junto a los de referencia. Deben parecer hermanos: cabecera, tamaños de letra, etiquetas, franja, luz y materiales.
 7. **Regresión** (toda corrección) — `qc_video.py <nuevo> --prev <anterior>` lista los segundos que han cambiado: deben coincidir con lo pedido y con nada más. Si cambia algo que no tocaba, se arregla antes de entregar. **Si modificas código común** (`cpd_video.py`, `mz_tools.py`, base 3D), pasa la regresión a todos los vídeos que lo usan.
-8. **Voz** — n.º de bloques de la locución = bloques del guion. No puedes oírla: pide al ingeniero que la escuche entera.
+8. **Voz y música** — n.º de bloques de la locución = bloques del guion. No puedes oírlas: pide al ingeniero que escuche el piloto entero (pronunciación, ninguna palabra cortada, música sin cortes ni duplicados).
 9. **Coherencia** — portada ↔ vídeo (mismos productos y nombres) · ES ↔ EN · guion ↔ pantalla ↔ ficha · tabla de afirmaciones al día.
 10. **Informe de control** en cada entrega: una tabla breve con lo comprobado (✔/✖), lo que queda **sin comprobar** y lo que conviene que mire el ingeniero.
 
@@ -240,19 +240,19 @@ Del vídeo aprobado salen 3–5 piezas que **se entienden solas** y se publican 
 - Solo 4:5; el 16:9 completo se enlaza en el primer comentario. SIEX → LinkedIn de SIEX; resto → LinkedIn de Grupo Komtes.
 - **Una pregunta, una respuesta completa:** cada pieza cuenta la actuación entera hasta el resultado; la primera frase no depende de nada anterior.
 - **Gancho en los primeros 3,2 s escrito sobre la imagen:** antetítulo RED Inter Bold 22 «SISTEMA · APLICACIÓN» en (70, 92); pregunta Inter Display Bold 50 desde y = 128, máximo 2 líneas (≈65 caracteres); barra roja de 64×7.
-- Sin «Capítulo n/N». Pasos renumerados dentro de cada pieza. Cierre igual en todas (3,4 s). 25–60 s con las mismas escenas, locución y música: no gasta créditos.
+- Sin «Capítulo n/N». Pasos renumerados dentro de cada pieza; con un solo paso, título sin número. Cierre igual en todas (3,4 s). 25–60 s con las mismas escenas, locución y música: no gasta créditos.
 - Montaje: lista `PIECES` del script de escenas y `PIEZA=n python3 <montaje>.py <es|en> <voz> 45 <salida.mp4>`. Nombres `…_1080x1350_LinkedIn<n>_<Tema>.mp4`; portada = fotograma del gancho.
-- Documento de publicación: por pieza, texto listo para pegar (abre con la pregunta, 3–4 ideas con «→», 3–4 hashtags, sin enlace) y primer comentario con la web; calendario (una por semana, martes a jueves de 9 a 11 h) y tabla de medición.
+- Documento de publicación: por pieza, texto listo para pegar (abre con la pregunta, 3–4 ideas con «→», 3–4 hashtags, sin enlace) y primer comentario con la web; calendario (una por semana, martes a jueves de 9 a 11 h), difusión del equipo en la primera hora y tabla de medición.
 
 ## 16. Errores ya cometidos (no repetir)
 
 - **Proceso:** generar la voz de pago antes de congelar el guion y validar los fotogramas · renderizar las cuatro versiones antes de que el ingeniero vea una · revisar por muestreo y afirmar que «lo demás no cambia» · re-renderizar un vídeo validado con el código común más reciente sin control de regresión (las etiquetas cambiaron de sitio en todas las escenas) · entregar con la locución antigua sin marcarlo como borrador · dejar crecer el guion ronda a ronda sin volver a medir la duración · corregir solo el minuto citado · dos vídeos a la vez o encadenados en un mismo trabajo · lanzar voz o transcripción sin avisar del coste · dar una fase por cerrada sin OK.
 - **Producto y 3D:** usar una imagen generada por IA sin compararla con el render original · equipos sin etiqueta de marca · orificios como relieve · piezas inventadas · baterías sin anclar · válvulas en otra posición o con otra entrada/salida · más válvulas o colectores de los reales · redes que siguen hasta la pared pasado el último punto de descarga · plano general como pasillo vacío.
-- **Nombres y textos:** un término corregido en el guion pero no en pantalla, en el otro idioma o en la portada · inglés traducido literal · «certificado» en lugar de la fórmula del emisor · una pieza etiquetada con el nombre de otra · subtítulos de 3 líneas · referencias leídas como palabra · eslogan final sin leer · un producto explicado sin mostrarlo.
-- **Etiquetas:** guías largas o cruzadas · pastilla sobre la pieza, sobre una tarjeta o sobre el objeto que nombra otra etiqueta · pastillas que se mueven después de aparecer · guía por encima de otra pastilla · pastilla tapando el punto de otra · punto rojo fuera de la ventana · validar con fotogramas sueltos.
+- **Nombres y textos:** un término corregido en el guion pero no en pantalla, en el otro idioma o en la portada · inglés traducido literal · «certificado» en lugar de la fórmula del emisor · una pieza etiquetada con el nombre de otra · subtítulos de 3 líneas · referencias leídas como palabra · pronunciación de marca sin revisar · eslogan final sin leer · un producto explicado sin mostrarlo.
+- **Etiquetas:** guías largas o cruzadas · pastilla sobre la pieza, sobre una tarjeta o sobre el objeto que nombra otra etiqueta · pastillas que se mueven después de aparecer · guía por encima de otra pastilla · pastilla tapando el punto de otra · punto rojo fuera de la ventana · texto traducido que no cabe en la pastilla · validar con fotogramas sueltos.
 - **Animación:** rótulos escalándose · elementos que saltan en el zoom · rótulos residuales · ruta animada desplazada de la tubería, que sobresale del render o que invade la cabecera.
 - **Audio y montaje:** empalme fuera de compás · música más corta que el vídeo · pico real por encima de −1 dBTP · subtítulos desacompasados con la voz · piezas que no se entienden por separado.
-- **Línea gráfica:** copiar la estética de la competencia · cambiar colores, letras o el motor de etiquetas para un solo vídeo · flechas de portada que no apuntan al punto exacto.
+- **Línea gráfica:** copiar la estética de la competencia · cambiar colores, letras o el motor de etiquetas para un solo vídeo · explicaciones en un recuadro en vez de a todo el ancho · flechas de portada que no apuntan al punto exacto.
 
 ## 17. Operativa técnica (carpeta `codigo/` del kit)
 
@@ -284,5 +284,6 @@ Del vídeo aprobado salen 3–5 piezas que **se entienden solas** y se publican 
 | Portada | Script de portadas | Portadas |
 
 - Escena nueva sin locución todavía: va en `SCENES` sin bloque en `SCENE_BLOCKS` y dura lo fijado.
+- No modifiques `cpd_video.py` ni la mezcla de audio, salvo el logotipo de la firma.
 - «Centros de datos» de SIEX conserva las posiciones de etiqueta validadas a mano (`TAG_FIXED`); los vídeos nuevos usan la colocación automática.
 - Si el manual del kit y esta skill discrepan, manda el que tenga **la versión más alta** en su cabecera; ante la duda, pregunta a Marketing.
