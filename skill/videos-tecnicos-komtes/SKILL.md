@@ -280,7 +280,7 @@ Del vídeo aprobado salen 3–5 piezas que **se entienden solas** y se publican 
 | Geometría (tubería, válvula, difusor, sala) | Escenario 3D y sus `KEY` | Planos afectados + portadas + vídeos |
 | Ruta animada desplazada | `KEY` del plano (nunca píxeles en las escenas) | Planos afectados + vídeos |
 | Duración u orden de escenas | `SCENES` y `SCENE_BLOCKS` | Vídeos |
-| Locución | Guion + voz (§5) | Voz + audio de los vídeos |
+| Locución | Guion + voz (§5) | Voz + vídeos (cambian los tiempos) |
 | Portada | Script de portadas | Portadas |
 
 - Escena nueva sin locución todavía: va en `SCENES` sin bloque en `SCENE_BLOCKS` y dura lo fijado.
