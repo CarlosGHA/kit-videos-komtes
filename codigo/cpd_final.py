@@ -57,7 +57,7 @@ EN = {
     'Microdifusores': 'Micro-diffusers',
     'Descarga simultánea sobre los grupos': 'Simultaneous discharge over the gensets',
     'Cada sala tiene su propia válvula de control WF-VC junto a la batería: una para generadores y otra para transformadores.': 'Each room has its own WF-VC control valve next to the bank: one for the generators and one for the transformers.',
-    'Ante un incendio en un generador, los detectores lo identifican y la central abre solo la válvula de esa sala.': "If a generator catches fire, the detectors identify it and the panel opens only that room's valve.",
+    'Ante un incendio en un generador, los detectores lo identifican y la central da la orden de disparo.': "If a generator catches fire, the detectors identify it and the panel gives the release command.",
     'El nitrógeno impulsa el agua por su colector hasta los difusores EMM-416549, que descargan sobre los grupos.': 'Nitrogen drives the water through its manifold to the EMM-416549 nozzles, which discharge over the gensets.',
     'Centro de control': 'Control room',
     'Difusores MM-P50': 'MM-P50 nozzles',
@@ -1086,7 +1086,7 @@ def sc_uac(t, L, img):
     subtitle(d, 'Generadores y transformadores: RG W-FOG UAC, baterías de agua y nitrógeno, sin bombas ni corriente eléctrica.',
              win(t, 0.5, TV))
     subtitle(d, 'Cada sala tiene su propia válvula de control WF-VC junto a la batería: una para generadores y otra para transformadores.', win(t, TV, UF))
-    subtitle(d, 'Ante un incendio en un generador, los detectores lo identifican y la central abre solo la válvula de esa sala.',
+    subtitle(d, 'Ante un incendio en un generador, los detectores lo identifican y la central da la orden de disparo.',
              win(t, UF, CA0 + 1.0))
     subtitle(d, 'El nitrógeno presuriza la batería y empuja el agua hacia las válvulas de control WF-VC.', win(t, CA0 + 1.0, CV0 + 0.3))
     _tm = CV0 + 0.3 + 0.3 * (CB0 + 0.1 - CV0)                                   # dos subtítulos: máx. 2 líneas
@@ -1628,12 +1628,15 @@ ANCHORS = {
     7: [(4.4, 6, {'es': 'Es eficaz', 'en': 'It is effective'})],
     10: [(TS1 + 0.4, 9, {'es': 'y el presostato', 'en': "and the valve's"})],
     11: [(TS2 + 0.4, 10, {'es': 'sin fuego no', 'en': 'with no fire'})],
-    13: [(TV, 11, {'es': 'Cada generador tiene', 'en': 'Each generator has'}), (UF, 12, None), (CA0 + 1.0, 13, None)],
+    13: [(TV, 12, {'es': 'Cada sala tiene', 'en': 'Each room has'}), (UF, 13, None), (CA0 + 1.0, 14, None),
+         (CV0 + 0.4, 14, {'es': 'La central abre', 'en': 'The panel opens'}),
+         (CC0 - 0.6, 14, {'es': 'El colector lleva', 'en': 'The manifold carries'})],
 }
-SCENE_TAIL = {13: 10.0, 8: 4.4}   # tiempo extra tras la voz (escenas con varias fases después de la última frase)
-# bloques de locución por escena (en orden)
-SCENE_BLOCKS = {1: [0], 2: [1], 3: [2], 4: [3], 5: [4], 6: [5], 7: [6], 8: [7], 9: [8], 10: [9], 11: [10], 13: [11, 12, 13]}
-# escena 12 (centro de control): sin bloque de voz hasta la nueva locución; dura L_CTRL
+SCENE_TAIL = {13: 3.0, 8: 4.4}   # tiempo extra tras la voz (escenas con varias fases después de la última frase)
+# bloques de locución por escena (en orden) · guion v6: 16 bloques
+SCENE_BLOCKS = {1: [0], 2: [1], 3: [2], 4: [3], 5: [4], 6: [5], 7: [6], 8: [7], 9: [8], 10: [9], 11: [10], 12: [11],
+                13: [12, 13, 14], 14: [15]}
+# escena 12 (centro de control / zonas de personal): bloque 11 del guion v6
 
 
 def M_wide_med(tA, LA, tB, LB):
