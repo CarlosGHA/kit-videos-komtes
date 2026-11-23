@@ -1603,11 +1603,11 @@ def sc_ctrl(t, L, img):
     d = ImageDraw.Draw(img)
     title(d, 'ZONAS DE PERSONAL', 'Difusores MM-P50 · válvula de sección WF-SV', ss(0.2, 0.7, t))
     subtitle(d, 'Las zonas de personal, como oficinas, se pueden proteger con el difusor MM-P50, aprobado por FM para riesgos HC-1.',
-             win(t, 0.5, TCA + 0.4))
+             win(t, 0.5, TCB + 0.4))
     subtitle(d, 'Se emplean válvulas de sección WF-SV normalmente abiertas, que confirman el flujo de agua en caso de activación…',
-             win(t, TCA + 0.4, TCB + 0.4))
+             win(t, TCB + 0.4, TCB + 2.6))
     subtitle(d, '…y permiten cerrarlo para poner de nuevo el sistema en servicio una vez extinguido el incendio.',
-             win(t, TCB + 0.4, L))
+             win(t, TCB + 2.6, L))
 
 
 _SF = L_FLOOR - 8.0      # el falso suelo crece con la fase de aplicación local
@@ -1628,14 +1628,16 @@ ANCHORS = {
     7: [(4.4, 6, {'es': 'Es eficaz', 'en': 'It is effective'})],
     10: [(TS1 + 0.4, 9, {'es': 'y el presostato', 'en': "and the valve's"})],
     11: [(TS2 + 0.4, 10, {'es': 'sin fuego no', 'en': 'with no fire'})],
-    13: [(TV, 12, {'es': 'Cada sala tiene', 'en': 'Each room has'}), (UF, 13, None), (CA0 + 1.0, 14, None),
-         (CV0 + 0.4, 14, {'es': 'La central abre', 'en': 'The panel opens'}),
-         (CC0 - 0.6, 14, {'es': 'El colector lleva', 'en': 'The manifold carries'})],
+    12: [(TCB + 0.4, 12, None), (TCB + 2.6, 13, None)],
+    13: [(TV, 15, None), (UF, 16, None), (CA0 + 1.0, 17, None), (CV0 + 0.3, 18, None), (CB0 + 0.4, 19, None)],
 }
 SCENE_TAIL = {13: 3.0, 8: 4.4}   # tiempo extra tras la voz (escenas con varias fases después de la última frase)
-# bloques de locución por escena (en orden) · guion v6: 16 bloques
-SCENE_BLOCKS = {1: [0], 2: [1], 3: [2], 4: [3], 5: [4], 6: [5], 7: [6], 8: [7], 9: [8], 10: [9], 11: [10], 12: [11],
-                13: [12, 13, 14], 14: [15]}
+# bloques de locución por escena (en orden) · guion v6 con cortes [cut] en zonas de personal y UAC: 21 bloques
+# (cada frase larga es un bloque propio, con un respiro entre frases y anclada a su imagen)
+SCENE_BLOCKS = {1: [0], 2: [1], 3: [2], 4: [3], 5: [4], 6: [5], 7: [6], 8: [7], 9: [8], 10: [9], 11: [10],
+                12: [11, 12, 13], 13: [14, 15, 16, 17, 18, 19], 14: [20]}
+SCENE_GAP = {12: 0.9, 13: 0.9}                 # respiro entre frases (s)
+SCENE_SPEED = {'en': {12: 1.0, 13: 1.0}}       # en inglés estas dos escenas suenan a velocidad natural
 # escena 12 (centro de control / zonas de personal): bloque 11 del guion v6
 
 

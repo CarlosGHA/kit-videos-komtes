@@ -31,6 +31,9 @@ assert len(blocks) >= NBLK, f'la locución tiene {len(blocks)} bloques y el mont
 SPEED = 1.0 if LANG == 'es' else 1.06
 LEAD, TAIL = 0.3, 0.55
 GAP = 0.4
+_SG = getattr(F, 'SCENE_GAP', {})                       # respiro entre frases de una misma escena
+_SS = getattr(F, 'SCENE_SPEED', {}).get(LANG, {})      # velocidad de la voz por escena (si no, SPEED)
+BSPD = {}                                              # bloque -> velocidad con que suena
 orig = F.SCENES
 new = [(0.0, orig[0][1], orig[0][2], orig[0][3], 1.0)]
 t = orig[0][1]
@@ -62,9 +65,11 @@ for i in range(1, len(orig)):
     L0 = b - a
     bl_ids = F.SCENE_BLOCKS.get(i, [])
     pos = t + LEAD
+    sp_ = _SS.get(i, SPEED)
     for k_, bi in enumerate(bl_ids):
         vo_place.append((pos, blocks[bi]))
-        pos += (blocks[bi][1] - blocks[bi][0]) / SPEED + (GAP if k_ < len(bl_ids) - 1 else 0)
+        BSPD[bi] = sp_
+        pos += (blocks[bi][1] - blocks[bi][0]) / sp_ + (_SG.get(i, GAP) if k_ < len(bl_ids) - 1 else 0)
     L = max(L0, pos - t + TAIL + getattr(F, 'SCENE_TAIL', {}).get(i, 0.0)) if bl_ids else L0
     if i < len(orig) - 1:
         L = next_beat(t + L) - t
@@ -133,7 +138,7 @@ for i, (a0, b0, fn, band, f) in enumerate(new):
             vt = clause_time(bi, pref[LANG]) if BJ else None
             if vt is None:
                 print('  ancla no encontrada', i, pref[LANG]); continue
-        tau = block_pos[bi] + (vt - blocks[bi][0]) / SPEED - a0
+        tau = block_pos[bi] + (vt - blocks[bi][0]) / BSPD.get(bi, SPEED) - a0
         if tau > pts[-1][0] + 0.3 and to > pts[-1][1] + 0.2 and tau < Ln - 0.3 and to < L0 - 0.2:
             pts.append((tau, to))
     pts.append((Ln, L0))
@@ -266,8 +271,9 @@ def build_audio(video_in, out):
     vow = out + '.vo.wav'
     fl = []
     for k, (pos, (a, b)) in enumerate(vo_place):
-        fl.append(f"[0:a]atrim={max(0, a - 0.05):.3f}:{b + 0.15:.3f},asetpts=PTS-STARTPTS,atempo={SPEED},afade=t=in:d=0.03,"
-                  f"afade=t=out:st={(b - a) / SPEED + 0.03:.3f}:d=0.12,adelay={int(pos * 1000)}|{int(pos * 1000)}[v{k}]")
+        sp_ = BSPD.get(blocks.index((a, b)), SPEED)
+        fl.append(f"[0:a]atrim={max(0, a - 0.05):.3f}:{b + 0.15:.3f},asetpts=PTS-STARTPTS,atempo={sp_},afade=t=in:d=0.03,"
+                  f"afade=t=out:st={(b - a) / sp_ + 0.03:.3f}:d=0.12,adelay={int(pos * 1000)}|{int(pos * 1000)}[v{k}]")
     ins = ['-i', VO]
     labs = [f'[v{k}]' for k in range(len(vo_place))]
     for j, (pos, f_) in enumerate(extra_place):
