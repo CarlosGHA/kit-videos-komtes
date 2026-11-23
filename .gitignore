@@ -8,3 +8,4 @@ __pycache__/
 *.pyc
 *.noaudio.mp4
 *.vo.wav
+trabajo/out_prev/*
