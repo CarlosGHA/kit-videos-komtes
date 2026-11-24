@@ -1774,7 +1774,9 @@ if __name__ == '__main__':
 
 
 # =====================================================================================
-# SECCIÓN DE LINKEDIN «Ingeniería aplicada» (solo 4:5)
+# SECCIÓN DE LINKEDIN «Riesgo a riesgo» / «Risk by Risk» (solo 4:5)
+#   Público: ingenierías, instaladores y directivos que necesitan protección contra incendios. Cada episodio = un riesgo
+#   del edificio y cómo se protege.
 #   Serie de episodios cortos (30–60 s) que se cortan del vídeo largo, con el mismo formato para cualquier aplicación
 #   (centros de datos, cocinas, oil & gas…) y cualquier división. Cada episodio: apertura (antetítulo de la sección
 #   + aplicación + nº de episodio y título técnico en afirmativo) -> escenas del tema con su locución -> cierre con la
@@ -1782,19 +1784,21 @@ if __name__ == '__main__':
 #   Uso: PIEZA=<nº> SUB_LANG=es python3 cpd_master.py en <voz_en.mp3> 45 <salida.mp4>   (voz en inglés, textos en español)
 # =====================================================================================
 SECCION = dict(
-    nombre='INGENIERÍA APLICADA',                       # nombre fijo de la sección (igual en todas las aplicaciones)
+    nombre='RIESGO A RIESGO',                           # nombre fijo de la sección (igual en todas las aplicaciones)
+    nombre_en='RISK BY RISK',                           # para el texto del post en inglés
     aplicacion='CENTROS DE DATOS',
     sistema='RG W-FOG',
     cierre='Protección contra incendios para centros de datos',
     web='www.rg-systems.com',
+    # títulos: primero el RIESGO y después cómo se protege (la sección es «riesgo a riesgo»)
     episodios=[
-        dict(slug='01_Rack', titulo='Extinción localizada en el rack', escenas=[2, 3, 5, 7, 9],
+        dict(slug='01_Rack', titulo='Foco en un rack: extinción localizada', escenas=[2, 3, 5, 7, 9],
              steps=({1: 1, 2: 2, 4: 3, 6: 4, 8: 5}, 5)),
-        dict(slug='02_Preaccion', titulo='Preacción: sin detección no hay descarga', escenas=[4, 10, 11], steps=({}, 0)),
-        dict(slug='03_Falso-suelo', titulo='Dos redes: sala y falso suelo', escenas=[1, 8], steps=({}, 0)),
-        dict(slug='04_Zonas-personal', titulo='Zonas de personal: difusor MM-P50 y válvulas de sección', escenas=[12],
+        dict(slug='02_Preaccion', titulo='Falsas alarmas y roturas: la preacción no descarga', escenas=[4, 10, 11], steps=({}, 0)),
+        dict(slug='03_Falso-suelo', titulo='Bajo el falso suelo: una red propia para los cables', escenas=[1, 8], steps=({}, 0)),
+        dict(slug='04_Zonas-personal', titulo='Oficinas: difusor MM-P50 y válvulas de sección', escenas=[12],
              steps=({}, 0)),
-        dict(slug='05_Generadores', titulo='Generadores y transformadores, sin bombas ni corriente', escenas=[13],
+        dict(slug='05_Generadores', titulo='Generadores y transformadores: sin bombas ni corriente', escenas=[13],
              steps=({}, 0)),
     ])
 PIECES = [dict(slug=e['slug'], hook=e['titulo'], scenes=e['escenas'], steps=e['steps']) for e in SECCION['episodios']]
