@@ -306,8 +306,9 @@ def build_audio(video_in, out):
         _e0 = F.PRE_SEC - 0.6
         fl.append(f"[1:a]atrim=0:{DUR - _e0:.3f},asetpts=PTS-STARTPTS,afade=t=in:d=1.6,afade=t=out:st={DUR - _e0 - 2.5:.3f}:d=2.5,"
                   f"volume=0.26,adelay={int(_e0 * 1000)}|{int(_e0 * 1000)}[bed]")
-        fl.append(f"amovie={SFX}{F.E.MUSICA},aresample=48000,atrim=0:{F.PRE_SEC:.3f},lowpass=f=9000,volume=0.55,"
-                  f"afade=t=out:st={F.PRE_SEC - 1.2:.3f}:d=1.2[ent]")
+        _em = SFX + os.environ.get('MUSICA', F.E.MUSICA)
+        fl.append(f"amovie='{_em}',aresample=48000,atrim=0:{F.PRE_SEC:.3f},lowpass=f=12000,volume={F.E.music_gain(_em):.2f}dB,"
+                  f"afade=t=in:d=0.3,afade=t=out:st={F.PRE_SEC - 1.6:.3f}:d=1.6[ent]")
         fl.append(f"[bed][ent]amix=inputs=2:normalize=0,apad,atrim=0:{DUR:.3f}[mus0]")
     else:
         fl.append(f"[1:a]atrim=0:{DUR:.3f},afade=t=in:d=1.2,afade=t=out:st={DUR - 2.5:.3f}:d=2.5,volume=0.26[mus0]")

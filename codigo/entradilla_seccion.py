@@ -17,7 +17,8 @@ import os, sys, math, glob, subprocess
 from PIL import Image, ImageDraw, ImageFont
 
 DUR = 10.0
-MUSICA = 'music_entradilla.wav'               # música original de la entradilla (musica_entradilla.py), distinta del fondo
+MUSICA = 'music_entradilla.wav'               # música de la entradilla (en trabajo/sfx), distinta del fondo de los episodios
+MUS_LUFS = -21.0                              # nivel de la música de la entradilla (sin voz: más baja que la locución, −15)
 SERIE = 'A SERIES BY'                         # vínculo con el grupo, sobre el logotipo de Grupo Komtes
 NOMBRE = ['RISK', 'BY', 'RISK']                 # la palabra central va en rojo
 LEMA_EN = 'Fire protection, one risk at a time'
@@ -137,6 +138,16 @@ def draw(img, t, S, W, H, ss_=None):
     img.alpha_composite(base)
 
 
+def music_gain(path, dur=None):
+    """ganancia (dB) para dejar el tramo de música de la entradilla en MUS_LUFS"""
+    import re as _re
+    dur = dur or DUR
+    r = subprocess.run(['ffmpeg', '-hide_banner', '-i', path, '-t', f'{dur}', '-af', 'ebur128', '-f', 'null', '-'],
+                       capture_output=True, text=True).stderr
+    m = _re.findall(r'I:\s+(-?[\d.]+) LUFS', r)
+    return MUS_LUFS - float(m[-1]) if m else -12.0
+
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print(__doc__); sys.exit(2)
@@ -158,8 +169,10 @@ if __name__ == '__main__':
         ff.stdin.write(im.convert('RGB').resize((W, H), Image.LANCZOS).tobytes())
     ff.stdin.close(); ff.wait()
     mus = os.path.join(sfx, os.environ.get('MUSICA', MUSICA))
+    gdb = music_gain(mus)
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', out + '.v.mp4', '-i', mus, '-filter_complex',
-                    f'[1:a]atrim=0:{DUR},asetpts=PTS-STARTPTS,lowpass=f=9000,volume=0.8,afade=t=in:d=0.3,afade=t=out:st={DUR - 1.2}:d=1.2[o]',
+                    f'[1:a]atrim=0:{DUR},asetpts=PTS-STARTPTS,aresample=48000,lowpass=f=12000,volume={gdb:.2f}dB,'
+                    f'afade=t=in:d=0.3,afade=t=out:st={DUR - 1.6}:d=1.6[o]',
                     '-map', '0:v', '-map', '[o]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000',
                     '-movflags', '+faststart', out], check=True)
     os.remove(out + '.v.mp4'); print('done', out)
