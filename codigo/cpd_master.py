@@ -273,8 +273,9 @@ def _loudnorm2(inp, fl):
     if not m:
         return 'loudnorm=I=-15:TP=-2.0:LRA=11'
     v = _j.loads(m.group(0))
-    return (f"loudnorm=I=-15:TP=-2.0:LRA=20:linear=true:measured_I={v['input_i']}:measured_TP={v['input_tp']}:"
-            f"measured_LRA={v['input_lra']}:measured_thresh={v['input_thresh']}:offset={v['target_offset']},"
+    # ganancia FIJA + limitador (loudnorm «linear» pasa a modo dinámico si no le cabe el pico y sube las partes sin voz,
+    # p. ej. la entradilla de los episodios de redes, hasta el nivel de la locución)
+    return (f"volume={-15.0 - float(v['input_i']):.2f}dB,"
             "aresample=192000,alimiter=limit=0.76:level=disabled:attack=2:release=60,aresample=48000")   # limitador a ~−2,4 dBFS con sobremuestreo
 
 
@@ -302,14 +303,8 @@ def build_audio(video_in, out):
             idx[nm] = 3 + len(idx); inp += ['-i', SFX + fn]
     vi = 3 + len(idx); inp += ['-i', video_in]
     fl = [f"[0:a]atrim=0:{DUR:.3f},asplit=2[vo][key]"]
-    if os.environ.get('PIEZA'):                   # episodio de redes: música propia en la entradilla y el fondo entra después
-        _e0 = F.PRE_SEC - 0.6
-        fl.append(f"[1:a]atrim=0:{DUR - _e0:.3f},asetpts=PTS-STARTPTS,afade=t=in:d=1.6,afade=t=out:st={DUR - _e0 - 2.5:.3f}:d=2.5,"
-                  f"volume=0.26,adelay={int(_e0 * 1000)}|{int(_e0 * 1000)}[bed]")
-        _em = SFX + os.environ.get('MUSICA', F.E.MUSICA)
-        fl.append(f"amovie='{_em}',aresample=48000,atrim=0:{F.PRE_SEC:.3f},lowpass=f=12000,volume={F.E.music_gain(_em):.2f}dB,"
-                  f"afade=t=in:d=0.3,afade=t=out:st={F.PRE_SEC - 1.6:.3f}:d=1.6[ent]")
-        fl.append(f"[bed][ent]amix=inputs=2:normalize=0,apad,atrim=0:{DUR:.3f}[mus0]")
+    if os.environ.get('PIEZA'):                   # episodio de redes: la MISMA música de fondo, continua y al mismo nivel
+        fl.append(f"[1:a]atrim=0:{DUR:.3f},afade=t=in:d=0.4,afade=t=out:st={DUR - 2.5:.3f}:d=2.5,volume=0.26[mus0]")
     else:
         fl.append(f"[1:a]atrim=0:{DUR:.3f},afade=t=in:d=1.2,afade=t=out:st={DUR - 2.5:.3f}:d=2.5,volume=0.26[mus0]")
     fl.append("[mus0][key]sidechaincompress=threshold=0.03:ratio=6:attack=20:release=400[mus]")

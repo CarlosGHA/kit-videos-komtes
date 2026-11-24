@@ -17,8 +17,8 @@ import os, sys, math, glob, subprocess
 from PIL import Image, ImageDraw, ImageFont
 
 DUR = 10.0
-MUSICA = 'music_entradilla.wav'               # música de la entradilla (en trabajo/sfx), distinta del fondo de los episodios
-MUS_LUFS = -21.0                              # nivel de la música de la entradilla (sin voz: más baja que la locución, −15)
+MUSICA = 'music_loop2.wav'                    # la música de fondo de los vídeos: suena continua de la entradilla al episodio
+MUS_LUFS = -22.5                              # nivel de la música en la entradilla (igual que dentro de los episodios)
 SERIE = 'A SERIES BY'                         # vínculo con el grupo, sobre el logotipo de Grupo Komtes
 NOMBRE = ['RISK', 'BY', 'RISK']                 # la palabra central va en rojo
 LEMA_EN = 'Fire protection, one risk at a time'
