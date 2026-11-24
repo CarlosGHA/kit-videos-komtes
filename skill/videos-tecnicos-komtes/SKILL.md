@@ -42,7 +42,7 @@ Estándar de Marketing y Comunicación (v2.0, noviembre de 2026). Kit de producc
 | **Mismo sistema, otra aplicación** | Reutiliza los productos 3D y las escenas del sistema; escenario y guion nuevos | Todas las fases; el 3D de producto ya está validado |
 | **Vídeo de producto** | Un equipo o componente: qué es, sus piezas, cómo actúa | 3–5 pasos; el escenario puede ser solo estudio blanco |
 | **Actualización o corrección** | Cambia un producto, un texto, una aprobación o un plano de un vídeo entregado | Ronda de feedback (§4) + control de regresión (§13.7) |
-| **Otra versión** | Idioma nuevo, versión sin voz (pantalla de feria) o piezas cortas (§15) | Sale del máster ya aprobado; no se rehace nada |
+| **Otra versión** | Idioma nuevo, versión sin voz (pantalla de feria) o episodios de la sección «Ingeniería aplicada» (§15) | Sale del máster ya aprobado; no se rehace nada |
 
 Si la petición no encaja en ninguna, descríbesela a Marketing antes de empezar.
 
@@ -76,7 +76,7 @@ Si la petición no encaja en ninguna, descríbesela a Marketing antes de empezar
 | 4 Locución | Aviso de créditos (§5); voz ES y EN, una toma por idioma | Audios | El ingeniero la escucha entera (tú no puedes oírla) |
 | 5 Piloto | **Un solo vídeo** (ES 4:5) + control de calidad (§13) | 1 MP4 `_BORRADOR` + informe | OK del ingeniero al vídeo completo |
 | 6 Versiones | Las otras tres + portadas + control completo | 4 MP4 + 4 portadas + informe | — |
-| 7 Entrega | Tabla de afirmaciones validada; después, piezas de LinkedIn (§15) | 8 archivos + informe de control | I+D+i y Marketing. Publica Marketing |
+| 7 Entrega | Tabla de afirmaciones validada; después, episodios de la sección «Ingeniería aplicada» (§15) | 8 archivos + informe de control | I+D+i y Marketing. Publica Marketing |
 
 - **La voz de pago se genera una vez, con el guion congelado y los fotogramas validados.** Hasta entonces se trabaja con la locución provisional (silenciosa, con los tiempos estimados).
 - **No se renderizan las cuatro versiones hasta que el piloto tiene OK.** En rondas posteriores: si cambian tres escenas o más, o geometría 3D, primero el piloto; si es menor, las cuatro tras probar el tramo.
@@ -233,16 +233,18 @@ Reglas: un mensaje por escena; todo componente nombrado está en pantalla con su
 - Entrega final: los 8 archivos, una tabla resumen (idioma, formato, duración), el informe de control, la pregunta de feedback y el siguiente paso pendiente.
 - **Versión sin voz** (pantalla de feria): mismo montaje con la locución provisional silenciosa; los subtítulos ya cuentan la historia.
 
-## 15. Piezas autoconclusivas para LinkedIn (solo 4:5)
+## 15. Sección de LinkedIn «Ingeniería aplicada» (solo 4:5)
 
-Del vídeo aprobado salen 3–5 piezas que **se entienden solas** y se publican en cualquier orden.
+Sección fija de Grupo Komtes en LinkedIn: cada vídeo aprobado se convierte en una **serie corta de episodios** (3–6, de 25–60 s) con el mismo formato para **cualquier aplicación** (centros de datos, cocinas, oil & gas, residencial…) y **cualquier división**. El hilo conductor es la sección, no un gancho de redes: tono técnico y sobrio, como una nota de aplicación.
 
-- Solo 4:5; el 16:9 completo se enlaza en el primer comentario. SIEX → LinkedIn de SIEX; resto → LinkedIn de Grupo Komtes.
-- **Una pregunta, una respuesta completa:** cada pieza cuenta la actuación entera hasta el resultado; la primera frase no depende de nada anterior.
-- **Gancho en los primeros 3,2 s escrito sobre la imagen:** antetítulo RED Inter Bold 22 «SISTEMA · APLICACIÓN» en (70, 92); pregunta Inter Display Bold 50 desde y = 128, máximo 2 líneas (≈65 caracteres); barra roja de 64×7.
-- Sin «Capítulo n/N». Pasos renumerados dentro de cada pieza; con un solo paso, título sin número. Cierre igual en todas (3,4 s). 25–60 s con las mismas escenas, locución y música: no gasta créditos.
-- Montaje: lista `PIECES` del script de escenas y `PIEZA=n python3 <montaje>.py <es|en> <voz> 45 <salida.mp4>`. Nombres `…_1080x1350_LinkedIn<n>_<Tema>.mp4`; portada = fotograma del gancho.
-- Documento de publicación: por pieza, texto listo para pegar (abre con la pregunta, 3–4 ideas con «→», 3–4 hashtags, sin enlace) y primer comentario con la web; calendario (una por semana, martes a jueves de 9 a 11 h), difusión del equipo en la primera hora y tabla de medición.
+- **Idiomas:** voz en **inglés** y textos en pantalla (subtítulos, etiquetas, apertura y cierre) en **español**. Se monta con la locución inglesa ya aprobada: no gasta créditos. `SUB_LANG=es` separa el idioma de los textos del de la voz; los subtítulos van por fases de imagen, así que encajan con la voz inglesa (revisa la hoja de textos: siguen el límite de 2 líneas).
+- **Apertura (3,4 s, sobre la primera escena):** antetítulo RED Inter Bold 22 «INGENIERÍA APLICADA · SISTEMA EN APLICACIÓN · 02/05» en (70, 92); **título técnico en afirmativo** (nunca pregunta ni exclamación) Inter Display Bold 50 desde y = 128, máximo 2 líneas (≈65 caracteres); barra roja de 64×7.
+- **Cuerpo:** las escenas del tema con su tramo de locución y subtítulos; cada episodio cuenta su tema completo y se entiende solo. Pasos renumerados dentro del episodio.
+- **Cierre (≥3,4 s):** firma de la división, frase de cierre, web y «INGENIERÍA APLICADA · APLICACIÓN»; suena la firma de voz del vídeo largo («RG Systems, Komtes Group: …»).
+- **Orden de la serie:** del riesgo principal hacia el resto del edificio (p. ej. rack → preacción → falso suelo → zonas de personal → generadores). El número de episodio va en pantalla; el «próximo episodio» y el enlace al anterior, **solo en el texto del post**, para que cada vídeo siga valiendo si cambia el orden.
+- **Configuración:** diccionario `SECCION` del script de escenas (`nombre`, `aplicacion`, `sistema`, `cierre`, `web`, `episodios` con `slug`, `titulo`, `escenas`, `steps`). Para una aplicación nueva solo se rellena `SECCION`; el formato no se toca.
+- **Montaje:** `bash trabajo/seccion_lane.sh 1 2 3` (o `PIEZA=n SUB_LANG=es python3 cpd_master.py en <voz_en.mp3> 45 <salida.mp4>`). Nombres `…_IngAplicada_<nn>_<Tema>_VozEN-SubES_1080x1350.mp4`; portada = fotograma de la apertura.
+- **Publicación:** SIEX → LinkedIn de SIEX; resto → LinkedIn de Grupo Komtes; el vídeo completo 16:9 se enlaza en el primer comentario. Texto por episodio: una frase técnica que plantea el problema, 3 datos del sistema con «→», mención de la serie y del episodio anterior, 2–3 hashtags del sector, sin emojis. Calendario: un episodio por semana, martes a jueves de 9 a 11 h.
 
 ## 16. Errores ya cometidos (no repetir)
 

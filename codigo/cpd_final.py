@@ -1774,30 +1774,44 @@ if __name__ == '__main__':
 
 
 # =====================================================================================
-# piezas autoconclusivas para LinkedIn (solo 4:5)
-#   cada pieza: gancho sobre la imagen (0–HOOK s) -> una historia completa -> cierre con frase + web
-#   sin «capítulo n/N» ni «próximo capítulo»: se entienden solas aunque se publiquen con semanas de diferencia
+# SECCIÓN DE LINKEDIN «Ingeniería aplicada» (solo 4:5)
+#   Serie de episodios cortos (30–60 s) que se cortan del vídeo largo, con el mismo formato para cualquier aplicación
+#   (centros de datos, cocinas, oil & gas…) y cualquier división. Cada episodio: apertura (antetítulo de la sección
+#   + aplicación + nº de episodio y título técnico en afirmativo) -> escenas del tema con su locución -> cierre con la
+#   firma de voz y la web. Se entienden solos: el «próximo episodio» va solo en el texto del post.
+#   Uso: PIEZA=<nº> SUB_LANG=es python3 cpd_master.py en <voz_en.mp3> 45 <salida.mp4>   (voz en inglés, textos en español)
 # =====================================================================================
-PIECES = [
-    dict(slug='Incendio-rack', hook='Arde un rack. ¿Cómo se apaga sin mojar el resto de la sala?',
-         scenes=[2, 3, 5, 7, 9], steps=({1: 1, 2: 2, 4: 3, 6: 4, 8: 5}, 5)),
-    dict(slug='Preaccion', hook='¿Y si una ampolla se rompe por accidente sobre los servidores?',
-         scenes=[4, 10, 11], steps=({}, 0)),
-    dict(slug='Falso-suelo', hook='Un centro de datos tiene dos zonas que proteger: la sala y el falso suelo.',
-         scenes=[1, 8], steps=({}, 0)),
-    dict(slug='Generadores', hook='¿Cómo se protege un generador sin bombas ni corriente eléctrica?',
-         scenes=[13], steps=({}, 0)),
-]
-KICKER = 'RG W-FOG · CENTROS DE DATOS'
+SECCION = dict(
+    nombre='INGENIERÍA APLICADA',                       # nombre fijo de la sección (igual en todas las aplicaciones)
+    aplicacion='CENTROS DE DATOS',
+    sistema='RG W-FOG',
+    cierre='Protección contra incendios para centros de datos',
+    web='www.rg-systems.com',
+    episodios=[
+        dict(slug='01_Rack', titulo='Extinción localizada en el rack', escenas=[2, 3, 5, 7, 9],
+             steps=({1: 1, 2: 2, 4: 3, 6: 4, 8: 5}, 5)),
+        dict(slug='02_Preaccion', titulo='Preacción: sin detección no hay descarga', escenas=[4, 10, 11], steps=({}, 0)),
+        dict(slug='03_Falso-suelo', titulo='Dos redes: sala y falso suelo', escenas=[1, 8], steps=({}, 0)),
+        dict(slug='04_Zonas-personal', titulo='Zonas de personal: difusor MM-P50 y válvulas de sección', escenas=[12],
+             steps=({}, 0)),
+        dict(slug='05_Generadores', titulo='Generadores y transformadores, sin bombas ni corriente', escenas=[13],
+             steps=({}, 0)),
+    ])
+PIECES = [dict(slug=e['slug'], hook=e['titulo'], scenes=e['escenas'], steps=e['steps']) for e in SECCION['episodios']]
 PC_CUR = [0]
-HOOK = 3.2                       # s que dura el gancho sobre la primera escena
+HOOK = 3.4                       # s que dura la apertura sobre la primera escena
 F_HK = B.F('Inter-Bold.otf', 22)
 F_HT = B.F('InterDisplay-Bold.otf', 50)
 F_CHN = B.F('InterDisplay-Medium.otf', 30)
 
 
+def kicker(k):
+    n = len(SECCION['episodios'])
+    return f"{SECCION['nombre']} · {SECCION['aplicacion']} · {k + 1:02d}/{n:02d}"   # el sistema ya lo dice la firma
+
+
 def hooked(fn):
-    """primera escena de la pieza: el gancho ocupa la cabecera y la cabecera de la escena entra después"""
+    """primera escena del episodio: la apertura (antetítulo + título) ocupa la cabecera y la de la escena entra después"""
     def f(t, L, img):
         B.HDR_A[0] = ss(HOOK, HOOK + 0.5, t)
         try:
@@ -1809,7 +1823,12 @@ def hooked(fn):
             return
         d = B._ud(ImageDraw.Draw(img))
         pc = PIECES[PC_CUR[0]]
-        d.text((S(70), S(92)), KICKER, font=F_HK, fill=B.ca(B.RED, a))
+        kt = kicker(PC_CUR[0]); fk = F_HK
+        for px in (22, 20, 18):                    # el antetítulo no puede llegar a la firma (x < 600)
+            fk = B.F('Inter-Bold.otf', px)
+            if fk.getlength(kt) <= S(600):
+                break
+        d.text((S(70), S(92)), kt, font=fk, fill=B.ca(B.RED, a))
         y = 128
         for ln in B.wrap(pc['hook'], F_HT, 930):
             d.text((S(70), S(y)), ln, font=F_HT, fill=B.ca(B.INK, a)); y += 58
@@ -1819,12 +1838,15 @@ def hooked(fn):
 
 
 def sc_close(t, L, img):
-    """cierre de cada pieza: firma + frase + web (igual en todas)"""
+    """cierre de cada episodio: firma + sección + frase + web (igual en todos)"""
     a = ss(0.1, 0.7, t)
     img.alpha_composite(B.fade_img(B.LOCK, a), (S(W / 2) - B.LOCK.width // 2, S(H / 2 - 150) - B.LOCK.height // 2))
     d = ImageDraw.Draw(img)
-    for i, (txt, f_, c) in enumerate([('Protección contra incendios para centros de datos', F_CHN, B.INK), ('www.rg-systems.com', B.F_SMB, B.RED)]):
+    rows = [(SECCION['cierre'], F_CHN, B.INK), (SECCION['web'], B.F_SMB, B.RED)]
+    for i, (txt, f_, c) in enumerate(rows):
         d.text((S(W / 2) - f_.getlength(TR(txt)) / 2, S(H / 2 - 20 + i * 52)), txt, font=f_, fill=B.ca(c, ss(0.5, 1.1, t)))
+    sec = f"{SECCION['nombre']} · {SECCION['aplicacion']}"
+    d.text((S(W / 2) - F_HK.getlength(TR(sec)) / 2, S(H / 2 + 120)), sec, font=F_HK, fill=B.ca(B.MUTED if hasattr(B, 'MUTED') else B.INK, 0.6 * ss(0.7, 1.3, t)))
 
 
 NO_LOCK = (B.sc_intro, V.sc_outro, sc_close)

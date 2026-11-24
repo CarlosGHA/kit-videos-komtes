@@ -9,3 +9,4 @@ __pycache__/
 *.noaudio.mp4
 *.vo.wav
 trabajo/out_prev/*
+trabajo/out_seccion/*

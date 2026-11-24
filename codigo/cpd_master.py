@@ -2,7 +2,8 @@
 Uso: python3 cpd_master.py <es|en> <vo.mp3> <45|169> <salida.mp4>   [VO_MODE=--still VO_TS=t1,t2 para fotogramas]"""
 import sys, subprocess, re, os, math
 LANG, VO, ASPECT, OUT = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
-sys.argv = ['cpd_final.py', LANG]
+SUB_LANG = os.environ.get('SUB_LANG', LANG)      # idioma de los textos en pantalla (p. ej. voz en inglés con subtítulos en español)
+sys.argv = ['cpd_final.py', SUB_LANG]
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import cpd_final as F
@@ -220,6 +221,10 @@ if os.environ.get('PIEZA'):
     for j, i in enumerate(spec['scenes']):
         a0, b0, fn, band = oldS[i]
         newS.append((tt, tt + (b0 - a0), F.hooked(fn) if j == 0 else fn, band)); remap.append((a0, b0, tt)); tt += b0 - a0
+    # el cierre lleva la última frase de la locución (firma: «RG Systems, Komtes Group: …»)
+    _lb = F.SCENE_BLOCKS[max(F.SCENE_BLOCKS)][-1]
+    _lbt = blocks[_lb]
+    CLOSE = max(CLOSE, (_lbt[1] - _lbt[0]) / BSPD.get(_lb, SPEED) + 1.3)
     newS.append((tt, tt + CLOSE, F.sc_close, False))
     DUR = tt + CLOSE
 
@@ -234,7 +239,7 @@ if os.environ.get('PIEZA'):
             j = spec['scenes'].index(k)
             if spec['scenes'][j + 1] == k + 1:
                 newTR[j] = v
-    vo_place = [(_m(p_), blk) for p_, blk in vo_place if _m(p_) is not None]
+    vo_place = [(_m(p_), blk) for p_, blk in vo_place if _m(p_) is not None] + [(tt + 0.45, _lbt)]
     EV = [(nm, _m(at), vol) for nm, at, vol in EV if _m(at) is not None]
     F.SCENES = newS; F.TRANS = newTR; F.DUR = DUR
     print('pieza', ci + 1, spec['slug'], 'DUR', round(DUR, 2), [(round(a, 2), round(b - a, 2)) for a, b, *_ in newS])
