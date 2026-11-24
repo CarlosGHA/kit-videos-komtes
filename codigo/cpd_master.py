@@ -302,7 +302,15 @@ def build_audio(video_in, out):
             idx[nm] = 3 + len(idx); inp += ['-i', SFX + fn]
     vi = 3 + len(idx); inp += ['-i', video_in]
     fl = [f"[0:a]atrim=0:{DUR:.3f},asplit=2[vo][key]"]
-    fl.append(f"[1:a]atrim=0:{DUR:.3f},afade=t=in:d=1.2,afade=t=out:st={DUR - 2.5:.3f}:d=2.5,volume=0.26[mus0]")
+    if os.environ.get('PIEZA'):                   # episodio de redes: música propia en la entradilla y el fondo entra después
+        _e0 = F.PRE_SEC - 0.6
+        fl.append(f"[1:a]atrim=0:{DUR - _e0:.3f},asetpts=PTS-STARTPTS,afade=t=in:d=1.6,afade=t=out:st={DUR - _e0 - 2.5:.3f}:d=2.5,"
+                  f"volume=0.26,adelay={int(_e0 * 1000)}|{int(_e0 * 1000)}[bed]")
+        fl.append(f"amovie={SFX}{F.E.MUSICA},aresample=48000,atrim=0:{F.PRE_SEC:.3f},lowpass=f=9000,volume=0.55,"
+                  f"afade=t=out:st={F.PRE_SEC - 1.2:.3f}:d=1.2[ent]")
+        fl.append(f"[bed][ent]amix=inputs=2:normalize=0,apad,atrim=0:{DUR:.3f}[mus0]")
+    else:
+        fl.append(f"[1:a]atrim=0:{DUR:.3f},afade=t=in:d=1.2,afade=t=out:st={DUR - 2.5:.3f}:d=2.5,volume=0.26[mus0]")
     fl.append("[mus0][key]sidechaincompress=threshold=0.03:ratio=6:attack=20:release=400[mus]")
     fl.append(f"[2:a]atrim=0:{DUR:.3f},afade=t=in:d=1.5,afade=t=out:st={DUR - 2:.3f}:d=2,volume=0.06[amb]")
     sfx_labels = []

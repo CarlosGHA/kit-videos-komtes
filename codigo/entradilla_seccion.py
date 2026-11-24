@@ -2,7 +2,7 @@
 (cualquier división, sistema y aplicación). Es solo la sección: sin logotipos, sin sector, sin aplicación y sin número de
 episodio (todo eso va después, en el título-pregunta de cada pieza).
 
-Animación (3,6 s, 1080x1350 lógicos), solo fundidos y desplazamientos suaves:
+Animación (6 s, 1080x1350 lógicos), solo fundidos y desplazamientos suaves:
   · fondo grafito de marca (#2B2D2F, nunca negro puro) que entra desde el blanco
   · «RISK BY RISK» en Bio Sans Bold: aparece con un fundido, sube unos píxeles y se cierra el espaciado; «BY» en rojo
   · filo rojo que crece desde el centro y el lema en inglés (Bio Sans Regular)
@@ -16,7 +16,9 @@ Uso desde un montaje:  import entradilla_seccion as E;  E.draw(img_rgba, t, S, W
 import os, sys, math, glob, subprocess
 from PIL import Image, ImageDraw, ImageFont
 
-DUR = 3.6
+DUR = 6.0
+MUSICA = 'music_entradilla.wav'               # música original de la entradilla (musica_entradilla.py), distinta del fondo
+SERIE = 'A SERIES BY'                         # vínculo con el grupo, sobre el logotipo de Grupo Komtes
 NOMBRE = ['RISK', 'BY', 'RISK']                 # la palabra central va en rojo
 LEMA_EN = 'Fire protection, one risk at a time'
 GRAPH = (43, 45, 47); OFF = (249, 249, 249); RED = (228, 3, 19); GREY = (167, 171, 176); GREY2 = (128, 132, 137)
@@ -60,28 +62,48 @@ def _c(col, a):
 _FC = {}
 
 
+_LOGO = {}
+
+
+def _logo(px_w):
+    """logotipo de Grupo Komtes para fondo oscuro: el gris pasa a blanco y el rojo se mantiene"""
+    k = int(px_w)
+    if k not in _LOGO:
+        im = Image.open(os.path.join(KIT, 'marcas', 'logo_GroupKomtes.png')).convert('RGBA')
+        im = im.resize((k, int(im.height * k / im.width)), Image.LANCZOS)
+        px = im.load()
+        for y in range(im.height):
+            for x in range(im.width):
+                r, g_, b, a = px[x, y]
+                if a and not (r > 150 and r - g_ > 90):
+                    px[x, y] = OFF + (a,)
+        _LOGO[k] = im
+    return _LOGO[k]
+
+
 def draw(img, t, S, W, H, ss_=None):
     """dibuja la entradilla en el instante t (s) sobre img (RGBA, tamaño S(W) x S(H))"""
     ssf = S(1.0)
     key = round(ssf, 3)
     if key not in _FC:
-        _FC[key] = dict(big=_font('Bold', 150, ssf), lema=_font('Regular', 38, ssf))
-    fb, fl = _FC[key]['big'], _FC[key]['lema']
+        _FC[key] = dict(big=_font('Bold', 150, ssf), lema=_font('Regular', 38, ssf), serie=_font('Regular', 22, ssf))
+    fb, fl, fs = _FC[key]['big'], _FC[key]['lema'], _FC[key]['serie']
     # entrada (blanco -> grafito) y salida (grafito -> blanco), largas y suaves
-    g = _ss(0.0, 0.55, t) * (1 - _ss(DUR - 0.75, DUR - 0.05, t))
+    g = _ss(0.0, 0.9, t) * (1 - _ss(DUR - 0.95, DUR - 0.05, t))
     bg = tuple(int(OFF[j] + (GRAPH[j] - OFF[j]) * g) for j in range(3))
     base = Image.new('RGBA', img.size, bg + (255,))
     layer = Image.new('RGBA', img.size, (0, 0, 0, 0))   # todo se dibuja en una capa aparte (los fundidos no agujerean el fondo)
     d = ImageDraw.Draw(layer)
-    out = 1 - _ss(DUR - 1.05, DUR - 0.55, t)           # el texto sale antes de que vuelva el blanco
-    up = -16 * _ss(DUR - 1.05, DUR - 0.55, t)
-    cy = H / 2 - 40 + up                                 # línea base visual del nombre
+    o_ = _ss(DUR - 1.7, DUR - 0.9, t)                     # el texto sale antes de que vuelva el blanco
+    out = 1 - o_
+    up = -18 * o_
+    cy = H / 2 - 70 + up                                 # línea base visual del nombre
 
     # nombre: fundido + subida suave + espaciado que se cierra
-    a = _ss(0.3, 1.2, t) * out
-    p = _ease_out(0.3, 1.5, t)
-    dy = (1 - p) * 26
-    sp = fb.getlength(' ') * (0.9 + 0.6 * (1 - p))
+    a = _ss(0.6, 1.9, t) * out
+    p = _ease_out(0.6, 2.4, t)
+    dy = (1 - p) * 30
+    sp = fb.getlength(' ') * (0.9 + 0.7 * (1 - p))
     ws = [fb.getlength(w) for w in NOMBRE]
     x = S(W / 2) - (sum(ws) + sp * (len(NOMBRE) - 1)) / 2
     for i, w in enumerate(NOMBRE):
@@ -89,13 +111,26 @@ def draw(img, t, S, W, H, ss_=None):
         x += ws[i] + sp
 
     # filo rojo bajo el nombre: crece desde el centro
-    bw = 150 * _ease_out(0.9, 1.7, t)
+    bw = 150 * _ease_out(1.6, 2.6, t)
     if bw > 0.5:
         d.rectangle([S(W / 2 - bw / 2), S(cy + 38), S(W / 2 + bw / 2), S(cy + 45)], fill=_c(RED, out))
 
     # lema en inglés
-    a2 = _ss(1.1, 1.8, t) * out
-    d.text((S(W / 2), S(cy + 122 + (1 - _ease_out(1.1, 1.9, t)) * 12)), LEMA_EN, font=fl, fill=_c(OFF, a2 * 0.9), anchor='ms')
+    a2 = _ss(2.0, 2.9, t) * out
+    d.text((S(W / 2), S(cy + 122 + (1 - _ease_out(2.0, 3.0, t)) * 14)), LEMA_EN, font=fl, fill=_c(OFF, a2 * 0.9), anchor='ms')
+
+    # vínculo con Grupo Komtes: «A SERIES BY» + logotipo, abajo
+    a3 = _ss(2.8, 3.7, t) * out
+    if a3 > 0.01:
+        yl = H - 300 + up + (1 - _ease_out(2.8, 3.9, t)) * 12
+        sp_ = S(4)                                         # versalitas espaciadas
+        tw = sum(fs.getlength(c) for c in SERIE) + sp_ * (len(SERIE) - 1)
+        xx = S(W / 2) - tw / 2
+        for c in SERIE:
+            d.text((xx, S(yl)), c, font=fs, fill=_c(GREY, a3), anchor='ls'); xx += fs.getlength(c) + sp_
+        lg = _logo(S(300))
+        la = lg.copy(); la.putalpha(la.getchannel('A').point(lambda v: int(v * a3)))
+        layer.alpha_composite(la, (int(S(W / 2) - lg.width / 2), int(S(yl + 26))))
     base.alpha_composite(layer)
     img.alpha_composite(base)
 
@@ -120,9 +155,9 @@ if __name__ == '__main__':
         im = Image.new('RGBA', (W * SSF, H * SSF)); draw(im, fi / FPS, S, W, H)
         ff.stdin.write(im.convert('RGB').resize((W, H), Image.LANCZOS).tobytes())
     ff.stdin.close(); ff.wait()
-    mus = os.path.join(sfx, 'music_loop2.wav')
+    mus = os.path.join(sfx, os.environ.get('MUSICA', MUSICA))
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', out + '.v.mp4', '-i', mus, '-filter_complex',
-                    f'[1:a]atrim=0:{DUR},asetpts=PTS-STARTPTS,volume=0.9,afade=t=in:d=0.4,afade=t=out:st={DUR - 0.8}:d=0.8[o]',
+                    f'[1:a]atrim=0:{DUR},asetpts=PTS-STARTPTS,lowpass=f=9000,volume=0.8,afade=t=in:d=0.3,afade=t=out:st={DUR - 1.2}:d=1.2[o]',
                     '-map', '0:v', '-map', '[o]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000',
                     '-movflags', '+faststart', out], check=True)
     os.remove(out + '.v.mp4'); print('done', out)
