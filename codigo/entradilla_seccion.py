@@ -87,15 +87,15 @@ def draw(img, t, S, W, H, ss_=None):
     ssf = S(1.0)
     key = round(ssf, 3)
     if key not in _FC:
-        _FC[key] = dict(big=_font('Bold', 150, ssf), lema=_font('Regular', 38, ssf), serie=_font('Regular', 22, ssf))
+        _FC[key] = dict(big=_font('Bold', 136, ssf), lema=_font('Regular', 38, ssf), serie=_font('Regular', 22, ssf))
     fb, fl, fs = _FC[key]['big'], _FC[key]['lema'], _FC[key]['serie']
     # entrada (blanco -> grafito) y salida (grafito -> blanco), largas y suaves
-    g = _ss(0.0, 1.1, t) * (1 - _ss(DUR - 1.1, DUR - 0.05, t))
+    g = _ss(0.0, 1.1, t) * (1 - _ss(DUR - 0.9, DUR - 0.1, t))   # el blanco llega justo al fundido con la pregunta
     bg = tuple(int(OFF[j] + (GRAPH[j] - OFF[j]) * g) for j in range(3))
     base = Image.new('RGBA', img.size, bg + (255,))
     layer = Image.new('RGBA', img.size, (0, 0, 0, 0))   # todo se dibuja en una capa aparte (los fundidos no agujerean el fondo)
     d = ImageDraw.Draw(layer)
-    o_ = _ss(DUR - 2.1, DUR - 1.1, t)                     # el texto sale antes de que vuelva el blanco
+    o_ = _ss(DUR - 1.2, DUR - 0.3, t)                     # el texto sale antes de que vuelva el blanco
     out = 1 - o_
     up = -18 * o_
     drift = -10 * _ss(0.0, DUR, t)                       # deriva muy lenta: la pantalla no queda congelada
