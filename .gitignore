@@ -10,3 +10,5 @@ __pycache__/
 *.vo.wav
 trabajo/out_prev/*
 trabajo/out_seccion/*
+fuentes/*.otf
+fuentes/*.ttf

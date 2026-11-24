@@ -1826,7 +1826,8 @@ SECCION = dict(
     ])
 PIECES = [dict(slug=e['slug'], hook=e['titulo'], q=e['pregunta'], scenes=e['escenas'], steps=e['steps'])
           for e in SECCION['episodios']]
-PRE_SEC, PRE_Q = 2.8, 3.4        # s de la entradilla de la sección y del título-pregunta del episodio
+import entradilla_seccion as E
+PRE_SEC, PRE_Q = E.DUR, 3.4      # s de la entradilla común de la sección y del título-pregunta del episodio
 PC_CUR = [0]
 HOOK = 3.4                       # s que dura la apertura sobre la primera escena
 F_HK = B.F('Inter-Bold.otf', 22)
@@ -1884,35 +1885,8 @@ F_Q = B.F('InterDisplay-Bold.otf', 70)
 
 
 def sc_section(t, L, img):
-    """ENTRADILLA de la sección (igual en todos los episodios y aplicaciones): barra de la serie con el episodio en
-    rojo, nombre de la sección con la palabra central en rojo, lema, barra roja y aplicación · episodio"""
-    d = B._ud(ImageDraw.Draw(img))   # capa de rótulos: los textos se funden bien en las transiciones
-    o = 1 - ss(L - 0.6, L - 0.2, t)                          # sale antes de la transición: no se mezcla con la pregunta
-    k, n = PC_CUR[0], len(SECCION['episodios'])
-    cy = H / 2 - 40
-    sw, gap = 64, 14                                         # barra de la serie: un segmento por episodio
-    x0 = W / 2 - (n * sw + (n - 1) * gap) / 2
-    for i in range(n):
-        ai = ss(0.05 + 0.07 * i, 0.35 + 0.07 * i, t)
-        c = B.RED if i == k else (214, 216, 219)
-        x = x0 + i * (sw + gap)
-        d.rounded_rectangle([S(x), S(cy - 150), S(x + sw), S(cy - 143)], radius=S(3.5), fill=B.ca(c, ai * o))
-    a = ss(0.25, 0.75, t); dy = (1 - a) * 24
-    words = TR(SECCION['nombre']).split()
-    sp = F_SEC.getlength(' ')
-    tw = sum(F_SEC.getlength(w_) for w_ in words) + sp * (len(words) - 1)
-    x = S(W / 2) - tw / 2
-    for i, w_ in enumerate(words):
-        col = B.RED if (len(words) == 3 and i == 1) else B.INK
-        d.text((x, S(cy - 112 + dy)), w_, font=F_SEC, fill=B.ca(col, a * o)); x += F_SEC.getlength(w_) + sp
-    a2 = ss(0.6, 1.1, t)
-    lm = TR(SECCION['lema'])
-    d.text((S(W / 2) - F_LEMA.getlength(lm) / 2, S(cy + 22)), lm, font=F_LEMA, fill=B.ca(B.INK2, a2 * o))
-    bw = 96 * ss(0.8, 1.4, t)
-    d.rounded_rectangle([S(W / 2 - bw / 2), S(cy + 96), S(W / 2 + bw / 2), S(cy + 103)], radius=S(3.5), fill=B.ca(B.RED, o))
-    lab = f"{TR(SECCION['aplicacion'])} · {TR('EPISODIO')} {k + 1:02d}/{n:02d}"
-    d.text((S(W / 2) - F_HK.getlength(lab) / 2, S(cy + 128)), lab, font=F_HK, fill=B.ca(B.RED, ss(1.0, 1.5, t) * o))
-    B.subtitle(d, SECCION['lema'] + '.', ss(0.5, 1.0, t) * o)   # subtítulo: el lema en español
+    """ENTRADILLA común de la sección «Risk by Risk» (entradilla_seccion.py): sin logos, aplicación ni episodio"""
+    E.draw(img, t, S, W, H)
 
 
 def make_question(fn0, L0):
@@ -1944,4 +1918,4 @@ def make_question(fn0, L0):
     return f
 
 
-NO_LOCK = (B.sc_intro, V.sc_outro, sc_close)
+NO_LOCK = (B.sc_intro, V.sc_outro, sc_close, sc_section)
