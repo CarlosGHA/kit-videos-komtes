@@ -246,7 +246,7 @@ if os.environ.get('PIEZA'):
                 newTR[j + NPRE] = v
     vo_place = [(_m(p_), blk) for p_, blk in vo_place if _m(p_) is not None] + [(tt + 0.45, _lbt)]
     EV = [(nm, _m(at), vol) for nm, at, vol in EV if _m(at) is not None]
-    EV += [('whoosh', 0.1, 0.14), ('click', 1.3, 0.22), ('whoosh', F.PRE_SEC - 0.45, 0.13), ('whoosh', tt - 0.45, 0.12)]
+    EV += [('whoosh', tt - 0.45, 0.12)]          # la entradilla va solo con música; un soplo suave al entrar en el tema
     F.SCENES = newS; F.TRANS = newTR; F.DUR = DUR
     print('pieza', ci + 1, spec['slug'], 'DUR', round(DUR, 2), [(round(a, 2), round(b - a, 2)) for a, b, *_ in newS])
 

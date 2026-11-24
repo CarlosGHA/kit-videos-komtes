@@ -2,12 +2,12 @@
 (cualquier división, sistema y aplicación). Es solo la sección: sin logotipos, sin sector, sin aplicación y sin número de
 episodio (todo eso va después, en el título-pregunta de cada pieza).
 
-Animación (3,2 s, 1080x1350 lógicos):
-  · fondo grafito de marca (#2B2D2F, nunca negro puro)
-  · «RISK BY RISK» en Bio Sans Bold, cada palabra sube desde detrás de una línea; «BY» en rojo de marca
-  · el lema en inglés (Bio Sans Regular) y debajo su subtítulo en español (Bio Sans Light), como la plantilla corporativa
-  · cinco cubos isométricos: el rojo recorre los riesgos uno a uno y cada riesgo recorrido queda marcado («one risk at a time»)
-  · salida: una cortina blanca con filo rojo sube y deja la pantalla en blanco para el título-pregunta
+Animación (3,6 s, 1080x1350 lógicos), solo fundidos y desplazamientos suaves:
+  · fondo grafito de marca (#2B2D2F, nunca negro puro) que entra desde el blanco
+  · «RISK BY RISK» en Bio Sans Bold: aparece con un fundido, sube unos píxeles y se cierra el espaciado; «BY» en rojo
+  · filo rojo que crece desde el centro y el lema en inglés (Bio Sans Regular)
+  · salida: el texto sube y se desvanece y el grafito se funde a blanco para el título-pregunta
+  · sonido: solo la música de fondo (sin efectos)
 
 Tipografía: copia la familia Bio Sans (OTF) en  <kit>/fuentes/  (no se versiona: licencia). Si falta, usa Inter y avisa.
 Uso directo (clip suelto, para editar en otro programa):
@@ -16,10 +16,9 @@ Uso desde un montaje:  import entradilla_seccion as E;  E.draw(img_rgba, t, S, W
 import os, sys, math, glob, subprocess
 from PIL import Image, ImageDraw, ImageFont
 
-DUR = 3.2
+DUR = 3.6
 NOMBRE = ['RISK', 'BY', 'RISK']                 # la palabra central va en rojo
 LEMA_EN = 'Fire protection, one risk at a time'
-LEMA_ES = 'Protección contra incendios, un riesgo cada vez'
 GRAPH = (43, 45, 47); OFF = (249, 249, 249); RED = (228, 3, 19); GREY = (167, 171, 176); GREY2 = (128, 132, 137)
 
 KIT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
@@ -66,75 +65,37 @@ def draw(img, t, S, W, H, ss_=None):
     ssf = S(1.0)
     key = round(ssf, 3)
     if key not in _FC:
-        _FC[key] = dict(big=_font('Bold', 150, ssf), lema=_font('Regular', 36, ssf), es=_font('Light', 30, ssf))
-    fb, fl, fe = _FC[key]['big'], _FC[key]['lema'], _FC[key]['es']
-    base = Image.new('RGBA', img.size, GRAPH + (255,))
+        _FC[key] = dict(big=_font('Bold', 150, ssf), lema=_font('Regular', 38, ssf))
+    fb, fl = _FC[key]['big'], _FC[key]['lema']
+    # entrada (blanco -> grafito) y salida (grafito -> blanco), largas y suaves
+    g = _ss(0.0, 0.55, t) * (1 - _ss(DUR - 0.75, DUR - 0.05, t))
+    bg = tuple(int(OFF[j] + (GRAPH[j] - OFF[j]) * g) for j in range(3))
+    base = Image.new('RGBA', img.size, bg + (255,))
     layer = Image.new('RGBA', img.size, (0, 0, 0, 0))   # todo se dibuja en una capa aparte (los fundidos no agujerean el fondo)
     d = ImageDraw.Draw(layer)
-    cy = H / 2 - 130                                       # línea base visual del nombre
+    out = 1 - _ss(DUR - 1.05, DUR - 0.55, t)           # el texto sale antes de que vuelva el blanco
+    up = -16 * _ss(DUR - 1.05, DUR - 0.55, t)
+    cy = H / 2 - 40 + up                                 # línea base visual del nombre
 
-    # nombre: cada palabra sube desde detrás de la línea (máscara) con un pequeño escalonado
-    sp = fb.getlength(' ') * 0.9
+    # nombre: fundido + subida suave + espaciado que se cierra
+    a = _ss(0.3, 1.2, t) * out
+    p = _ease_out(0.3, 1.5, t)
+    dy = (1 - p) * 26
+    sp = fb.getlength(' ') * (0.9 + 0.6 * (1 - p))
     ws = [fb.getlength(w) for w in NOMBRE]
     x = S(W / 2) - (sum(ws) + sp * (len(NOMBRE) - 1)) / 2
-    asc, desc = fb.getmetrics()
-    top, bot = S(cy) - asc, S(cy) + desc * 0.25          # ventana visible de las letras
     for i, w in enumerate(NOMBRE):
-        p = _ease_out(0.15 + 0.14 * i, 0.75 + 0.14 * i, t)
-        dy = (1 - p) * (asc + desc)
-        strip = Image.new('RGBA', (int(ws[i]) + 4, int(bot - top) + 2), (0, 0, 0, 0))
-        ImageDraw.Draw(strip).text((0, asc + dy), w, font=fb, fill=(RED if i == 1 else OFF) + (255,), anchor='ls')
-        layer.alpha_composite(strip, (int(x), int(top)))
+        d.text((x, S(cy + dy)), w, font=fb, fill=_c(RED if i == 1 else OFF, a), anchor='ls')
         x += ws[i] + sp
 
     # filo rojo bajo el nombre: crece desde el centro
-    bw = 150 * _ease_out(0.7, 1.3, t)
-    d.rectangle([S(W / 2 - bw / 2), S(cy + 38), S(W / 2 + bw / 2), S(cy + 45)], fill=RED + (255,))
+    bw = 150 * _ease_out(0.9, 1.7, t)
+    if bw > 0.5:
+        d.rectangle([S(W / 2 - bw / 2), S(cy + 38), S(W / 2 + bw / 2), S(cy + 45)], fill=_c(RED, out))
 
-    # lema en inglés (Regular) + español (Light)
-    a = _ss(0.95, 1.45, t)
-    d.text((S(W / 2), S(cy + 120)), LEMA_EN, font=fl, fill=_c(OFF, a * 0.92), anchor='ms')
-    a2 = _ss(1.15, 1.65, t)
-    _b = sys.modules.get('cpd_video')               # dentro de un montaje en inglés: el español no se traduce
-    if _b is not None:
-        _b.RAW[0] = True
-    try:
-        d.text((S(W / 2), S(cy + 166)), LEMA_ES, font=fe, fill=_c(GREY, a2), anchor='ms')
-    finally:
-        if _b is not None:
-            _b.RAW[0] = False
-
-    # cubos isométricos: el riesgo activo en rojo recorre la fila; los recorridos quedan con el filo rojo
-    n, s_, gap = 5, 44, 136
-    yc = cy + 270
-    x0 = W / 2 - gap * (n - 1) / 2
-    cw, ch = s_ * math.cos(math.radians(30)), s_ * math.sin(math.radians(30))
-    t0, step = 1.25, 0.26
-    for k in range(n):
-        ap = _ss(0.9 + 0.06 * k, 1.3 + 0.06 * k, t)
-        if ap <= 0.01:
-            continue
-        cx = x0 + k * gap
-        act = _ss(t0 + k * step - 0.08, t0 + k * step + 0.06, t) * (1 - _ss(t0 + (k + 1) * step - 0.04, t0 + (k + 1) * step + 0.12, t))
-        done = _ss(t0 + (k + 1) * step - 0.04, t0 + (k + 1) * step + 0.12, t)
-        lift = -14 * act
-        T = [(cx, yc - ch + lift), (cx + cw, yc + lift), (cx, yc + ch + lift), (cx - cw, yc + lift)]
-        Lf = [T[3], T[2], (T[2][0], T[2][1] + s_), (T[3][0], T[3][1] + s_)]
-        Rf = [T[2], T[1], (T[1][0], T[1][1] + s_), (T[2][0], T[2][1] + s_)]
-        mix = lambda c1, c2, m: tuple(int(c1[j] + (c2[j] - c1[j]) * m) for j in range(3))
-        top_c = mix((78, 81, 85), RED, act); l_c = mix((62, 65, 69), (176, 4, 18), act); r_c = mix((54, 56, 60), (140, 3, 14), act)
-        P = lambda pts: [(S(px), S(py)) for px, py in pts]
-        d.polygon(P(Lf), fill=_c(l_c, ap)); d.polygon(P(Rf), fill=_c(r_c, ap)); d.polygon(P(T), fill=_c(top_c, ap))
-        if done > 0.01:                                   # riesgo resuelto: filo rojo en la cara superior
-            d.line(P(T + [T[0]]), fill=_c(RED, ap * done), width=max(1, int(S(2.2))), joint='curve')
-
-    # salida: cortina blanca con filo rojo que sube
-    w_ = _ss(DUR - 0.85, DUR - 0.42, t)               # termina antes del fundido con la pieza siguiente
-    if w_ > 0:
-        yb = H * (1 - w_)
-        d.rectangle([0, S(yb), S(W), S(H)], fill=OFF + (255,))
-        if w_ < 0.999:
-            d.rectangle([0, S(yb - 7), S(W), S(yb)], fill=RED + (255,))
+    # lema en inglés
+    a2 = _ss(1.1, 1.8, t) * out
+    d.text((S(W / 2), S(cy + 122 + (1 - _ease_out(1.1, 1.9, t)) * 12)), LEMA_EN, font=fl, fill=_c(OFF, a2 * 0.9), anchor='ms')
     base.alpha_composite(layer)
     img.alpha_composite(base)
 
@@ -159,9 +120,9 @@ if __name__ == '__main__':
         im = Image.new('RGBA', (W * SSF, H * SSF)); draw(im, fi / FPS, S, W, H)
         ff.stdin.write(im.convert('RGB').resize((W, H), Image.LANCZOS).tobytes())
     ff.stdin.close(); ff.wait()
-    wh = os.path.join(sfx, 'whoosh.mp3'); ck = os.path.join(sfx, 'click.mp3')
-    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', out + '.v.mp4', '-i', wh, '-i', ck, '-i', wh, '-filter_complex',
-                    '[1:a]volume=0.5,adelay=100|100[a];[2:a]volume=0.6,adelay=1300|1300[b];[3:a]volume=0.45,adelay=2800|2800[c];'
-                    f'[a][b][c]amix=inputs=3:normalize=0,apad,atrim=0:{DUR}[o]', '-map', '0:v', '-map', '[o]', '-c:v', 'copy',
-                    '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-movflags', '+faststart', out], check=True)
+    mus = os.path.join(sfx, 'music_loop2.wav')
+    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', out + '.v.mp4', '-i', mus, '-filter_complex',
+                    f'[1:a]atrim=0:{DUR},asetpts=PTS-STARTPTS,volume=0.9,afade=t=in:d=0.4,afade=t=out:st={DUR - 0.8}:d=0.8[o]',
+                    '-map', '0:v', '-map', '[o]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000',
+                    '-movflags', '+faststart', out], check=True)
     os.remove(out + '.v.mp4'); print('done', out)
