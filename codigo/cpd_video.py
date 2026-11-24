@@ -320,17 +320,25 @@ def title(d, t1, t2, a):
             d.text((S(70), S(y)), ln, font=F_T2, fill=ca(INK, a)); y += 38
 
 
+SUB_RAW = [False]   # True: los subtítulos se quedan en su idioma original (español) aunque el resto del vídeo vaya traducido
+RAW = [False]       # lo consulta la traducción del script de composición mientras se dibuja un subtítulo
+
+
 def subtitle(d, text, a):
     if not UI[0]:
         return
     if a <= 0.01:
         return
     d = _ud(d)
-    lines = wrap(text, F_SUB, 900)
-    y = 1170 - (len(lines) - 1) * 21
-    for ln in lines:
-        w = F_SUB.getlength(ln)
-        d.text((S(W / 2) - w / 2, S(y)), ln, font=F_SUB, fill=ca(INK, a)); y += 42
+    RAW[0] = SUB_RAW[0]
+    try:
+        lines = wrap(text, F_SUB, 900)
+        y = 1170 - (len(lines) - 1) * 21
+        for ln in lines:
+            w = F_SUB.getlength(ln)
+            d.text((S(W / 2) - w / 2, S(y)), ln, font=F_SUB, fill=ca(INK, a)); y += 42
+    finally:
+        RAW[0] = False
 
 
 # ---- etiquetas: regla fija (v1.5) ----

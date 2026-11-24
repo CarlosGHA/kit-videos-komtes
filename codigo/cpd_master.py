@@ -2,8 +2,10 @@
 Uso: python3 cpd_master.py <es|en> <vo.mp3> <45|169> <salida.mp4>   [VO_MODE=--still VO_TS=t1,t2 para fotogramas]"""
 import sys, subprocess, re, os, math
 LANG, VO, ASPECT, OUT = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
-SUB_LANG = os.environ.get('SUB_LANG', LANG)      # idioma de los textos en pantalla (p. ej. voz en inglés con subtítulos en español)
-sys.argv = ['cpd_final.py', SUB_LANG]
+SUB_LANG = os.environ.get('SUB_LANG', LANG)      # idioma de los SUBTÍTULOS; el resto de textos va en el idioma de la voz
+if LANG == 'en' and SUB_LANG == 'es':            # sección «Riesgo a riesgo»: vídeo en inglés con subtítulos en español
+    os.environ['SUB_RAW'] = '1'
+sys.argv = ['cpd_final.py', LANG]
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import cpd_final as F

@@ -1,6 +1,6 @@
 """Versión final con transiciones: 1440x1800 (4:5), ES/EN.
 Uso: python3 cpd_final.py es|en salida.mp4   |   python3 cpd_final.py still es|en dir t..."""
-import sys, subprocess, math, re
+import sys, os, subprocess, math, re
 MISSING = set()
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageChops
@@ -67,6 +67,12 @@ EN = {
     'El centro de control se protege con difusores MM-P50 y su propia válvula de sección WF-SV, también con aprobación FM.': 'The control room is protected by MM-P50 nozzles and its own WF-SV section valve, also FM approved.',
     'Los MM-P50 tienen la misma forma y el mismo funcionamiento que las boquillas de la sala de racks.': 'MM-P50 nozzles have the same shape and operation as those in the rack room.',
     'CENTROS DE DATOS': 'DATA CENTERS',
+    'RIESGO A RIESGO': 'RISK BY RISK',
+    'Foco en un rack: extinción localizada': 'A fire in one rack: local extinguishing',
+    'Falsas alarmas y roturas: la preacción no descarga': 'False alarms and accidents: pre-action holds the water',
+    'Bajo el falso suelo: una red propia para los cables': 'Under the raised floor: a dedicated network for cables',
+    'Oficinas: difusor MM-P50 y válvulas de sección': 'Offices: MM-P50 nozzle and section valves',
+    'Generadores y transformadores: sin bombas ni corriente': 'Generators and transformers: no pumps, no power',
     'Agua nebulizada RG W-FOG': 'RG W-FOG water mist',
     'Certificación': 'Certified by',
     'Protección contra incendios con certificación FM para centros de datos: sobre y bajo suelo técnico.':
@@ -275,6 +281,9 @@ EN = {
 def TR(s):
     if LANG != 'en' or not isinstance(s, str):
         return s
+    _b = sys.modules.get('cpd_video')
+    if _b is not None and _b.RAW[0]:          # subtítulo en español sobre un vídeo en inglés (sección «Riesgo a riesgo»)
+        return s
     if s in EN:
         return EN[s]
     if len(s) > 5 and s[:2].isdigit() and s[2:5] == ' · ' and s[5:] in EN:
@@ -292,6 +301,7 @@ if LANG == 'en':
 
 import cpd_video as B
 B.TXT_TR[0] = TR
+B.SUB_RAW[0] = os.environ.get('SUB_RAW') == '1'
 if LANG == 'en':
     _wrap = B.wrap
     B.wrap = lambda text, f, maxw: _wrap(TR(text), f, maxw)
@@ -1781,7 +1791,8 @@ if __name__ == '__main__':
 #   (centros de datos, cocinas, oil & gas…) y cualquier división. Cada episodio: apertura (antetítulo de la sección
 #   + aplicación + nº de episodio y título técnico en afirmativo) -> escenas del tema con su locución -> cierre con la
 #   firma de voz y la web. Se entienden solos: el «próximo episodio» va solo en el texto del post.
-#   Uso: PIEZA=<nº> SUB_LANG=es python3 cpd_master.py en <voz_en.mp3> 45 <salida.mp4>   (voz en inglés, textos en español)
+#   Uso: PIEZA=<nº> SUB_LANG=es python3 cpd_master.py en <voz_en.mp3> 45 <salida.mp4>
+#   (vídeo en inglés: voz, etiquetas, cabeceras, apertura y cierre; SOLO los subtítulos en español)
 # =====================================================================================
 SECCION = dict(
     nombre='RIESGO A RIESGO',                           # nombre fijo de la sección (igual en todas las aplicaciones)
@@ -1811,7 +1822,7 @@ F_CHN = B.F('InterDisplay-Medium.otf', 30)
 
 def kicker(k):
     n = len(SECCION['episodios'])
-    return f"{SECCION['nombre']} · {SECCION['aplicacion']} · {k + 1:02d}/{n:02d}"   # el sistema ya lo dice la firma
+    return f"{TR(SECCION['nombre'])} · {TR(SECCION['aplicacion'])} · {k + 1:02d}/{n:02d}"   # el sistema ya lo dice la firma
 
 
 def hooked(fn):
@@ -1849,7 +1860,7 @@ def sc_close(t, L, img):
     rows = [(SECCION['cierre'], F_CHN, B.INK), (SECCION['web'], B.F_SMB, B.RED)]
     for i, (txt, f_, c) in enumerate(rows):
         d.text((S(W / 2) - f_.getlength(TR(txt)) / 2, S(H / 2 - 20 + i * 52)), txt, font=f_, fill=B.ca(c, ss(0.5, 1.1, t)))
-    sec = f"{SECCION['nombre']} · {SECCION['aplicacion']}"
+    sec = f"{TR(SECCION['nombre'])} · {TR(SECCION['aplicacion'])}"
     d.text((S(W / 2) - F_HK.getlength(TR(sec)) / 2, S(H / 2 + 120)), sec, font=F_HK, fill=B.ca(B.MUTED if hasattr(B, 'MUTED') else B.INK, 0.6 * ss(0.7, 1.3, t)))
 
 
