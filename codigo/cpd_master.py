@@ -218,11 +218,14 @@ if os.environ.get('PIEZA'):
     V.STEP_MAP[0] = spec['steps'] if spec['steps'][1] else ({}, 0)
     oldS = F.SCENES
     CLOSE = 3.4
-    newS = []
-    tt = 0.0; remap = []                       # (a_viejo, b_viejo, a_nuevo)
+    # entradilla de la sección -> título-pregunta del episodio (sobre su primera imagen velada) -> tema -> cierre
+    _a0, _b0, _fn0, _ = oldS[spec['scenes'][0]]
+    newS = [(0.0, F.PRE_SEC, F.sc_section, False), (F.PRE_SEC, F.PRE_SEC + F.PRE_Q, F.make_question(_fn0, _b0 - _a0), False)]
+    NPRE = len(newS)
+    tt = F.PRE_SEC + F.PRE_Q; remap = []       # (a_viejo, b_viejo, a_nuevo)
     for j, i in enumerate(spec['scenes']):
         a0, b0, fn, band = oldS[i]
-        newS.append((tt, tt + (b0 - a0), F.hooked(fn) if j == 0 else fn, band)); remap.append((a0, b0, tt)); tt += b0 - a0
+        newS.append((tt, tt + (b0 - a0), fn, band)); remap.append((a0, b0, tt)); tt += b0 - a0
     # el cierre lleva la última frase de la locución (firma: «RG Systems, Komtes Group: …»)
     _lb = F.SCENE_BLOCKS[max(F.SCENE_BLOCKS)][-1]
     _lbt = blocks[_lb]
@@ -240,9 +243,10 @@ if os.environ.get('PIEZA'):
         if k in spec['scenes'] and k + 1 in spec['scenes']:
             j = spec['scenes'].index(k)
             if spec['scenes'][j + 1] == k + 1:
-                newTR[j] = v
+                newTR[j + NPRE] = v
     vo_place = [(_m(p_), blk) for p_, blk in vo_place if _m(p_) is not None] + [(tt + 0.45, _lbt)]
     EV = [(nm, _m(at), vol) for nm, at, vol in EV if _m(at) is not None]
+    EV += [('whoosh', 0.15, 0.14), ('click', 0.95, 0.25), ('whoosh', F.PRE_SEC - 0.45, 0.13), ('whoosh', tt - 0.45, 0.12)]
     F.SCENES = newS; F.TRANS = newTR; F.DUR = DUR
     print('pieza', ci + 1, spec['slug'], 'DUR', round(DUR, 2), [(round(a, 2), round(b - a, 2)) for a, b, *_ in newS])
 

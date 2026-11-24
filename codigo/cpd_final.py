@@ -68,6 +68,13 @@ EN = {
     'Los MM-P50 tienen la misma forma y el mismo funcionamiento que las boquillas de la sala de racks.': 'MM-P50 nozzles have the same shape and operation as those in the rack room.',
     'CENTROS DE DATOS': 'DATA CENTERS',
     'RIESGO A RIESGO': 'RISK BY RISK',
+    'EPISODIO': 'EPISODE',
+    'Protección contra incendios, un riesgo cada vez': 'Fire protection, one risk at a time',
+    '¿Qué pasa cuando arde un solo rack?': 'What happens when a single rack catches fire?',
+    '¿Puede una falsa alarma inundar un centro de datos?': 'Can a false alarm flood a data center?',
+    '¿Cómo se protegen los cables bajo el falso suelo?': 'How do you protect the cables under the raised floor?',
+    '¿Cómo se protegen las oficinas de un centro de datos?': 'How do you protect the offices in a data center?',
+    '¿Cómo se apaga un generador en llamas sin bombas ni corriente?': 'How do you put out a generator fire with no pumps and no power?',
     'Foco en un rack: extinción localizada': 'A fire in one rack: local extinguishing',
     'Falsas alarmas y roturas: la preacción no descarga': 'False alarms and accidents: pre-action holds the water',
     'Bajo el falso suelo: una red propia para los cables': 'Under the raised floor: a dedicated network for cables',
@@ -1797,22 +1804,29 @@ if __name__ == '__main__':
 SECCION = dict(
     nombre='RIESGO A RIESGO',                           # nombre fijo de la sección (igual en todas las aplicaciones)
     nombre_en='RISK BY RISK',                           # para el texto del post en inglés
+    lema='Protección contra incendios, un riesgo cada vez',   # entradilla de la sección (se traduce en pantalla)
     aplicacion='CENTROS DE DATOS',
     sistema='RG W-FOG',
     cierre='Protección contra incendios para centros de datos',
     web='www.rg-systems.com',
     # títulos: primero el RIESGO y después cómo se protege (la sección es «riesgo a riesgo»)
     episodios=[
-        dict(slug='01_Rack', titulo='Foco en un rack: extinción localizada', escenas=[2, 3, 5, 7, 9],
+        dict(slug='01_Rack', titulo='Foco en un rack: extinción localizada', pregunta='¿Qué pasa cuando arde un solo rack?', escenas=[2, 3, 5, 7, 9],
              steps=({1: 1, 2: 2, 4: 3, 6: 4, 8: 5}, 5)),
-        dict(slug='02_Preaccion', titulo='Falsas alarmas y roturas: la preacción no descarga', escenas=[4, 10, 11], steps=({}, 0)),
-        dict(slug='03_Falso-suelo', titulo='Bajo el falso suelo: una red propia para los cables', escenas=[1, 8], steps=({}, 0)),
-        dict(slug='04_Zonas-personal', titulo='Oficinas: difusor MM-P50 y válvulas de sección', escenas=[12],
+        dict(slug='02_Preaccion', titulo='Falsas alarmas y roturas: la preacción no descarga',
+             pregunta='¿Puede una falsa alarma inundar un centro de datos?', escenas=[4, 10, 11], steps=({}, 0)),
+        dict(slug='03_Falso-suelo', titulo='Bajo el falso suelo: una red propia para los cables',
+             pregunta='¿Cómo se protegen los cables bajo el falso suelo?', escenas=[1, 8], steps=({}, 0)),
+        dict(slug='04_Zonas-personal', titulo='Oficinas: difusor MM-P50 y válvulas de sección',
+             pregunta='¿Cómo se protegen las oficinas de un centro de datos?', escenas=[12],
              steps=({}, 0)),
-        dict(slug='05_Generadores', titulo='Generadores y transformadores: sin bombas ni corriente', escenas=[13],
+        dict(slug='05_Generadores', titulo='Generadores y transformadores: sin bombas ni corriente',
+             pregunta='¿Cómo se apaga un generador en llamas sin bombas ni corriente?', escenas=[13],
              steps=({}, 0)),
     ])
-PIECES = [dict(slug=e['slug'], hook=e['titulo'], scenes=e['escenas'], steps=e['steps']) for e in SECCION['episodios']]
+PIECES = [dict(slug=e['slug'], hook=e['titulo'], q=e['pregunta'], scenes=e['escenas'], steps=e['steps'])
+          for e in SECCION['episodios']]
+PRE_SEC, PRE_Q = 2.8, 3.4        # s de la entradilla de la sección y del título-pregunta del episodio
 PC_CUR = [0]
 HOOK = 3.4                       # s que dura la apertura sobre la primera escena
 F_HK = B.F('Inter-Bold.otf', 22)
@@ -1862,6 +1876,72 @@ def sc_close(t, L, img):
         d.text((S(W / 2) - f_.getlength(TR(txt)) / 2, S(H / 2 - 20 + i * 52)), txt, font=f_, fill=B.ca(c, ss(0.5, 1.1, t)))
     sec = f"{TR(SECCION['nombre'])} · {TR(SECCION['aplicacion'])}"
     d.text((S(W / 2) - F_HK.getlength(TR(sec)) / 2, S(H / 2 + 120)), sec, font=F_HK, fill=B.ca(B.MUTED if hasattr(B, 'MUTED') else B.INK, 0.6 * ss(0.7, 1.3, t)))
+
+
+F_SEC = B.F('InterDisplay-Bold.otf', 104)
+F_LEMA = B.F('InterDisplay-Medium.otf', 34)
+F_Q = B.F('InterDisplay-Bold.otf', 70)
+
+
+def sc_section(t, L, img):
+    """ENTRADILLA de la sección (igual en todos los episodios y aplicaciones): barra de la serie con el episodio en
+    rojo, nombre de la sección con la palabra central en rojo, lema, barra roja y aplicación · episodio"""
+    d = B._ud(ImageDraw.Draw(img))   # capa de rótulos: los textos se funden bien en las transiciones
+    o = 1 - ss(L - 0.6, L - 0.2, t)                          # sale antes de la transición: no se mezcla con la pregunta
+    k, n = PC_CUR[0], len(SECCION['episodios'])
+    cy = H / 2 - 40
+    sw, gap = 64, 14                                         # barra de la serie: un segmento por episodio
+    x0 = W / 2 - (n * sw + (n - 1) * gap) / 2
+    for i in range(n):
+        ai = ss(0.05 + 0.07 * i, 0.35 + 0.07 * i, t)
+        c = B.RED if i == k else (214, 216, 219)
+        x = x0 + i * (sw + gap)
+        d.rounded_rectangle([S(x), S(cy - 150), S(x + sw), S(cy - 143)], radius=S(3.5), fill=B.ca(c, ai * o))
+    a = ss(0.25, 0.75, t); dy = (1 - a) * 24
+    words = TR(SECCION['nombre']).split()
+    sp = F_SEC.getlength(' ')
+    tw = sum(F_SEC.getlength(w_) for w_ in words) + sp * (len(words) - 1)
+    x = S(W / 2) - tw / 2
+    for i, w_ in enumerate(words):
+        col = B.RED if (len(words) == 3 and i == 1) else B.INK
+        d.text((x, S(cy - 112 + dy)), w_, font=F_SEC, fill=B.ca(col, a * o)); x += F_SEC.getlength(w_) + sp
+    a2 = ss(0.6, 1.1, t)
+    lm = TR(SECCION['lema'])
+    d.text((S(W / 2) - F_LEMA.getlength(lm) / 2, S(cy + 22)), lm, font=F_LEMA, fill=B.ca(B.INK2, a2 * o))
+    bw = 96 * ss(0.8, 1.4, t)
+    d.rounded_rectangle([S(W / 2 - bw / 2), S(cy + 96), S(W / 2 + bw / 2), S(cy + 103)], radius=S(3.5), fill=B.ca(B.RED, o))
+    lab = f"{TR(SECCION['aplicacion'])} · {TR('EPISODIO')} {k + 1:02d}/{n:02d}"
+    d.text((S(W / 2) - F_HK.getlength(lab) / 2, S(cy + 128)), lab, font=F_HK, fill=B.ca(B.RED, ss(1.0, 1.5, t) * o))
+    B.subtitle(d, SECCION['lema'] + '.', ss(0.5, 1.0, t) * o)   # subtítulo: el lema en español
+
+
+def make_question(fn0, L0):
+    """TÍTULO-PREGUNTA del episodio, sobre la primera imagen del tema velada: antetítulo de la sección + pregunta"""
+    def f(t, L, img):
+        B.UI[0] = False; B.HDR_A[0] = 0.0
+        try:
+            fn0(0.0, L0, img)
+        finally:
+            B.UI[0] = True; B.HDR_A[0] = 1.0
+        img.alpha_composite(Image.new('RGBA', img.size, (255, 255, 255, int(255 * 0.88))))
+        d = B._ud(ImageDraw.Draw(img))   # capa de rótulos: los textos se funden bien en las transiciones
+        pc = PIECES[PC_CUR[0]]
+        kt = kicker(PC_CUR[0]); fk = F_HK
+        for px in (22, 20, 18):                    # el antetítulo no puede llegar a la firma (x < 600)
+            fk = B.F('Inter-Bold.otf', px)
+            if fk.getlength(kt) <= S(600):
+                break
+        d.text((S(70), S(92)), kt, font=fk, fill=B.ca(B.RED, ss(0.3, 0.7, t)))
+        lines = B.wrap(pc['q'], F_Q, 930)
+        a = ss(0.35, 0.9, t); dx = (1 - a) * 30
+        y = H / 2 - 120 - (len(lines) - 1) * 40
+        for ln in lines:
+            d.text((S(70 + dx), S(y)), ln, font=F_Q, fill=B.ca(B.INK, a)); y += 82
+        bw = 64 * ss(0.7, 1.2, t)
+        d.rounded_rectangle([S(70), S(y + 22), S(70 + bw), S(y + 29)], radius=S(3.5), fill=B.RED)
+        B.subtitle(d, pc['q'], ss(0.5, 1.0, t))
+    f.__name__ = 'question_' + fn0.__name__
+    return f
 
 
 NO_LOCK = (B.sc_intro, V.sc_outro, sc_close)
