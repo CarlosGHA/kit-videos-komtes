@@ -30,7 +30,9 @@ def env(a, d, s0, s1):              # ataque, caída, inicio y fin (s)
 L = np.zeros(n); R = np.zeros(n)
 ch1 = [57, 60, 64, 67, 71]          # Am9
 ch2 = [53, 57, 60, 64, 71]          # Fmaj7(#11) aprox. (B como color)
-for chord, s0, s1 in [(ch1, 0.0, 3.4), (ch2, 2.9, D)]:
+ch3 = [50, 57, 60, 64, 69]          # Dm9 (sin 3.ª arriba) para la parte central
+segs = [(ch1, 0.0, 0.38 * D), (ch2, 0.32 * D, 0.7 * D), (ch1, 0.64 * D, D)] if D > 7 else [(ch1, 0.0, 3.4), (ch2, 2.9, D)]
+for chord, s0, s1 in segs:
     for k, m in enumerate(chord):
         for det, pan in [(-0.08, 0.3), (0.08, 0.7)]:
             v = saw(f(m) * (1 + det / 100 * 12), rng.random()) * env(1.2, 1.3, s0, s1) * 0.05
@@ -41,7 +43,8 @@ L = lp(L, 1600); R = lp(R, 1600)
 # arpegio de pulsos suaves (corcheas a 96 bpm), entra con el título
 step = 60 / 96 / 2
 notes = [69, 72, 76, 79, 76, 72, 69, 72, 65, 69, 72, 76, 72, 69, 65, 69]
-for i, m in enumerate(notes):
+for i in range(400):
+    m = notes[i % len(notes)]
     s0 = 0.9 + i * step
     if s0 > D - 0.6:
         break
@@ -53,7 +56,7 @@ for i, m in enumerate(notes):
     L += v * (1 - pan); R += v * pan
 
 # sub suave bajo el título y bajo el cambio de acorde
-for s0, m in [(0.6, 33), (2.9, 29)]:
+for s0, m in ([(0.6, 33), (0.32 * D, 29), (0.64 * D, 33)] if D > 7 else [(0.6, 33), (2.9, 29)]):
     tt = t - s0
     e = np.where(tt >= 0, np.clip(tt / 0.08, 0, 1) * np.exp(-np.clip(tt, 0, None) * 1.1), 0)
     v = np.sin(2 * np.pi * f(m) * tt) * e * 0.16

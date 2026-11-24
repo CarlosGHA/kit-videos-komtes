@@ -2,7 +2,7 @@
 (cualquier división, sistema y aplicación). Es solo la sección: sin logotipos, sin sector, sin aplicación y sin número de
 episodio (todo eso va después, en el título-pregunta de cada pieza).
 
-Animación (6 s, 1080x1350 lógicos), solo fundidos y desplazamientos suaves:
+Animación (10 s, 1080x1350 lógicos), solo fundidos y desplazamientos suaves:
   · fondo grafito de marca (#2B2D2F, nunca negro puro) que entra desde el blanco
   · «RISK BY RISK» en Bio Sans Bold: aparece con un fundido, sube unos píxeles y se cierra el espaciado; «BY» en rojo
   · filo rojo que crece desde el centro y el lema en inglés (Bio Sans Regular)
@@ -16,7 +16,7 @@ Uso desde un montaje:  import entradilla_seccion as E;  E.draw(img_rgba, t, S, W
 import os, sys, math, glob, subprocess
 from PIL import Image, ImageDraw, ImageFont
 
-DUR = 6.0
+DUR = 10.0
 MUSICA = 'music_entradilla.wav'               # música original de la entradilla (musica_entradilla.py), distinta del fondo
 SERIE = 'A SERIES BY'                         # vínculo con el grupo, sobre el logotipo de Grupo Komtes
 NOMBRE = ['RISK', 'BY', 'RISK']                 # la palabra central va en rojo
@@ -89,19 +89,21 @@ def draw(img, t, S, W, H, ss_=None):
         _FC[key] = dict(big=_font('Bold', 150, ssf), lema=_font('Regular', 38, ssf), serie=_font('Regular', 22, ssf))
     fb, fl, fs = _FC[key]['big'], _FC[key]['lema'], _FC[key]['serie']
     # entrada (blanco -> grafito) y salida (grafito -> blanco), largas y suaves
-    g = _ss(0.0, 0.9, t) * (1 - _ss(DUR - 0.95, DUR - 0.05, t))
+    g = _ss(0.0, 1.1, t) * (1 - _ss(DUR - 1.1, DUR - 0.05, t))
     bg = tuple(int(OFF[j] + (GRAPH[j] - OFF[j]) * g) for j in range(3))
     base = Image.new('RGBA', img.size, bg + (255,))
     layer = Image.new('RGBA', img.size, (0, 0, 0, 0))   # todo se dibuja en una capa aparte (los fundidos no agujerean el fondo)
     d = ImageDraw.Draw(layer)
-    o_ = _ss(DUR - 1.7, DUR - 0.9, t)                     # el texto sale antes de que vuelva el blanco
+    o_ = _ss(DUR - 2.1, DUR - 1.1, t)                     # el texto sale antes de que vuelva el blanco
     out = 1 - o_
     up = -18 * o_
+    drift = -10 * _ss(0.0, DUR, t)                       # deriva muy lenta: la pantalla no queda congelada
+    up += drift
     cy = H / 2 - 70 + up                                 # línea base visual del nombre
 
     # nombre: fundido + subida suave + espaciado que se cierra
-    a = _ss(0.6, 1.9, t) * out
-    p = _ease_out(0.6, 2.4, t)
+    a = _ss(0.7, 2.3, t) * out
+    p = _ease_out(0.7, 3.0, t)
     dy = (1 - p) * 30
     sp = fb.getlength(' ') * (0.9 + 0.7 * (1 - p))
     ws = [fb.getlength(w) for w in NOMBRE]
@@ -111,18 +113,18 @@ def draw(img, t, S, W, H, ss_=None):
         x += ws[i] + sp
 
     # filo rojo bajo el nombre: crece desde el centro
-    bw = 150 * _ease_out(1.6, 2.6, t)
+    bw = 150 * _ease_out(2.1, 3.3, t)
     if bw > 0.5:
         d.rectangle([S(W / 2 - bw / 2), S(cy + 38), S(W / 2 + bw / 2), S(cy + 45)], fill=_c(RED, out))
 
     # lema en inglés
-    a2 = _ss(2.0, 2.9, t) * out
-    d.text((S(W / 2), S(cy + 122 + (1 - _ease_out(2.0, 3.0, t)) * 14)), LEMA_EN, font=fl, fill=_c(OFF, a2 * 0.9), anchor='ms')
+    a2 = _ss(2.7, 3.8, t) * out
+    d.text((S(W / 2), S(cy + 122 + (1 - _ease_out(2.7, 4.0, t)) * 14)), LEMA_EN, font=fl, fill=_c(OFF, a2 * 0.9), anchor='ms')
 
     # vínculo con Grupo Komtes: «A SERIES BY» + logotipo, abajo
-    a3 = _ss(2.8, 3.7, t) * out
+    a3 = _ss(3.9, 5.0, t) * out
     if a3 > 0.01:
-        yl = H - 300 + up + (1 - _ease_out(2.8, 3.9, t)) * 12
+        yl = H - 300 + up + (1 - _ease_out(3.9, 5.2, t)) * 12
         sp_ = S(4)                                         # versalitas espaciadas
         tw = sum(fs.getlength(c) for c in SERIE) + sp_ * (len(SERIE) - 1)
         xx = S(W / 2) - tw / 2
